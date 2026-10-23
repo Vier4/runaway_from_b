@@ -1,0 +1,3 @@
+# local dev-server config for the Claude desktop preview
+.claude/
+.DS_Store
