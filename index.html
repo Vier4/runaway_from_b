@@ -374,7 +374,7 @@ const ENDINGS = [
   { id:6, name:'Стрим окончен', good:true, hint:'Найди ключ от электрощитка и выключи свет.', how:'Ты открыл электрощиток и выключил свет во всём доме.', text:'Стрим Бронислава оборвался на самом интересном месте. Пока он в темноте искал фонарик, ты спокойно ушёл из дома.', quote:'Э! Кто свет вырубил?! У меня стрим идёт, пацаны!' },
   { id:7, name:'Угнал жигули', good:true, hint:'Найди ключи от машины и уезжай на ней.', how:'Ты завёл жигули Бронислава и уехал.', text:'Бронислав выбежал во двор, но было поздно: ты уже ехал по улице на его «семёрке». Новый ролик называется «У меня угнали машину».', quote:'Э! Это моя «семёрка»! Стой! Подписчики, звоните в полицию!' },
   { id:8, name:'Трусы-дымовуха', good:true, hint:'Найди на кровати кое-что личное и накинь это на датчик дыма.', how:'Ты накинул трусы Бронислава на датчик дыма.', text:'Датчик не выдержал такого запаха и поднял пожарную тревогу. Бронислав выбежал на улицу спасать компьютер, а пожарные открыли дверь и вывели тебя из дома.', quote:'Пацаны, это не пожар! Это мои трусы! Не снимайте!' },
-  { id:9, name:'Макар тебя поймал', good:false, hint:'Спустись в подвал через люк в кладовке и попадись Макару.', how:'Макар поймал тебя в подвале.', text:'Он запер тебя в погребе вместе с банками огурцов и позвал Бронислава. Ролик назвали «Поймали вора в подвале».', quote:'Брони-и-ислав! Я его поймал! Мне за это премия положена?' },
+  { id:9, name:'Макар тебя поймал', good:false, hint:'Спустись в подвал через люк в кладовке и попадись Макару, когда у тебя кончатся попытки.', how:'Макар поймал тебя в подвале, и попытки кончились.', text:'Он запер тебя в погребе вместе с банками огурцов и позвал Бронислава. Ролик назвали «Поймали вора в подвале».', quote:'Брони-и-ислав! Я его поймал! Мне за это премия положена?' },
   { id:10, name:'Сбежал от Макара', good:true, hint:'Пусть Макар погонится за тобой, а ты уйди через дверь погреба.', how:'Макар гнался за тобой, но ты ушёл через дверь погреба.', text:'Ты отодвинул ржавый засов и выскочил в огород. Макар застрял в дверях с банкой огурцов в руках.', quote:'Э-э! Стой! Бронислав меня убьёт!' },
   { id:11, name:'Мимо Макара', good:true, hint:'Выберись через погреб так, чтобы Макар тебя не заметил.', how:'Ты прокрался мимо Макара и ушёл через дверь погреба.', text:'Макар так увлёкся танчиками, что даже не снял наушники. Ты тихо ушёл огородами.', quote:'Чё? Дверью хлопнуло? Да не, показалось. Ещё катку!' },
 ];
@@ -3049,17 +3049,23 @@ function endRun(id){
   $('againBtn').focus();
 }
 // caught but attempts are left: black out, wake up in the bedroom, Bronislav hides the key again
-function startRespawn(){
+function startRespawn(byMakar){
   state = 'respawn'; respawnT = 2.4; respawned = false;
+  const lostKey = hasKey || doorOpen || hasFireKey || hasElecKey || hasCarKey;
   $('fadeTitle').textContent = `Попытка ${catches + 1} из ${maxCatches()}`;
-  $('fadeText').textContent = hasKey || doorOpen || hasFireKey || hasElecKey || hasCarKey
-    ? 'Бронислав выложил ролик, отобрал ключ, запер дверь и спрятал ключ в новом месте. Ты снова в спальне.'
+  $('fadeText').textContent = byMakar
+    ? (lostKey ? 'Макар вытащил тебя из подвала и сдал брату. Бронислав отобрал ключ и спрятал его в новом месте. Ты снова в спальне.'
+            : 'Макар вытащил тебя из подвала и сдал брату, а сам вернулся к танчикам. Ты снова в спальне.')
+    : lostKey ? 'Бронислав выложил ролик, отобрал ключ, запер дверь и спрятал ключ в новом месте. Ты снова в спальне.'
     : 'Бронислав выложил ролик и вернулся к своим делам. Ты снова в спальне.';
   $('fade').classList.add('on');
-  $('bubble').classList.remove('on'); $('vignette').style.opacity = 0; $('prompt').hidden = true;
+  $('bubble').classList.remove('on'); $('mbubble').classList.remove('on'); $('vignette').style.opacity = 0; $('prompt').hidden = true;
 }
 function doRespawn(){
   const tookKey = hasKey || doorOpen;
+  // caught downstairs: back to the bedroom, Макар back to his танчики
+  if (P.cellar) $('goalText').textContent = goalBefore;
+  makarSit(); MK.speakT = 4; $('mbubble').classList.remove('on');
   if (hasFireKey){ hasFireKey = false; placeFireKey(); }
   if (hasElecKey){ hasElecKey = false; placeElecKey(); }
   if (hasCarKey){ hasCarKey = false; placeCarKey(); }
@@ -3406,12 +3412,14 @@ function makarChase(){
   sfx.sting(); banner('Макар тебя заметил! Беги!', 'warn', 2.2);
   makarSay('Стоять! Ты кто такой?! Брони-и-ислав!', 2.4, 2);
 }
+// he uses up your attempts just like Bronislav; the last one ends the run
 function makarCatch(){
   state = 'mcaught'; caughtT = 1.9; MK.pose = 'grab';
+  catches++; syncLives();
   $('prompt').hidden = true; $('eye').classList.remove('on');
   sfx.sting();
   makarSay('Попался! Брони-и-ислав, я его поймал!', 2.2, 3);
-  try { document.exitPointerLock?.(); } catch (e) {}
+  if (catches >= maxCatches()){ try { document.exitPointerLock?.(); } catch (e) {} }
 }
 function updateMakar(dt){
   if (cheat('freeze')){ MK.meter = 0; MK.seen = false; return; }
@@ -3858,7 +3866,7 @@ function frame(){
   if (state === 'play'){ if (!spawnOpen){ updatePlayer(dt); if (state === 'play') d = updateBron(dt); if (state === 'play') updateMakar(dt); } updateHud(d, dt); }
   else if (state === 'menu'){ updateBron(dt); }
   else if (state === 'caught'){ caughtT -= dt; if (caughtT <= 0){ if (catches >= maxCatches()) endRun(1); else startRespawn(); } }
-  else if (state === 'mcaught'){ caughtT -= dt; if (caughtT <= 0) endRun(9); }
+  else if (state === 'mcaught'){ caughtT -= dt; if (caughtT <= 0){ if (catches >= maxCatches()) endRun(9); else startRespawn(true); } }
   else if (state === 'cellarOut'){ outT -= dt; if (outT <= 0) endRun(MK.chased ? 10 : 11); }
   else if (state === 'transit'){
     transitT -= dt;
