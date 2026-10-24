@@ -1375,11 +1375,6 @@ const ucol = (x1, z1, x2, z2, top) => addCollider(x1, z1, x2, z2, top, { lvl:1 }
   box(house, bx, Y2 + .97, BALC.z2 - .02, bw, .05, .08, balM);
   for (const x of [BALC.x1 + .02, BALC.x2 - .02]) box(house, x, Y2 + .97, bz + .05, .08, .05, bd, balM);
   ucol(BALC.x1 - .1, BALC.z2 - .1, BALC.x2 + .1, BALC.z2 + .05, 1.0); ucol(BALC.x1 - .1, BALC.z1, BALC.x1 + .08, BALC.z2, 1.0); ucol(BALC.x2 - .08, BALC.z1, BALC.x2 + .1, BALC.z2, 1.0);
-  // balcony door: a white PVC frame in the opening and a threshold
-  const fw = BALC.door.b - BALC.door.a;
-  for (const x of [BALC.door.a + .05, BALC.door.b - .05]) box(house, x, Y2, D - .05, .07, 2.1, .12, mat.pvc);
-  box(house, (BALC.door.a + BALC.door.b)/2, Y2 + 2.06, D - .05, fw, .07, .12, mat.pvc);
-  box(house, (BALC.door.a + BALC.door.b)/2, Y2, D, fw, .03, .3, mat.pvc);
 }
 // Реквизитная: green screen, camera on a tripod, ring light, rack of costumes, shelves of merch, the silver play button
 {
@@ -1413,7 +1408,7 @@ const ucol = (x1, z1, x2, z2, top) => addCollider(x1, z1, x2, z2, top, { lvl:1 }
   }), rough:.25, metal:.4, env:1.2 }));
   plaque.position.set(4.5, Y2 + 2.0, .12); house.add(plaque);
 }
-// Спальня Бронислава: double bed with an orange «Б» duvet, nightstand, poster, rug
+// Спальня Бронислава: double bed with an orange «Б» duvet, nightstand, rug
 {
   ubox(13.5, 0, 1.2, 1.9, .3, 2.1, mat.walnut); ubox(13.5, 0, .13, 1.96, 1.1, .06, mat.walnut);
   ubox(13.5, .3, 1.2, 1.8, .2, 2.0, M(0xf3f0e8, { rough:.9 }));
@@ -1425,11 +1420,6 @@ const ucol = (x1, z1, x2, z2, top) => addCollider(x1, z1, x2, z2, top, { lvl:1 }
   ucol(12.55, .1, 14.45, 2.25, .6);
   ubox(14.95, 0, .35, .45, .55, .42, mat.walnut); ucol(14.72, .14, 15.18, .56, .55);
   const rug = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.6), M(0xffffff, { map:rep(carpetTex, 1, 1), rough:.95 })); rug.rotation.x = -Math.PI/2; rug.position.set(13.5, Y2 + .008, 3.1); house.add(rug);
-  const poster = new THREE.Mesh(new THREE.PlaneGeometry(1.4, .8), M(0xffffff, { map:canvasTex(256, 146, (c, w, h) => {
-    c.fillStyle = '#1d1f27'; c.fillRect(0, 0, w, h); c.fillStyle = '#ff6a00'; c.font = 'bold 34px sans-serif'; c.textAlign = 'center'; c.fillText('БРОНИСЛАВ', w/2, 58);
-    c.fillStyle = '#ffffff'; c.font = 'bold 22px sans-serif'; c.fillText('1 000 000 подписчиков', w/2, 100);
-  }), rough:.7 }));
-  poster.position.set(13.5, Y2 + 1.55, 4.88); poster.rotation.y = Math.PI; house.add(poster);
 }
 // Качалка: bench with a barbell, a punching bag, dumbbells, a mat
 {
@@ -1493,15 +1483,16 @@ const DOOR_W = 1.1, DOOR_H = 2.05;
 const interiorDoors = [];
 const frameMat = M(0xe0d4ba, { rough:.4, env:.6 });
 // door frame (коробка) inside the opening + profiled наличники on both faces; a,b are the real edges
-function doorFrame(dir, c, a, b, m = frameMat){
+function doorFrame(dir, c, a, b, m = frameMat, lvl = 0){
+  const Y = lvl ? Y2 : 0;
   const along = (p0, p1, y0, y1, off, t, dpt) => {
     const mid = (p0 + p1)/2, len = p1 - p0, h = y1 - y0;
-    if (dir === 'h') return rbox(house, mid, y0 + h/2, c + off, len, h, dpt, m, .006);
-    return rbox(house, c + off, y0 + h/2, mid, dpt, h, len, m, .006);
+    if (dir === 'h') return rbox(house, mid, Y + y0 + h/2, c + off, len, h, dpt, m, .006);
+    return rbox(house, c + off, Y + y0 + h/2, mid, dpt, h, len, m, .006);
   };
   const post = (p, y0, y1, off, w, dpt) => {
-    if (dir === 'h') return rbox(house, p, (y0 + y1)/2, c + off, w, y1 - y0, dpt, m, .006);
-    return rbox(house, c + off, (y0 + y1)/2, p, dpt, y1 - y0, w, m, .006);
+    if (dir === 'h') return rbox(house, p, Y + (y0 + y1)/2, c + off, w, y1 - y0, dpt, m, .006);
+    return rbox(house, c + off, Y + (y0 + y1)/2, p, dpt, y1 - y0, w, m, .006);
   };
   post(a + .012, 0, 2.1, 0, .024, .2); post(b - .012, 0, 2.1, 0, .024, .2); along(a, b, 2.088, 2.112, 0, 0, .2);
   for (const side of [-1, 1]){
@@ -1513,13 +1504,13 @@ function doorFrame(dir, c, a, b, m = frameMat){
   along(a, b, 0, .015, 0, 0, .2).material = mat.darkWood;   // порожек
 }
 // hinge = edge where the door hangs; swing = +1/-1 side of the wall it opens into
-function interiorDoor(dir, c, a, b, hinge, swing, look){
-  doorFrame(dir, c, a, b);
+function interiorDoor(dir, c, a, b, hinge, swing, look, lvl = 0){
+  doorFrame(dir, c, a, b, frameMat, lvl);
   const pivot = new THREE.Group();
   const free = hinge === a ? 1 : -1;
   const leaf = new THREE.Group();
-  if (dir === 'h'){ pivot.position.set(hinge, 0, c); leaf.position.x = free*DOOR_W/2; }
-  else { pivot.position.set(c, 0, hinge); leaf.position.z = free*DOOR_W/2; leaf.rotation.y = Math.PI/2; }
+  if (dir === 'h'){ pivot.position.set(hinge, lvl ? Y2 : 0, c); leaf.position.x = free*DOOR_W/2; }
+  else { pivot.position.set(c, lvl ? Y2 : 0, hinge); leaf.position.z = free*DOOR_W/2; leaf.rotation.y = Math.PI/2; }
   pivot.add(leaf);
   const white = look === 'white';
   const slabM = white ? M(0xefebe2, { rough:.32, env:.7 }) : M(0xffffff, { map:walnutTex, rough:.3, env:.8 });
@@ -1537,10 +1528,10 @@ function interiorDoor(dir, c, a, b, hinge, swing, look){
   for (const y of [.25, 1.8]){ cyl(leaf, -latchX - inward*.004, y, 0, .011, .011, .11, mat.brass, 12); cyl(leaf, -latchX - inward*.004, y + .065, 0, .006, .011, .02, mat.brass, 12); }
   house.add(pivot);
   const openAngle = dir === 'h' ? -swing*free*1.45 : swing*free*1.45;
-  const col = dir === 'h' ? addCollider(a, c - .03, b, c + .03, DOOR_H, { nav:false, solid:false })
-                          : addCollider(c - .03, a, c + .03, b, DOOR_H, { nav:false, solid:false });
+  const col = dir === 'h' ? addCollider(a, c - .03, b, c + .03, DOOR_H, { nav:false, solid:false, lvl })
+                          : addCollider(c - .03, a, c + .03, b, DOOR_H, { nav:false, solid:false, lvl });
   const cx = dir === 'h' ? (a + b)/2 : c, cz = dir === 'h' ? c : (a + b)/2;
-  const d = { pivot, openAngle, angle:0, hold:0, col, cx, cz };
+  const d = { pivot, openAngle, angle:0, hold:0, col, cx, cz, lvl };
   interiorDoors.push(d); return d;
 }
 interiorDoor('h', 5, 3.3, 4.4, 4.4, -1, 'white');   // спальня
@@ -1606,6 +1597,23 @@ socket(13.1, .3, 10.5, 'e'); socket(2.9, .3, 7.6, 'w');
 lightSwitch(3.12, .9, 4.9, 'n'); lightSwitch(7.8, .9, 4.9, 'n', 2); lightSwitch(13.9, .9, 4.9, 'n');
 lightSwitch(6.3, .9, 7.1, 's'); lightSwitch(12.27, .9, 6.9, 'n', 2); lightSwitch(14.9, .9, 7.1, 's');
 lightSwitch(3.5, .9, 6.9, 'n'); lightSwitch(.1, .9, 8.15, 'e'); lightSwitch(5.1, .9, 3.35, 'e');
+// second floor: doors into the four rooms and onto the balcony, sockets, switches by the doors
+interiorDoor('h', 5, 3.9, 5.0, 5.0, -1, 'white', 1);     // реквизитная
+interiorDoor('h', 5, 13.3, 14.4, 14.4, -1, 'wood', 1);   // спальня Бронислава
+interiorDoor('h', 7, 3.9, 5.0, 3.9, 1, 'white', 1);      // качалка
+interiorDoor('h', 7, 13.3, 14.4, 14.4, 1, 'glass', 1);   // гостевая
+interiorDoor('h', D, BALC.door.a + .1, BALC.door.b - .1, BALC.door.b - .1, -1, 'glass', 1);   // балкон
+{
+  const y = Y2 + .3, ys = Y2 + .9;
+  socket(1.0, y, .1, 's'); socket(7.5, y, .1, 's', 2); socket(.1, y, 4.0, 'e');               // реквизитная
+  socket(15.45, y, .1, 's', 2); socket(11.6, y, .1, 's'); socket(17.9, y, 4.0, 'w');          // спальня
+  socket(8.0, y, 6.9, 'n'); socket(2.0, y, 5.1, 's');                                         // холл
+  socket(.1, y, 8.0, 'e'); socket(8.9, y, 10.5, 'w');                                         // качалка
+  socket(9.1, y, 11.3, 'e'); socket(17.9, y, 9.6, 'w', 2);                                    // гостевая
+  lightSwitch(3.65, ys, 4.9, 'n'); lightSwitch(13.05, ys, 4.9, 'n');
+  lightSwitch(3.65, ys, 7.1, 's'); lightSwitch(13.05, ys, 7.1, 's', 2);
+  lightSwitch(16.1, ys, 6.9, 'n', 2); lightSwitch(.1, ys, 6.2, 'e');                          // холл: у лестницы и в торце
+}
 // plug with a white cable in the studio (Bronislav's chargers)
 {
   const pl = onWall(15.6 - .071, .92, .1, 's');
@@ -4087,8 +4095,8 @@ function syncWorld(dt, t){
   toiletDoor.pivot.rotation.y = toiletDoor.angle;
   // interior doors swing open for whoever walks up to them
   for (const d of interiorDoors){
-    const pNear = !P.hidden && (state === 'play') && !P.level && Math.hypot(P.x - d.cx, P.z - d.cz) < 1.5;
-    const bNear = !B.level && !B.climb && Math.hypot(B.x - d.cx, B.z - d.cz) < 1.5;
+    const pNear = !P.hidden && (state === 'play') && P.level === d.lvl && Math.hypot(P.x - d.cx, P.z - d.cz) < 1.5;
+    const bNear = B.level === d.lvl && !B.climb && Math.hypot(B.x - d.cx, B.z - d.cz) < 1.5;
     const wasClosed = d.hold <= 0;
     if (pNear || bNear){ d.hold = 1.4; if (wasClosed && state === 'play') sfx.door(Math.max(0, 1 - Math.hypot(d.cx - P.x, d.cz - P.z)/10)); }
     else d.hold -= dt;
