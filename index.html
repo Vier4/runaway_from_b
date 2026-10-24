@@ -332,6 +332,10 @@ const turnTo = (cur, target, k) => cur + angDiff(target, cur) * Math.min(1, k);
 
 /* ================= tuning ================= */
 const W = 18, D = 12, H = 2.7;          // house footprint (m) and ceiling
+const Y2 = 2.9, H2 = 2.5;               // second floor: where its floor is, and its ceiling height
+// the stairs climb along the north side of the corridor's east end; you step off upstairs south of the stairwell
+const STAIRS = { x1:16.4, x2:17.95, z1:5.15, z2:5.85, bottom:{ x:15.95, z:5.5 }, top:{ x:17.35, z:6.45 } };
+const BALC = { x1:10.6, x2:13.8, z1:D, z2:13.35, door:{ a:11.6, b:12.8 } };   // balcony off the upstairs guest room
 const DIFF = {
   classic: { label:'Практика', blind:true, lives:3, range:9, cone:55, detect:.85, chase:3.2 },   // he never sees you
   easy:    { label:'Лёгкий',   lives:3, range:9, cone:55, detect:.85, chase:3.2 },
@@ -351,6 +355,10 @@ const TASKS = {
                say:['Румтур, пацаны! Это мой зал.','Зацените ковёр. Классика.','Сервант бабушкин. Не трогать!','Видос будет просто бомба.'] },
   snack:     { doing:'роется в холодильнике',     going:'идёт к холодильнику',spot:[6.85, 10.7], a:0,       pose:'stand',     dur:[5, 7],   w:1,
                say:['Где моя колбаса? Кто сожрал?','Перекус чемпиона.'] },
+  bedroom2:  { doing:'переодевается наверху',     going:'идёт на второй этаж', spot:[13.5, 3.0], lvl:1, a:Math.PI, pose:'stand', dur:[10, 16], w:1.4,
+               say:['Так, какую худи надеть для ролика?','Оранжевая — это мой цвет, пацаны.','Ща переоденусь и продолжим.'] },
+  props:     { doing:'снимает на зелёном фоне',   going:'идёт в реквизитную',  spot:[6.9, 2.5], lvl:1, a:Math.PI/2, pose:'vlog', dur:[10, 15], w:1.2,
+               say:['Хромакей, пацаны! Тут будет космос.','Камера, мотор!','Зацените реквизит. Всё для контента.'] },
   door:      { doing:'проверяет входную дверь',   going:'идёт в сени',        spot:[1.3, 9.0],  a:-Math.PI/2, pose:'stand',   dur:[4, 6],   w:.8,
                say:['Заперто. Всё чётко.','Никто не выйдет, пока ролик не снят.'] },
 };
@@ -763,7 +771,7 @@ const house = new THREE.Group(); scene.add(house);
 const casters = [];   // meshes that cast the moon's shadow
 const colliders = [];
 function addCollider(x1, z1, x2, z2, top, o = {}){
-  const c = { x1, z1, x2, z2, top, active:true, nav:o.nav !== false, solid:o.solid !== false };
+  const c = { x1, z1, x2, z2, top, active:true, nav:o.nav !== false, solid:o.solid !== false, lvl:o.lvl || 0 };
   colliders.push(c); return c;
 }
 function worldUV(geo, ox, oy, oz, s){
@@ -786,28 +794,30 @@ function box(parent, cx, y0, cz, w, h, d, m, solid){
 }
 // wall line with gaps; gap = [g1, g2] for a doorway or [g1, g2, 'w'] for a window (sill 0.9 m, head 2.1 m)
 // inner: which side gets skirting (+1 / -1 / 0 for both, for interior walls)
-function wallLine(dir, c, a, b, gaps = [], inner = 0){
+function wallLine(dir, c, a, b, gaps = [], inner = 0, lv = 0){
+  const Y = lv ? Y2 : 0, top = lv ? H2 : H;
   const piece = (s, e, y0, y1, skirt) => {
     if (e - s < .01) return;
-    const m = dir === 'h' ? box(house, (s + e)/2, y0, c, e - s + .2, y1 - y0, .2, mat.wall, y0 < .5)
-                          : box(house, c, y0, (s + e)/2, .2, y1 - y0, e - s + .2, mat.wall, y0 < .5);
+    const solid = y0 < .5 && { lvl:lv };
+    const m = dir === 'h' ? box(house, (s + e)/2, Y + y0, c, e - s + .2, y1 - y0, .2, mat.wall, solid)
+                          : box(house, c, Y + y0, (s + e)/2, .2, y1 - y0, e - s + .2, mat.wall, solid);
     casters.push(m);
     if (skirt){
       for (const side of inner ? [inner] : [-1, 1]){
         const f = c + side*.108;
-        if (dir === 'h'){ box(house, (s + e)/2, 0, f, e - s + .2, .075, .016, mat.skirting); box(house, (s + e)/2, H - .06, f, e - s + .2, .06, .03, mat.skirting); }
-        else { box(house, f, 0, (s + e)/2, .016, .075, e - s + .2, mat.skirting); box(house, f, H - .06, (s + e)/2, .03, .06, e - s + .2, mat.skirting); }
+        if (dir === 'h'){ box(house, (s + e)/2, Y, f, e - s + .2, .075, .016, mat.skirting); box(house, (s + e)/2, Y + top - .06, f, e - s + .2, .06, .03, mat.skirting); }
+        else { box(house, f, Y, (s + e)/2, .016, .075, e - s + .2, mat.skirting); box(house, f, Y + top - .06, (s + e)/2, .03, .06, e - s + .2, mat.skirting); }
       }
     }
   };
   let s = a;
   for (const [g1, g2, kind] of gaps){
-    piece(s, g1, 0, H, true);
-    if (kind === 'w'){ piece(g1 + .2, g2 - .2, 0, .9, true); piece(g1 + .2, g2 - .2, 2.1, H, false); }
-    else piece(g1 + .2, g2 - .2, 2.1, H, false);
+    piece(s, g1, 0, top, true);
+    if (kind === 'w'){ piece(g1 + .2, g2 - .2, 0, .9, true); piece(g1 + .2, g2 - .2, 2.1, top, false); }
+    else piece(g1 + .2, g2 - .2, 2.1, top, false);
     s = g2;
   }
-  piece(s, b, 0, H, true);
+  piece(s, b, 0, top, true);
 }
 const WINDOWS = [
   { dir:'v', c:0,  a:2.5,  b:3.5,  inner:1,  curtain:0x7a3b52, room:'Спальня' },
@@ -815,8 +825,20 @@ const WINDOWS = [
   { dir:'h', c:0,  a:5.7,  b:6.7,  inner:1,  curtain:0x9a7a3a, room:'Зал' },
   { dir:'h', c:D,  a:8.3,  b:9.3,  inner:-1, curtain:0xd8c27a, room:'Кухня', short:true },
   { dir:'v', c:W,  a:.9,   b:1.9,  inner:-1, curtain:0x1e1e24, room:'Студия' },
+  // second floor
+  { dir:'h', c:0,  a:2.0,  b:3.0,  inner:1,  curtain:0x3a6a3a, room:'Реквизитная', y:Y2 },
+  { dir:'h', c:0,  a:6.0,  b:7.0,  inner:1,  curtain:0x3a6a3a, room:'Реквизитная', y:Y2 },
+  { dir:'h', c:0,  a:11.0, b:12.0, inner:1,  curtain:0xff6a00, room:'Спальня Бронислава', y:Y2 },
+  { dir:'h', c:0,  a:15.0, b:16.0, inner:1,  curtain:0xff6a00, room:'Спальня Бронислава', y:Y2 },
+  { dir:'h', c:D,  a:3.0,  b:4.0,  inner:-1, curtain:0x7a3b52, room:'Качалка', y:Y2 },
+  { dir:'h', c:D,  a:6.5,  b:7.5,  inner:-1, curtain:0x7a3b52, room:'Качалка', y:Y2 },
+  { dir:'h', c:D,  a:15.0, b:16.0, inner:-1, curtain:0x2f5f9a, room:'Гостевая', y:Y2 },
+  { dir:'v', c:0,  a:2.0,  b:3.0,  inner:1,  curtain:0x3a6a3a, room:'Реквизитная', y:Y2 },
+  { dir:'v', c:0,  a:9.0,  b:10.0, inner:1,  curtain:0x7a3b52, room:'Качалка', y:Y2 },
+  { dir:'v', c:W,  a:2.0,  b:3.0,  inner:-1, curtain:0xff6a00, room:'Спальня Бронислава', y:Y2 },
+  { dir:'v', c:W,  a:9.0,  b:10.0, inner:-1, curtain:0x2f5f9a, room:'Гостевая', y:Y2 },
 ];
-const gapsFor = (dir, c) => WINDOWS.filter(w => w.dir === dir && w.c === c).map(w => [w.a - .1, w.b + .1, 'w']);
+const gapsFor = (dir, c, lv = 0) => WINDOWS.filter(w => w.dir === dir && w.c === c && !!w.y === !!lv).map(w => [w.a - .1, w.b + .1, 'w']);
 // outer walls (front door in the west wall, in the сени)
 wallLine('h', 0, 0, W, gapsFor('h', 0).sort((p, q) => p[0] - q[0]), 1);
 wallLine('h', D, 0, W, gapsFor('h', D), -1);
@@ -851,10 +873,19 @@ floorPlane(0, 0, W, D, woodFloorTex, 2.6, 0, 0xffffff, .42);
 floorPlane(3, 7, 10, D, linoTex, 1.6, .004, 0xffffff, .5);
 floorPlane(10, 7, 13, D, tileTex, 1.2, .004, 0xffffff, .2);
 floorPlane(0, 5, 3, D, woodFloorTex, 2.6, .004, 0x8a8a8a, .6);
-floorPlane(3.3, 5.55, 17.5, 6.45, carpetTex, 1.4, .008, 0xcc9a9a, .95);  // дорожка в коридоре
+floorPlane(3.3, 5.55, 16.2, 6.45, carpetTex, 1.4, .008, 0xcc9a9a, .95);  // дорожка в коридоре
 floorPlane(6.8, 1.4, 10.2, 3.7, carpetTex, 3.4, .008, 0xffffff, .95);    // ковёр под столом
-const ceilMesh = new THREE.Mesh(new THREE.PlaneGeometry(W + .2, D + .2), M(0xece6d8, { rough:.95, env:.2 }));
-ceilMesh.rotation.x = Math.PI/2; ceilMesh.position.set(W/2, H, D/2); house.add(ceilMesh); casters.push(ceilMesh);
+// floor plates with the stairwell cut out; the shape's (x, y) become (x, z) once laid flat facing down
+// (up: the shape's y is -z, so it lies flat facing up instead)
+function stairwellPlate(m, up = false){
+  const k = up ? -1 : 1, s = new THREE.Shape(), h = new THREE.Path();
+  s.moveTo(-.1, -.1*k); s.lineTo(W + .1, -.1*k); s.lineTo(W + .1, (D + .1)*k); s.lineTo(-.1, (D + .1)*k); s.closePath();
+  h.moveTo(STAIRS.x1 - .1, (STAIRS.z1 - .05)*k); h.lineTo(STAIRS.x1 - .1, (STAIRS.z2 + .05)*k); h.lineTo(W - .1, (STAIRS.z2 + .05)*k); h.lineTo(W - .1, (STAIRS.z1 - .05)*k); h.closePath();
+  s.holes.push(h);
+  return new THREE.Mesh(new THREE.ShapeGeometry(s), m);
+}
+const ceilMesh = stairwellPlate(M(0xece6d8, { rough:.95, env:.2 }));
+ceilMesh.rotation.x = Math.PI/2; ceilMesh.position.y = H; house.add(ceilMesh); casters.push(ceilMesh);
 // tiles: bathroom walls and kitchen backsplash
 function tilePanel(x, y, z, w, h, ry){
   const t = rep(wallTileTex, w/1.2, h/1.2);
@@ -866,12 +897,12 @@ tilePanel(5.4, 1.2, 11.885, 3.6, .6, Math.PI);
 
 // lamps under abazhurs (fabric shade with a fringe)
 const lampShade = M(0xb0402a, { rough:.95, side:THREE.DoubleSide, map:fabricTex });
-function lamp(x, z, color = 0xffc983, intensity = .95, dist = 8.5){
-  cyl(house, x, H - .01, z, .05, .05, .02, mat.pvc);
-  cyl(house, x, H - .2, z, .005, .005, .38, mat.blackPlastic, 6);
-  lathe(house, x, H - .62, z, [[.36, 0], [.34, .06], [.25, .2], [.12, .3], [.05, .32]], lampShade, 32);
-  cyl(house, x, H - .655, z, .365, .365, .07, M(0xd8b060, { rough:.9, side:THREE.DoubleSide }), 32, true);
-  sph(house, x, H - .5, z, .055, M(0xf6f1e4, { rough:.15, transparent:true, opacity:.85, env:1.2 }));
+function lamp(x, z, color = 0xffc983, intensity = .95, dist = 8.5, top = H){
+  cyl(house, x, top - .01, z, .05, .05, .02, mat.pvc);
+  cyl(house, x, top - .2, z, .005, .005, .38, mat.blackPlastic, 6);
+  lathe(house, x, top - .62, z, [[.36, 0], [.34, .06], [.25, .2], [.12, .3], [.05, .32]], lampShade, 32);
+  cyl(house, x, top - .655, z, .365, .365, .07, M(0xd8b060, { rough:.9, side:THREE.DoubleSide }), 32, true);
+  sph(house, x, top - .5, z, .055, M(0xf6f1e4, { rough:.15, transparent:true, opacity:.85, env:1.2 }));
 }
 lamp(2.6, 2.6); lamp(8.5, 2.5, 0xffc983, 1.05, 9.5); lamp(9.5, 6, 0xffc983, .7, 9); lamp(1.5, 8.5, 0xffc983, .6, 7);
 lamp(6.5, 9.5); lamp(11.5, 9.5, 0xf4f8ff, .8, 6.5); lamp(15.5, 9.5, 0xffc983, .45, 6.5);
@@ -890,6 +921,7 @@ function buildWindow(win){
   const g = new THREE.Group();
   if (win.dir === 'h'){ g.position.set(mid, 0, win.c); g.rotation.y = win.inner > 0 ? 0 : Math.PI; }
   else { g.position.set(win.c, 0, mid); g.rotation.y = win.inner > 0 ? Math.PI/2 : -Math.PI/2; }
+  g.position.y = win.y || 0;
   house.add(g);
   // local: x along the wall, +z into the room, y up; opening spans x ±len/2, y .9..2.1
   const fw = .07, y0 = .9, y1 = 2.1, hh = y1 - y0;
@@ -1262,8 +1294,8 @@ const spagBits = [], spagBitMat = M(0xf0d27a, { rough:.5 }), spagBitGeo = new TH
 
 /* ---- wardrobes (hiding spots): Soviet polished wardrobes with a mirror door ---- */
 const wardrobes = [];
-function wardrobe(cx, cz, w, d, fx, fz){
-  const g = new THREE.Group(); g.position.set(cx, 0, cz); g.rotation.y = Math.atan2(fx, fz);
+function wardrobe(cx, cz, w, d, fx, fz, lvl = 0){
+  const g = new THREE.Group(); g.position.set(cx, lvl ? Y2 : 0, cz); g.rotation.y = Math.atan2(fx, fz);
   rbox(g, 0, 1.09, 0, w, 1.98, d, mat.walnut, .012);
   rbox(g, 0, 2.14, 0, w + .08, .08, d + .06, mat.darkWood, .015);
   rbox(g, 0, .05, 0, w - .04, .1, d - .04, mat.darkWood, .005);
@@ -1278,8 +1310,8 @@ function wardrobe(cx, cz, w, d, fx, fz){
   }
   house.add(g);
   const hx = Math.abs(fx) > .5 ? d/2 : w/2, hz = Math.abs(fx) > .5 ? w/2 : d/2;
-  addCollider(cx - hx, cz - hz, cx + hx, cz + hz, 2.15);
-  const o = { x:cx, z:cz, fx, fz, d, group:g, doors, open:0, openTarget:0,
+  addCollider(cx - hx, cz - hz, cx + hx, cz + hz, 2.15, { lvl });
+  const o = { x:cx, z:cz, fx, fz, d, lvl, group:g, doors, open:0, openTarget:0,
               front:{ x:cx + fx*(d/2 + .5), z:cz + fz*(d/2 + .5) }, yaw:Math.atan2(-fx, -fz) };
   wardrobes.push(o); return o;
 }
@@ -1287,9 +1319,141 @@ wardrobe(4.1, .4, 1.2, .6, 0, 1);       // спальня
 sadd('Шкаф', 'Мебель', wardrobes[0].group);
 wardrobe(10.6, 4.68, 1.2, .6, 0, -1);   // зал
 wardrobe(.4, 6.0, 1.2, .6, 1, 0);       // сени
-wardrobe(17.68, 6.0, 1.0, .6, -1, 0);   // коридор
 wardrobe(14.0, 11.68, 1.2, .6, 0, -1);  // кладовка
 wardrobe(17.68, 9.4, 1.2, .6, -1, 0);   // кладовка
+wardrobe(10.0, .4, 1.2, .6, 0, 1, 1);    // спальня Бронислава, второй этаж
+wardrobe(17.68, 11.0, 1.2, .6, -1, 0, 1); // гостевая, второй этаж
+
+/* ================= second floor: a steep staircase from the corridor, four rooms off a hall, a balcony ================= */
+// furniture upstairs: boxes from the floor up, colliders on the second floor
+const ubox = (x, y0, z, w, h, d, m, solid) => box(house, x, Y2 + y0, z, w, h, d, m, solid && { lvl:1 });
+const ucol = (x1, z1, x2, z2, top) => addCollider(x1, z1, x2, z2, top, { lvl:1 });
+{
+  // floor with the stairwell cut out, the slab edge round the hole, the ceiling
+  const fl = stairwellPlate(M(0xffffff, { map:rep(woodFloorTex, 1/2.6, 1/2.6), bumpMap:rep(woodFloorTex, 1/2.6, 1/2.6), bumpScale:.012, rough:.42, env:.6 }), true);
+  fl.rotation.x = -Math.PI/2; fl.position.y = Y2; house.add(fl); casters.push(fl);
+  box(house, STAIRS.x1 - .15, H, (STAIRS.z1 + STAIRS.z2)/2, .1, Y2 - H, STAIRS.z2 - STAIRS.z1 + .1, mat.reveal);
+  box(house, (STAIRS.x1 + W)/2 - .05, H, STAIRS.z2 + .1, W - STAIRS.x1, Y2 - H, .1, mat.reveal);
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(W + .2, D + .2), M(0xece6d8, { rough:.95, env:.2 })); ceil.rotation.x = Math.PI/2; ceil.position.set(W/2, Y2 + H2, D/2); house.add(ceil); casters.push(ceil);
+  // walls: outer ones with the upstairs windows and the balcony door, then the hall and the rooms
+  const byA = (p, q) => p[0] - q[0];
+  wallLine('h', 0, 0, W, gapsFor('h', 0, 1).sort(byA), 1, 1);
+  wallLine('h', D, 0, W, [...gapsFor('h', D, 1), [BALC.door.a, BALC.door.b]].sort(byA), -1, 1);
+  wallLine('v', 0, 0, D, gapsFor('v', 0, 1).sort(byA), 1, 1);
+  wallLine('v', W, 0, D, gapsFor('v', W, 1).sort(byA), -1, 1);
+  wallLine('h', 5, 0, W, [[3.8, 5.1], [13.2, 14.5]], 0, 1);
+  wallLine('h', 7, 0, W, [[3.8, 5.1], [13.2, 14.5]], 0, 1);
+  wallLine('v', 9, 0, 5, [], 0, 1);
+  wallLine('v', 9, 7, D, [], 0, 1);
+  floorPlane(.4, 5.6, 16.0, 6.4, carpetTex, 1.4, Y2 + .006, 0x9acc9a, .95);   // дорожка в холле
+  for (const [x, z] of [[4.5, 2.5], [13.5, 2.5], [4.5, 9.5], [13.5, 9.5], [8, 6]]) lamp(x, z, 0, 0, 0, Y2 + H2);
+  // the staircase: closed steep steps up to the hole, a handrail on the open side
+  const stepM = M(0xffffff, { map:lightWoodTex, rough:.75, env:.3 });
+  const n = 10, run = (STAIRS.x2 - STAIRS.x1)/n;
+  for (let i = 0; i < n; i++){
+    box(house, STAIRS.x1 + (i + .5)*run, 0, (STAIRS.z1 + STAIRS.z2)/2, run + .01, (i + 1)*Y2/n, STAIRS.z2 - STAIRS.z1, i % 2 ? stepM : mat.walnut);
+    box(house, STAIRS.x1 + (i + .5)*run, (i + 1)*Y2/n, (STAIRS.z1 + STAIRS.z2)/2, run + .05, .03, STAIRS.z2 - STAIRS.z1 + .04, mat.darkWood);
+  }
+  tube(house, [[STAIRS.x1 - .05, .95, STAIRS.z2 + .05], [STAIRS.x2, Y2 + .9, STAIRS.z2 + .05]], .025, mat.darkWood, 8);
+  for (let i = 0; i <= 4; i++){ const k = i/4; cyl(house, STAIRS.x1 + k*(STAIRS.x2 - STAIRS.x1 - .1), (k*Y2 + .95)/2 + k*Y2*.0, STAIRS.z2 + .05, .015, .015, .95, mat.darkWood, 6).position.y = k*Y2*(n - 1)/n + .5; }
+  addCollider(STAIRS.x1 - .02, STAIRS.z1 - .05, W, STAIRS.z2 + .08, Y2);
+  // upstairs railing round the stairwell; the gap at the east end is where you step off the top
+  const railM = M(0xffffff, { map:darkWoodTex, rough:.6 });
+  for (let x = STAIRS.x1 - .1; x <= 17.0; x += .14) cyl(house, x, Y2 + .48, STAIRS.z2 + .1, .015, .015, .9, railM, 6);
+  for (let z = STAIRS.z1; z <= STAIRS.z2 + .1; z += .14) cyl(house, STAIRS.x1 - .1, Y2 + .48, z, .015, .015, .9, railM, 6);
+  box(house, (STAIRS.x1 - .1 + 17.0)/2, Y2 + .93, STAIRS.z2 + .1, 17.1 - STAIRS.x1 + .1, .05, .07, railM);
+  box(house, STAIRS.x1 - .1, Y2 + .93, (STAIRS.z1 + STAIRS.z2 + .1)/2, .07, .05, STAIRS.z2 + .1 - STAIRS.z1, railM);
+  ucol(STAIRS.x1 - .2, STAIRS.z1 - .1, W, STAIRS.z2 + .15, 1.0);
+  // balcony: a slab on two posts, plank floor, white balusters, opens off the guest room
+  const bx = (BALC.x1 + BALC.x2)/2, bz = (BALC.z1 + BALC.z2)/2, bw = BALC.x2 - BALC.x1, bd = BALC.z2 - BALC.z1;
+  casters.push(box(house, bx, Y2 - .2, bz + .05, bw, .2, bd + .1, M(0xffffff, { map:concreteTex, rough:.9 })));
+  box(house, bx, Y2, bz + .05, bw - .1, .015, bd, M(0xffffff, { map:rep(boardsTex, 1, 1), rough:.85 }));
+  for (const x of [BALC.x1 + .15, BALC.x2 - .15]){ casters.push(box(house, x, 0, BALC.z2 - .1, .16, Y2 - .2, .16, M(0xf4f1ea, { rough:.6 }))); addCollider(x - .1, BALC.z2 - .2, x + .1, BALC.z2, Y2); }
+  const balM = M(0xf4f1ea, { rough:.55 });
+  for (let x = BALC.x1 + .05; x <= BALC.x2 - .04; x += .16) cyl(house, x, Y2 + .5, BALC.z2 - .02, .018, .018, .95, balM, 6);
+  for (const x of [BALC.x1 + .02, BALC.x2 - .02]) for (let z = BALC.z1 + .2; z < BALC.z2; z += .16) cyl(house, x, Y2 + .5, z, .018, .018, .95, balM, 6);
+  box(house, bx, Y2 + .97, BALC.z2 - .02, bw, .05, .08, balM);
+  for (const x of [BALC.x1 + .02, BALC.x2 - .02]) box(house, x, Y2 + .97, bz + .05, .08, .05, bd, balM);
+  ucol(BALC.x1 - .1, BALC.z2 - .1, BALC.x2 + .1, BALC.z2 + .05, 1.0); ucol(BALC.x1 - .1, BALC.z1, BALC.x1 + .08, BALC.z2, 1.0); ucol(BALC.x2 - .08, BALC.z1, BALC.x2 + .1, BALC.z2, 1.0);
+  // balcony door: a white PVC frame in the opening and a threshold
+  const fw = BALC.door.b - BALC.door.a;
+  for (const x of [BALC.door.a + .05, BALC.door.b - .05]) box(house, x, Y2, D - .05, .07, 2.1, .12, mat.pvc);
+  box(house, (BALC.door.a + BALC.door.b)/2, Y2 + 2.06, D - .05, fw, .07, .12, mat.pvc);
+  box(house, (BALC.door.a + BALC.door.b)/2, Y2, D, fw, .03, .3, mat.pvc);
+}
+// Реквизитная: green screen, camera on a tripod, ring light, rack of costumes, shelves of merch, the silver play button
+{
+  const screenM = M(0x2fbf3a, { rough:.9, env:.1 });
+  const gs = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 2.2), screenM); gs.position.set(8.87, Y2 + 1.2, 2.5); gs.rotation.y = -Math.PI/2; house.add(gs);
+  ubox(8.0, 0, 2.5, 1.6, .02, 3.2, screenM);   // the screen rolls onto the floor
+  const tri = grp(house, 6.4, Y2, 2.5);
+  for (let i = 0; i < 3; i++){ const a = i/3*Math.PI*2; const l = cyl(tri, Math.cos(a)*.18, .65, Math.sin(a)*.18, .012, .012, 1.35, mat.blackPlastic, 6); l.rotation.set(Math.sin(a)*.14, 0, -Math.cos(a)*.14); }
+  rbox(tri, 0, 1.38, 0, .16, .12, .2, M(0x1c1c20, { rough:.35, env:1.1 }), .02);
+  const lens = cyl(tri, .12, 1.38, 0, .045, .05, .1, M(0x0e0e10, { rough:.1, env:1.5 }), 16); lens.rotation.z = Math.PI/2;
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.32, .03, 10, 40), BASIC(0xffffff, { toneMapped:false })); ring.position.set(7.0, Y2 + 1.55, 1.4); ring.rotation.y = 1.0; house.add(ring); powered.push(ring);
+  cyl(house, 7.0, Y2 + .65, 1.4, .015, .015, 1.3, mat.blackPlastic, 6);
+  ucol(6.1, 2.2, 6.7, 2.8, 1.4); ucol(6.85, 1.25, 7.15, 1.55, 1.8);
+  // costumes on a rail: orange and black hoodies with the «Б», a yellow chicken suit
+  cyl(house, 2.8, Y2 + 1.7, 4.45, .015, .015, 1.8, mat.steel, 8).rotation.z = Math.PI/2;
+  for (const x of [1.95, 3.65]) cyl(house, x, Y2 + .85, 4.45, .02, .02, 1.7, mat.steel, 8);
+  [[2.1, 0xff6a00], [2.4, 0x1d1f27], [2.7, 0xff6a00], [3.0, 0xf2d23a], [3.3, 0x2f6fb0]].forEach(([x, c]) => {
+    const cl = new THREE.Mesh(new THREE.PlaneGeometry(.26, .8, 2, 4), M(c, { map:fabricTex, rough:.95, side:THREE.DoubleSide })); cl.position.set(x, Y2 + 1.25, 4.45); cl.rotation.y = Math.PI/2; house.add(cl);
+  });
+  ucol(1.85, 4.25, 3.75, 4.65, 1.8);
+  // shelves of merch boxes between the north windows, the silver button above them
+  ubox(4.5, 0, .3, 1.8, 1.6, .02, mat.lightWood);
+  for (const s of [-1, 1]) ubox(4.5 + s*.9, 0, .3, .03, 1.6, .4, mat.lightWood);
+  for (let i = 0; i < 4; i++) ubox(4.5, .02 + i*.5, .3, 1.8, .03, .4, mat.lightWood);
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) if ((i + j) % 3) ubox(3.85 + j*.43, .05 + i*.5, .32, .36, .3, .32, M([0xa07848, 0xff6a00, 0x8e6a3e][(i + j) % 3], { rough:.9 }));
+  ucol(3.55, .1, 5.45, .52, 1.6);
+  const plaque = new THREE.Mesh(new THREE.PlaneGeometry(.5, .6), M(0xffffff, { map:canvasTex(100, 120, (c, w, h) => {
+    c.fillStyle = '#3a2a1a'; c.fillRect(0, 0, w, h); c.fillStyle = '#d8dde2'; c.fillRect(8, 8, w - 16, h - 40);
+    c.fillStyle = '#ff2d2d'; c.beginPath(); c.moveTo(38, 30); c.lineTo(66, 48); c.lineTo(38, 66); c.closePath(); c.fill();
+    c.fillStyle = '#e8e0c8'; c.font = 'bold 12px sans-serif'; c.textAlign = 'center'; c.fillText('100 000', w/2, h - 18);
+  }), rough:.25, metal:.4, env:1.2 }));
+  plaque.position.set(4.5, Y2 + 2.0, .12); house.add(plaque);
+}
+// Спальня Бронислава: double bed with an orange «Б» duvet, nightstand, poster, rug
+{
+  ubox(13.5, 0, 1.2, 1.9, .3, 2.1, mat.walnut); ubox(13.5, 0, .13, 1.96, 1.1, .06, mat.walnut);
+  ubox(13.5, .3, 1.2, 1.8, .2, 2.0, M(0xf3f0e8, { rough:.9 }));
+  const duvet = ubox(13.5, .48, 1.45, 1.86, .1, 1.5, M(0xffffff, { map:canvasTex(128, 128, (c, w, h) => {
+    c.fillStyle = '#ff6a00'; c.fillRect(0, 0, w, h); c.fillStyle = '#1d1f27'; c.beginPath(); c.arc(64, 64, 34, 0, 7); c.fill();
+    c.fillStyle = '#ff6a00'; c.font = 'bold 44px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('Б', 64, 68);
+  }), rough:.95 })); void duvet;
+  for (const dx of [-.45, .45]) rbox(house, 13.5 + dx, Y2 + .58, .45, .7, .14, .38, M(0xfbfaf6, { rough:.95 }), .06, 3);
+  ucol(12.55, .1, 14.45, 2.25, .6);
+  ubox(14.95, 0, .35, .45, .55, .42, mat.walnut); ucol(14.72, .14, 15.18, .56, .55);
+  const rug = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.6), M(0xffffff, { map:rep(carpetTex, 1, 1), rough:.95 })); rug.rotation.x = -Math.PI/2; rug.position.set(13.5, Y2 + .008, 3.1); house.add(rug);
+  const poster = new THREE.Mesh(new THREE.PlaneGeometry(1.4, .8), M(0xffffff, { map:canvasTex(256, 146, (c, w, h) => {
+    c.fillStyle = '#1d1f27'; c.fillRect(0, 0, w, h); c.fillStyle = '#ff6a00'; c.font = 'bold 34px sans-serif'; c.textAlign = 'center'; c.fillText('БРОНИСЛАВ', w/2, 58);
+    c.fillStyle = '#ffffff'; c.font = 'bold 22px sans-serif'; c.fillText('1 000 000 подписчиков', w/2, 100);
+  }), rough:.7 }));
+  poster.position.set(13.5, Y2 + 1.55, 4.88); poster.rotation.y = Math.PI; house.add(poster);
+}
+// Качалка: bench with a barbell, a punching bag, dumbbells, a mat
+{
+  const black = M(0x1c1c20, { rough:.5 }), iron = M(0x3a3e42, { rough:.4, metal:.8, env:1 });
+  ubox(3.2, 0, 9.6, .35, .45, 1.3, black); ucol(2.95, 8.9, 3.45, 10.3, .5);
+  for (const s of [-1, 1]) ubox(3.2 + s*.55, 0, 9.0, .06, 1.15, .06, iron);
+  const bar = cyl(house, 3.2, Y2 + 1.1, 9.0, .015, .015, 1.9, mat.chrome, 8); bar.rotation.z = Math.PI/2;
+  for (const s of [-1, 1]) for (const k of [0, 1]){ const pl = cyl(house, 3.2 + s*(.75 + k*.06), Y2 + 1.1, 9.0, .22 - k*.04, .22 - k*.04, .05, iron, 20); pl.rotation.z = Math.PI/2; }
+  ucol(2.2, 8.85, 4.2, 9.15, 1.2);
+  cyl(house, 6.6, Y2 + H2 - .3, 9.4, .006, .006, .6, mat.steel, 6);
+  cyl(house, 6.6, Y2 + 1.3, 9.4, .2, .2, 1.0, M(0xc81e16, { rough:.6, map:fabricTex }), 16); ucol(6.35, 9.15, 6.85, 9.65, 1.8);
+  for (const x of [5.0, 5.4]){ const db = cyl(house, x, Y2 + .08, 11.4, .012, .012, .35, mat.chrome, 6); db.rotation.x = Math.PI/2; for (const s of [-1, 1]) cyl(house, x, Y2 + .08, 11.4 + s*.15, .07, .07, .05, iron, 12).rotation.x = Math.PI/2; }
+  const matM = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.6), M(0x2a2a2e, { rough:.95 })); matM.rotation.x = -Math.PI/2; matM.position.set(6.2, Y2 + .006, 9.6); house.add(matM);
+}
+// Гостевая: fold-out sofa, a TV on a stand, the balcony door
+{
+  const sofaM = M(0x4a6a8a, { map:fabricTex, rough:.95, env:.2 });
+  ubox(9.6, 0, 9.5, .9, .42, 2.2, sofaM); ubox(9.2, .42, 9.5, .2, .5, 2.2, sofaM);
+  for (const s of [-1, 1]) ubox(9.6, .42, 9.5 + s*1.0, .9, .22, .2, sofaM);
+  ucol(9.1, 8.35, 10.1, 10.65, .9);
+  ubox(17.65, 0, 8.1, .45, .5, 1.1, mat.walnut); ubox(17.75, .5, 8.1, .1, .6, 1.0, M(0x141416, { rough:.3, env:1 }));
+  ucol(17.4, 7.5, W, 8.7, 1.1);
+  const rug = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.8), M(0x9aa0c8, { map:rep(carpetTex, 1, 1), rough:.95 })); rug.rotation.x = -Math.PI/2; rug.position.set(12.5, Y2 + .008, 9.6); house.add(rug);
+}
 
 /* ---- door hardware shared by all doors ---- */
 function leverHandle(parent, x, y, z, dirX, face){
@@ -1473,7 +1637,8 @@ let carGroup = null, carCol = null;
 // facades with real openings, painted wooden siding
 const sidingMat = M(0xffffff, { map:sidingTex, bumpMap:sidingTex, bumpScale:.02, rough:.75, env:.3 });
 const trimMat = M(0xf4f1ea, { rough:.6 });
-const EAVE = 2.75, RIDGE = 5.5, ROOF_Z0 = -.6, ROOF_Z1 = D + .6;
+const EAVE = Y2 + H2 + .05, RIDGE = EAVE + 2.75, ROOF_Z0 = -.6, ROOF_Z1 = D + .6;
+const ROOF_UP = EAVE - 2.75;   // the roof went up by a floor; things fixed to it move with it
 function facade(side){
   // u runs along the wall in the facade's own frame
   const T = .11;
@@ -1493,9 +1658,10 @@ function facade(side){
   const isWE = side === 'w' || side === 'e';
   for (const w of WINDOWS){
     if (isWE ? (w.dir === 'v' && w.c === (side === 'w' ? 0 : W)) : (w.dir === 'h' && w.c === (side === 'n' ? 0 : D))){
-      const ua = cfg.u(w.a), ub = cfg.u(w.b); holes.push([Math.min(ua, ub), .9, Math.max(ua, ub), 2.1]);
+      const ua = cfg.u(w.a), ub = cfg.u(w.b), y = w.y || 0; holes.push([Math.min(ua, ub), .9 + y, Math.max(ua, ub), 2.1 + y]);
     }
   }
+  if (side === 's') holes.push([BALC.door.a, Y2 + .02, BALC.door.b, Y2 + 2.1]);
   for (const [a, y0, b, y1] of holes){
     const p = new THREE.Path(); p.moveTo(a, y0); p.lineTo(a, y1); p.lineTo(b, y1); p.lineTo(b, y0); p.closePath();
     s.holes.push(p);
@@ -1508,8 +1674,12 @@ function facade(side){
   const len = cfg.u1 - cfg.u0, mid = (cfg.u0 + cfg.u1)/2;
   if (side === 'w'){ rbox(g, (cfg.u0 + 8.45)/2, .18, .03, 8.45 - cfg.u0, .36, .06, foundation, .01); rbox(g, (9.55 + cfg.u1)/2, .18, .03, cfg.u1 - 9.55, .36, .06, foundation, .01); }
   else rbox(g, mid, .18, .03, len + .06, .36, .06, foundation, .01);
-  for (const u of [cfg.u0 + .06, cfg.u1 - .06]) rbox(g, u, 1.55, .02, .14, 2.4, .03, trimMat, .006);
+  for (const u of [cfg.u0 + .06, cfg.u1 - .06]) rbox(g, u, (EAVE + .35)/2, .02, .14, EAVE - .35, .03, trimMat, .006);
   rbox(g, mid, EAVE + .12, .02, len, .16, .03, trimMat, .006);
+  if (side === 's'){   // the band between the floors stops at the balcony door
+    rbox(g, (cfg.u0 + BALC.door.a - .1)/2, Y2 - .1, .02, BALC.door.a - .1 - cfg.u0, .12, .03, trimMat, .006);
+    rbox(g, (BALC.door.b + .1 + cfg.u1)/2, Y2 - .1, .02, cfg.u1 - BALC.door.b - .1, .12, .03, trimMat, .006);
+  } else rbox(g, mid, Y2 - .1, .02, len, .12, .03, trimMat, .006);
 }
 ['w', 'e', 'n', 's'].forEach(facade);
 // roof of profiled metal, ridge, chimney, gutters, aerial and the blogger's satellite dish
@@ -1527,15 +1697,15 @@ function facade(side){
   // soffit planks under the eaves at the gable ends
   for (const x of [-.5, W + .5]){ const sf = new THREE.Mesh(new THREE.PlaneGeometry(D + 1.2, .5), trimMat); sf.position.set(x, EAVE + .1, D/2); sf.rotation.y = Math.PI/2; yard.add(sf); }
   const brick = M(0xffffff, { map:rep(brickTex, .6, 2.4), rough:.9 });
-  rbox(yard, 12.5, 5.1, 4.2, .52, 2.4, .52, brick, .01); rbox(yard, 12.5, 6.33, 4.2, .62, .08, .62, M(0x6a6a6a, { rough:.8 }), .01);
+  rbox(yard, 12.5, 5.1 + ROOF_UP, 4.2, .52, 2.4, .52, brick, .01); rbox(yard, 12.5, 6.33 + ROOF_UP, 4.2, .62, .08, .62, M(0x6a6a6a, { rough:.8 }), .01);
   casters.push(yard.children[yard.children.length - 2]);
   // TV aerial
   cyl(yard, 5, RIDGE + .9, 6, .018, .018, 1.8, mat.steel, 8);
   for (let i = 0; i < 5; i++){ const b = cyl(yard, 5, RIDGE + 1.2 + i*.12, 6, .008, .008, .9 - i*.12, mat.steel, 6); b.rotation.x = Math.PI/2; }
   // satellite dish on the north slope
   const dish = new THREE.Mesh(new THREE.SphereGeometry(.45, 28, 10, 0, Math.PI*2, 0, .55), M(0xe8e8e4, { rough:.5, side:THREE.DoubleSide }));
-  dish.position.set(15.5, 4.1, 2.0); dish.rotation.set(-1.0, .5, 0); yard.add(dish);
-  cyl(yard, 15.5, 3.85, 2.25, .02, .02, .5, mat.steel, 8);
+  dish.position.set(15.5, 4.1 + ROOF_UP, 2.0); dish.rotation.set(-1.0, .5, 0); yard.add(dish);
+  cyl(yard, 15.5, 3.85 + ROOF_UP, 2.25, .02, .02, .5, mat.steel, 8);
   // house number plate
   const plate = new THREE.Mesh(new THREE.PlaneGeometry(.6, .3), M(0xffffff, { map:labelTex('Садовая, 7', '#1f4fa0', '#ffffff', 256, 128, 'bold 34px sans-serif'), rough:.4, emissive:0x223355, ei:.4 }));
   plate.position.set(-.125, 2.3, 6.4); plate.rotation.y = -Math.PI/2; yard.add(plate);
@@ -1987,6 +2157,8 @@ const KEY_SPOTS = [
   { x:7.8,   y:.755, z:9.15, where:'на кухонном столе' },
   { x:10.6,  y:.85,  z:8.05, where:'на стиральной машине' },
   { x:13.6,  y:1.01, z:8.0,  where:'на коробках в кладовке' },
+  { x:4.5,   y:Y2 + .55, z:.32, where:'на полке в реквизитной на втором этаже', lvl:1 },
+  { x:14.95, y:Y2 + .56, z:.35, where:'на тумбочке в спальне Бронислава на втором этаже', lvl:1 },
 ];
 const keyObj = new THREE.Group();
 {
@@ -2083,7 +2255,7 @@ function updateDog(dt, t){
   dog.cd -= dt;
   const dx = P.x - dog.x, dz = P.z - dog.z, d = Math.hypot(dx, dz);
   const range = P.crouch ? 4.5 : 7.5;
-  const sees = state === 'play' && !P.hidden && !cheat('ghost') && d < range && P.fy < 4 && clearSight(dog.x, dog.z, P.x, P.z, P.crouch);
+  const sees = state === 'play' && !P.hidden && !cheat('ghost') && d < range && P.fy < 4 && !P.level && clearSight(dog.x, dog.z, P.x, P.z, P.crouch);
   dog.alert = sees ? Math.min(1.6, dog.alert + dt*(d < 3 ? 3 : 1.4)) : Math.max(0, dog.alert - dt*.6);
   if (dog.alert >= 1){
     dog.barkT -= dt;
@@ -2186,7 +2358,7 @@ function updateLizard(dt, t){
   liz.cd -= dt;
   const dx = P.x - LIZ.x, dz = P.z - LIZ.z, d = Math.hypot(dx, dz);
   const range = P.crouch ? 1.6 : 2.6;
-  const sees = state === 'play' && !P.hidden && !cheat('ghost') && d < range && P.fy < 1 && clearSight(LIZ.x, LIZ.z, P.x, P.z, P.crouch);
+  const sees = state === 'play' && !P.hidden && !cheat('ghost') && d < range && P.fy < 1 && !P.level && clearSight(LIZ.x, LIZ.z, P.x, P.z, P.crouch);
   liz.alert = sees ? Math.min(1.5, liz.alert + dt*.9) : Math.max(0, liz.alert - dt*.5);
   const hungry = !liz.fed, licking = hungry && sees && liz.alert >= 1;
   if (hungry && sees && liz.alert > .3 && !liz.warned){ liz.warned = true; banner('Ящерка тебя заметила! Насыпь ей кузнечиков, а то залижет', 'warn', 2.6); }
@@ -2340,19 +2512,25 @@ const blackoutEl = document.getElementById('blackout');
 /* ================= navigation grid for Bronislav (house + yard) ================= */
 const NX0 = -14, NZ0 = -5, NX1 = 30, NZ1 = 17;
 const CELL = .25, GW = (NX1 - NX0)/CELL, GH = (NZ1 - NZ0)/CELL, NC = GW*GH, INF = 1e9;
-const navBlocked = new Uint8Array(NC);
+const NAV = [new Uint8Array(NC), new Uint8Array(NC)];   // ground floor + yard, second floor + balcony
+let navBlocked = NAV[0];   // the grid of whoever is moving right now (Bronislav switches it to his floor)
 const cellAt = (x, z) => clamp(Math.floor((z - NZ0)/CELL), 0, GH - 1)*GW + clamp(Math.floor((x - NX0)/CELL), 0, GW - 1);
 const ccx = c => NX0 + (c % GW + .5)*CELL, ccz = c => NZ0 + ((c/GW|0) + .5)*CELL;
 const fieldCache = {};
 function buildNav(){
   const R = .32;
-  navBlocked.fill(0);
-  for (let c = 0; c < NC; c++){ const x = ccx(c), z = ccz(c); if (x < YARD.x1 + R || z < YARD.z1 + R || x > YARD.x2 - R || z > YARD.z2 - R) navBlocked[c] = 1; }
-  for (const b of colliders){
-    if (!b.nav || !b.active) continue;
-    const i0 = Math.max(0, Math.floor((b.x1 - R - NX0)/CELL - .5) + 1), i1 = Math.min(GW - 1, Math.ceil((b.x2 + R - NX0)/CELL - .5) - 1);
-    const j0 = Math.max(0, Math.floor((b.z1 - R - NZ0)/CELL - .5) + 1), j1 = Math.min(GH - 1, Math.ceil((b.z2 + R - NZ0)/CELL - .5) - 1);
-    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) navBlocked[j*GW + i] = 1;
+  const inside = (x, z, a) => x > a.x1 + R && x < a.x2 - R && z > a.z1 + R && z < a.z2 - R;
+  const UP = [{ x1:0, z1:0, x2:W, z2:D }, { x1:BALC.x1, z1:BALC.z1 - 1, x2:BALC.x2, z2:BALC.z2 }];
+  for (let lv = 0; lv < 2; lv++){
+    const nb = NAV[lv];
+    nb.fill(0);
+    for (let c = 0; c < NC; c++){ const x = ccx(c), z = ccz(c); if (lv ? !UP.some(a => inside(x, z, a)) : !inside(x, z, YARD)) nb[c] = 1; }
+    for (const b of colliders){
+      if (!b.nav || !b.active || b.lvl !== lv) continue;
+      const i0 = Math.max(0, Math.floor((b.x1 - R - NX0)/CELL - .5) + 1), i1 = Math.min(GW - 1, Math.ceil((b.x2 + R - NX0)/CELL - .5) - 1);
+      const j0 = Math.max(0, Math.floor((b.z1 - R - NZ0)/CELL - .5) + 1), j1 = Math.min(GH - 1, Math.ceil((b.z2 + R - NZ0)/CELL - .5) - 1);
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) nb[j*GW + i] = 1;
+    }
   }
   for (const k in fieldCache) delete fieldCache[k];
 }
@@ -2414,10 +2592,10 @@ function segHits(ax, az, bx, bz, b){
   else { let ta = (b.z1 - az)/dz, tb = (b.z2 - az)/dz; if (ta > tb){ const t = ta; ta = tb; tb = t; } t0 = Math.max(t0, ta); t1 = Math.min(t1, tb); if (t0 > t1) return false; }
   return true;
 }
-function clearSight(ax, az, bx, bz, crouched){
+function clearSight(ax, az, bx, bz, crouched, lvl = 0){
   const need = crouched ? .8 : 1.45;
   for (const b of colliders){
-    if (!b.active || b.top < need) continue;
+    if (!b.active || b.top < need || b.lvl !== lvl) continue;
     if (segHits(ax, az, bx, bz, b)) return false;
   }
   return true;
@@ -2430,14 +2608,14 @@ function groundAt(x, z, from){
     if (from >= roofY - .35) g = roofY;
   }
   for (const b of colliders){
-    if (!b.active || !b.solid || b.top > from + .35) continue;
+    if (!b.active || !b.solid || b.top > from + .35 || b.lvl) continue;
     if (x > b.x1 - .2 && x < b.x2 + .2 && z > b.z1 - .2 && z < b.z2 + .2) g = Math.max(g, b.top);
   }
   return g;
 }
 function pushOut(p, r, feet = 0){
   for (let it = 0; it < 2; it++) for (const b of colliders){
-    if (!b.active || !b.solid || b.top < feet + .05) continue;
+    if (!b.active || !b.solid || b.top < feet + .05 || b.lvl !== (p.level || 0)) continue;
     const cx = clamp(p.x, b.x1, b.x2), cz = clamp(p.z, b.z1, b.z2);
     const dx = p.x - cx, dz = p.z - cz, d2 = dx*dx + dz*dz;
     if (d2 >= r*r) continue;
@@ -2711,7 +2889,7 @@ function spawnObject(def){
   const box = new THREE.Box3().setFromObject(def.src), c = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
   const dist = Math.max(1.4, Math.max(size.x, size.z)/2 + 1.1);
   const holder = new THREE.Group();
-  holder.position.set(P.x - Math.sin(yaw)*dist, P.fy || 0, P.z - Math.cos(yaw)*dist);
+  holder.position.set(P.x - Math.sin(yaw)*dist, (P.fy || 0) + (P.level ? Y2 : 0), P.z - Math.cos(yaw)*dist);
   holder.rotation.y = yaw;
   // the clone keeps its world placement, so shift it until its footprint sits on the holder
   const obj = def.src.clone(true); obj.visible = true;
@@ -2721,7 +2899,7 @@ function spawnObject(def){
   const rec = { holder, pick:def.pick, name:def.name, x:holder.position.x, z:holder.position.z, taken:false, col:null };
   if (!def.pick && size.y > .25){
     const wb = new THREE.Box3().setFromObject(holder);
-    rec.col = addCollider(wb.min.x, wb.min.z, wb.max.x, wb.max.z, wb.max.y);
+    rec.col = addCollider(wb.min.x, wb.min.z, wb.max.x, wb.max.z, wb.max.y, { lvl:P.level });
     buildNav(); B.field = null;
   }
   spawned.push(rec);
@@ -2961,7 +3139,7 @@ function moodNow(){
 function speak(text, mood = 'calm', priority = 1, fixedVol, who = B){
   if (!VOICE.ok || muted || (state !== 'play' && state !== 'caught' && state !== 'mcaught' && state !== 'won' && state !== 'alarm' && state !== 'blackout' && state !== 'driving') || text.startsWith('*')) return;
   const d = Math.hypot(who.x - camera.position.x, who.z - camera.position.z);
-  const los = clearSight(who.x, who.z, camera.position.x, camera.position.z, false);
+  const los = (who === B ? B.level : 0) === P.level && clearSight(who.x, who.z, camera.position.x, camera.position.z, false, P.level);
   const v = fixedVol ?? Math.max(0, 1 - d/20)*(los ? 1 : .55);
   if (v < .06) return;
   if (speechSynthesis.speaking || speechSynthesis.pending){ if (priority < 2) return; speechSynthesis.cancel(); }
@@ -2989,9 +3167,9 @@ function updateLockHint(){
 
 /* ================= game state ================= */
 let state = 'menu';
-const P = { x:3, z:3.6, crouch:false, fy:0, hidden:null, moving:false, noisy:false, bob:0, eye:1.6 };
+const P = { x:3, z:3.6, crouch:false, fy:0, hidden:null, moving:false, noisy:false, bob:0, eye:1.6, cellar:false, level:0 };
 const B = {
-  x:15, z:1.3, a:Math.PI, state:'task', task:'computer', taskT:12, pose:'type', sitting:true,
+  x:15, z:1.3, a:Math.PI, state:'task', task:'computer', taskT:12, pose:'type', sitting:true, level:0, climb:null, climbY:0,
   meter:0, stim:{ x:0, z:0 }, lastSeen:{ x:0, z:0 }, lastSeenT:-9, lostT:0, searchT:0, hideSeen:null,
   phase:0, lastStep:0, speakT:3, field:null, fieldCell:-1, fieldAge:0, seen:false, snapT:1, sfxT:0, chases:0, grabT:0,
 };
@@ -3045,7 +3223,7 @@ function resetWorld(){
   interiorDoors.forEach(d => { d.angle = d.hold = 0; d.pivot.rotation.y = 0; d.col.active = true; });
   wardrobes.forEach(w => { w.group.visible = true; w.open = w.openTarget = 0; });
   Object.assign(B, { x:15, z:1.28, a:Math.PI, state:'task', task:'computer', taskT:rand(12, 16), pose:'type', sitting:true,
-    meter:0, lastSeenT:-9, lostT:0, searchT:0, hideSeen:null, speakT:2.5, field:null, fieldCell:-1, seen:false, grabT:0 });
+    meter:0, lastSeenT:-9, lostT:0, searchT:0, hideSeen:null, speakT:2.5, field:null, fieldCell:-1, seen:false, grabT:0, level:0, climb:null, climbY:0 });
   for (const it of PICKUPS){ it.taken = false; it.g.visible = true; }
   briefsOnDetector.visible = false;
   clearSpawns(true); closeSpawn();
@@ -3064,7 +3242,7 @@ function startRun(){
   initAudio();
   if (VOICE.ok){ try { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(' ')); } catch (e) {} }
   resetWorld();
-  Object.assign(P, { x:3.0, z:3.7, crouch:false, fy:0, hidden:null, moving:false, noisy:false, bob:0, eye:1.6, cellar:false });
+  Object.assign(P, { x:3.0, z:3.7, crouch:false, fy:0, hidden:null, moving:false, noisy:false, bob:0, eye:1.6, cellar:false, level:0 });
   yaw = -Math.PI*.9; pitch = 0; crouchToggle = false;
   elapsed = 0; chases = 0; hbT = 0; catches = 0; usedFlush = usedSpag = false;
   syncLives();
@@ -3176,8 +3354,8 @@ function doRespawn(){
   wardrobes.forEach(w => { w.group.visible = true; w.open = w.openTarget = 0; });
   $('closet').hidden = true;
   Object.assign(B, { x:15, z:1.28, a:Math.PI, state:'task', task:'computer', taskT:rand(10, 14), pose:'type', sitting:true,
-    meter:0, lastSeenT:-9, lostT:0, searchT:0, hideSeen:null, speakT:3, field:null, fieldCell:-1, seen:false, noise:null });
-  Object.assign(P, { x:3.0, z:3.7, crouch:false, fy:0, hidden:null, moving:false, noisy:false, bob:0, eye:1.6, cellar:false });
+    meter:0, lastSeenT:-9, lostT:0, searchT:0, hideSeen:null, speakT:3, field:null, fieldCell:-1, seen:false, noise:null, level:0, climb:null, climbY:0 });
+  Object.assign(P, { x:3.0, z:3.7, crouch:false, fy:0, hidden:null, moving:false, noisy:false, bob:0, eye:1.6, cellar:false, level:0 });
   yaw = -Math.PI*.9; pitch = 0; crouchToggle = false;
   if (cheat('key') && !hasKey) giveKey();
   syncLives();
@@ -3195,6 +3373,25 @@ function findAction(){
       return { type:'bolt', text:'Держи <kbd>E</kbd> — отодвинуть ржавый засов' };
     return null;
   }
+  const near = sp => Math.hypot(sp.x - P.x, sp.z - P.z) < 1.5 && facing(sp.x, sp.z) > .35;
+  const hideIn = () => {
+    let best = null, bd = 1.25;
+    for (const w of wardrobes){
+      if (w.lvl !== P.level) continue;
+      const d = Math.hypot(w.front.x - P.x, w.front.z - P.z);
+      if (d < bd && facing(w.x, w.z) > .25){ bd = d; best = w; }
+    }
+    return best && { type:'hide', w:best, text:'<kbd>E</kbd>спрятаться в шкаф' };
+  };
+  if (P.level){
+    if (Math.hypot(STAIRS.top.x - P.x, STAIRS.top.z - P.z) < 1.0 && facing(STAIRS.top.x, STAIRS.z1) > .4)
+      return { type:'downstairs', text:'<kbd>E</kbd>спуститься на первый этаж' };
+    if (!hasKey && keySpot.lvl && near(keySpot)) return { type:'key', text:'<kbd>E</kbd>взять ключ' };
+    if (!hasCarKey && carKeyObj.visible && carSpot.lvl && near(carSpot)) return { type:'carkey', text:'<kbd>E</kbd>взять ключи от машины' };
+    if (!hasElecKey && elecKeyObj.visible && elecSpot.lvl && near(elecSpot)) return { type:'eleckey', text:'<kbd>E</kbd>взять ключ от электрощитка' };
+    if (!hasFireKey && fireKeyObj.visible && fireSpot.lvl && near(fireSpot)) return { type:'firekey', text:'<kbd>E</kbd>взять ключ от пожарного щитка' };
+    return hideIn();
+  }
   // looking up at a smoke detector wins over anything lying around
   if (inv.includes('briefs') && pitch > .55){
     const spot = SMOKE_SPOTS.find(([x, z]) => Math.hypot(x - P.x, z - P.z) < 1.1);
@@ -3207,20 +3404,20 @@ function findAction(){
     return { type:'spawnpick', rec:r, text:`<kbd>E</kbd>взять: ${r.name.toLowerCase()}` };
   for (const it of PICKUPS) if (!it.taken && Math.hypot(it.x - P.x, it.z - P.z) < 1.4 && facing(it.x, it.z) > .4)
     return { type:'item', item:it, text:`<kbd>E</kbd>взять: ${INV_DEFS[it.id].name.toLowerCase()}` };
-  if (!hasKey && Math.hypot(keySpot.x - P.x, keySpot.z - P.z) < 1.5 && facing(keySpot.x, keySpot.z) > .35)
+  if (!hasKey && !keySpot.lvl && Math.hypot(keySpot.x - P.x, keySpot.z - P.z) < 1.5 && facing(keySpot.x, keySpot.z) > .35)
     return { type:'key', text:'<kbd>E</kbd>взять ключ' };
-  if (!hasCarKey && carKeyObj.visible && Math.hypot(carSpot.x - P.x, carSpot.z - P.z) < 1.5 && facing(carSpot.x, carSpot.z) > .35)
+  if (!hasCarKey && carKeyObj.visible && !carSpot.lvl && Math.hypot(carSpot.x - P.x, carSpot.z - P.z) < 1.5 && facing(carSpot.x, carSpot.z) > .35)
     return { type:'carkey', text:'<kbd>E</kbd>взять ключи от машины' };
   {
     const cx = clamp(P.x, carCol.x1, carCol.x2), cz = clamp(P.z, carCol.z1, carCol.z2);
     if (Math.hypot(P.x - cx, P.z - cz) < .9 && facing(-9.2, 3.8) > .2)
       return hasCarKey ? { type:'drive', text:'<kbd>E</kbd>сесть в жигули и уехать' } : { type:'carLocked', text:'Машина заперта. Нужны ключи' };
   }
-  if (!hasElecKey && elecKeyObj.visible && Math.hypot(elecSpot.x - P.x, elecSpot.z - P.z) < 1.5 && facing(elecSpot.x, elecSpot.z) > .35)
+  if (!hasElecKey && elecKeyObj.visible && !elecSpot.lvl && Math.hypot(elecSpot.x - P.x, elecSpot.z - P.z) < 1.5 && facing(elecSpot.x, elecSpot.z) > .35)
     return { type:'eleckey', text:'<kbd>E</kbd>взять ключ от электрощитка' };
   if (Math.hypot(ELEC_PANEL.front.x - P.x, ELEC_PANEL.front.z - P.z) < .85 && facing(ELEC_PANEL.x, ELEC_PANEL.z) > .7)
     return hasElecKey ? { type:'power', text:'<kbd>E</kbd>открыть электрощиток и выключить свет' } : { type:'panelLocked', text:'Электрощиток заперт. Нужен ключ' };
-  if (!hasFireKey && fireKeyObj.visible && Math.hypot(fireSpot.x - P.x, fireSpot.z - P.z) < 1.5 && facing(fireSpot.x, fireSpot.z) > .35)
+  if (!hasFireKey && fireKeyObj.visible && !fireSpot.lvl && Math.hypot(fireSpot.x - P.x, fireSpot.z - P.z) < 1.5 && facing(fireSpot.x, fireSpot.z) > .35)
     return { type:'firekey', text:'<kbd>E</kbd>взять ключ от пожарного щитка' };
   if (Math.hypot(FIRE_PANEL.front.x - P.x, FIRE_PANEL.front.z - P.z) < .85 && facing(FIRE_PANEL.x, FIRE_PANEL.z) > .7)
     return hasFireKey ? { type:'alarm', text:'<kbd>E</kbd>открыть щиток и включить тревогу' } : { type:'panelLocked', text:'Пожарный щиток заперт. Нужен ключ' };
@@ -3232,13 +3429,9 @@ function findAction(){
     return spagCd > 0 ? { type:'wait', text:'Хрусть! Ещё разок?' } : { type:'spaghetti', text:'<kbd>E</kbd>сломать спагетти Бронислава' };
   if (Math.hypot(HATCH.x - P.x, HATCH.z - P.z) < 1.1 && facing(HATCH.x, HATCH.z) > .3)
     return { type:'cellarDown', text:'<kbd>E</kbd>открыть люк и спуститься в подвал' };
-  let best = null, bd = 1.25;
-  for (const w of wardrobes){
-    const d = Math.hypot(w.front.x - P.x, w.front.z - P.z);
-    if (d < bd && facing(w.x, w.z) > .25){ bd = d; best = w; }
-  }
-  if (best) return { type:'hide', w:best, text:'<kbd>E</kbd>спрятаться в шкаф' };
-  return null;
+  if (Math.hypot(STAIRS.bottom.x - P.x, STAIRS.bottom.z - P.z) < 1.0 && facing(STAIRS.x2, STAIRS.bottom.z) > .5)
+    return { type:'upstairs', text:'<kbd>E</kbd>подняться на второй этаж' };
+  return hideIn();
 }
 function doAction(){
   if (state !== 'play' || !action) return;
@@ -3260,6 +3453,8 @@ function doAction(){
     return;
   }
   if (action.type === 'cellarDown'){ goDown(); return; }
+  if (action.type === 'upstairs'){ goFloor(1); return; }
+  if (action.type === 'downstairs'){ goFloor(0); return; }
   if (action.type === 'cellarUp'){ goUp(); return; }
   if (action.type === 'feed'){
     liz.fed = true; liz.eatT = .8; liz.tongueT = 0;
@@ -3352,7 +3547,15 @@ function enterChase(){
   if (B.state !== 'chase'){ chases++; sfx.sting(); say(pick(CHASE_PHRASES), 2); banner('Бронислав тебя заметил! Беги и прячься!', 'warn', 2.2); }
   standUp(); B.state = 'chase'; B.meter = 1; B.lostT = 0;
 }
-function navStep(tx, tz, speed, dt, cacheKey){
+// tl: the floor the target is on; on the other floor he heads for the stairs and climbs them first
+function navStep(tx, tz, speed, dt, cacheKey, tl = 0){
+  if (B.climb) return climbStep(dt);
+  if (B.level !== tl){
+    const e = B.level ? STAIRS.top : STAIRS.bottom;
+    if (navStep(e.x, e.z, speed, dt, 'stairs', B.level) || Math.hypot(e.x - B.x, e.z - B.z) < .3) B.climb = { t:0, up:!B.level };
+    return false;
+  }
+  if (cacheKey) cacheKey += '@' + B.level;
   const tc = nearestFree(cellAt(tx, tz));
   let f;
   if (cacheKey){ f = fieldCache[cacheKey] || (fieldCache[cacheKey] = bfsField(tc)); }
@@ -3381,21 +3584,33 @@ function navStep(tx, tz, speed, dt, cacheKey){
   B.phase += step*2.6;
   return false;
 }
+function climbStep(dt){
+  const c = B.climb; c.t = Math.min(1, c.t + dt/1.6);
+  const k = c.up ? c.t : 1 - c.t;   // 0 at the foot of the stairs, 1 at the top
+  B.x = STAIRS.x1 + k*(STAIRS.x2 - STAIRS.x1); B.z = (STAIRS.z1 + STAIRS.z2)/2; B.climbY = k*Y2;
+  B.a = c.up ? Math.PI/2 : -Math.PI/2; B.phase += dt*5;
+  if (c.t >= 1){
+    B.level = c.up ? 1 : 0; B.climb = null; B.field = null; navBlocked = NAV[B.level];
+    const e = B.level ? STAIRS.top : STAIRS.bottom; B.x = e.x; B.z = e.z;
+  }
+  return false;
+}
 function perceive(dt){
   const dx = P.x - B.x, dz = P.z - B.z, d = Math.hypot(dx, dz);
   let seen = false;
   const inToilet = toiletDoor.col.active;
-  const ghost = cheat('ghost') || !!D_().blind || P.cellar;   // «Практика»: he never spots you; nor down in the подвал
+  const ghost = cheat('ghost') || !!D_().blind || P.cellar || B.level !== P.level || !!B.climb;   // «Практика»: he never spots you; nor from another floor
   if (!P.hidden && !inToilet && !ghost){
     const alert = B.state === 'chase' || B.state === 'search';
     const range = alert ? 14 : D_().range;
-    if (d < range && clearSight(B.x, B.z, P.x, P.z, P.crouch)){
+    if (d < range && clearSight(B.x, B.z, P.x, P.z, P.crouch, P.level)){
       const cone = (alert ? 100 : B.sitting ? 45 : D_().cone)*Math.PI/180;
       if (Math.abs(angDiff(Math.atan2(dx, dz), B.a)) < cone || d < 1.7) seen = true;
     }
   }
   B.seen = seen;
-  if (seen){ B.lastSeen.x = P.x; B.lastSeen.z = P.z; B.lastSeenT = elapsed; }
+  if (seen){ B.lastSeen.x = P.x; B.lastSeen.z = P.z; B.lastSeen.lvl = P.level; B.lastSeenT = elapsed; }
+  B.stim.lvl = P.level;
   if (B.state === 'chase') return d;
   let gain = 0;
   if (seen){
@@ -3410,6 +3625,10 @@ function perceive(dt){
   return d;
 }
 function updateBron(dt){
+  navBlocked = NAV[B.level];
+  try { return updateBronOnFloor(dt); } finally { navBlocked = NAV[0]; }
+}
+function updateBronOnFloor(dt){
   if (state === 'play' && cheat('freeze')){ B.meter = 0; B.seen = false; return Math.hypot(P.x - B.x, P.z - B.z); }
   const d = perceive(dt);
   const T = TASKS[B.task];
@@ -3418,7 +3637,7 @@ function updateBron(dt){
     case 'walk':
       if (B.meter > .3){ toSuspicious(); break; }
       B.pose = 'walk';
-      if (navStep(T.spot[0], T.spot[1], B_WALK, dt, B.task)) arriveTask();
+      if (navStep(T.spot[0], T.spot[1], B_WALK, dt, B.task, T.lvl || 0)) arriveTask();
       break;
     case 'task':
       if (B.meter > .3 && !toiletDoor.col.active){ toSuspicious(); break; }
@@ -3435,20 +3654,21 @@ function updateBron(dt){
       B.pose = 'walk';
       if (B.meter >= 1){ enterChase(); break; }
       if (B.meter < .06){ B.state = 'walk'; say(pick(GIVEUP_PHRASES)); break; }
-      { const sd = Math.hypot(B.stim.x - B.x, B.stim.z - B.z);
-        if (sd > 1.6) navStep(B.stim.x, B.stim.z, 1.0, dt);
+      { const sd = Math.hypot(B.stim.x - B.x, B.stim.z - B.z), sl = B.stim.lvl || 0;
+        if (sd > 1.6 || sl !== B.level || B.climb) navStep(B.stim.x, B.stim.z, 1.0, dt, undefined, sl);
         else B.a = turnTo(B.a, Math.atan2(B.stim.x - B.x, B.stim.z - B.z), dt*4); }
       break;
     case 'chase': {
       B.pose = 'walk';
       if (B.seen) B.lostT = 0; else B.lostT += dt;
-      let tx = B.lastSeen.x, tz = B.lastSeen.z;
-      if (P.hidden && B.hideSeen){ tx = B.hideSeen.front.x; tz = B.hideSeen.front.z; }
-      else if (B.seen){ tx = P.x; tz = P.z; }
-      const arrived = navStep(tx, tz, D_().chase, dt) || Math.hypot(tx - B.x, tz - B.z) < .45;
+      let tx = B.lastSeen.x, tz = B.lastSeen.z, tl = B.lastSeen.lvl || 0;
+      if (P.hidden && B.hideSeen){ tx = B.hideSeen.front.x; tz = B.hideSeen.front.z; tl = B.hideSeen.lvl || 0; }
+      else if (B.seen){ tx = P.x; tz = P.z; tl = P.level; }
+      const arrived = navStep(tx, tz, D_().chase, dt, undefined, tl) || (B.level === tl && !B.climb && Math.hypot(tx - B.x, tz - B.z) < .45);
       if (B.speakT <= 0){ say(pick(CHASE_PHRASES)); B.speakT = rand(3, 5); }
-      if (!P.hidden && d < .9 && !cheat('god')){ caught(false); break; }
-      if (!cheat('god') && P.hidden && B.hideSeen && Math.hypot(B.hideSeen.front.x - B.x, B.hideSeen.front.z - B.z) < .6){ caught(true); break; }
+      const sameFloor = B.level === P.level && !B.climb;
+      if (!P.hidden && d < .9 && sameFloor && !cheat('god')){ caught(false); break; }
+      if (!cheat('god') && P.hidden && B.hideSeen && sameFloor && Math.hypot(B.hideSeen.front.x - B.x, B.hideSeen.front.z - B.z) < .6){ caught(true); break; }
       if ((arrived && !B.seen) || B.lostT > 7){ B.state = 'search'; B.searchT = 5; say(pick(SEARCH_PHRASES)); }
       break;
     }
@@ -3458,7 +3678,7 @@ function updateBron(dt){
       if (B.meter > .3){ toSuspicious(); break; }
       const nz = B.noise;
       if (!B.invArrived){
-        if (navStep(nz.x, nz.z, 2.3, dt) || Math.hypot(nz.x - B.x, nz.z - B.z) < .5){
+        if (navStep(nz.x, nz.z, 2.3, dt, undefined, 0) || (!B.level && !B.climb && Math.hypot(nz.x - B.x, nz.z - B.z) < .5)){
           B.invArrived = true; B.invT = 3.5;
           say(pick({ flush:FLUSH_ARRIVE, spaghetti:SPAG_ARRIVE, dog:DOG_ARRIVE, lizard:LIZARD_ARRIVE, makar:MAKAR_ARRIVE, pool:MAKAR_ARRIVE }[nz.kind]), 3, nz.kind === 'spaghetti' ? 'angry' : 'sly', 2);
         }
@@ -3483,14 +3703,14 @@ function updateBron(dt){
 function makeNoise(x, z, kind){
   if (state !== 'play' || B.state === 'chase') return;
   standUp();
-  B.state = 'investigate'; B.noise = { x, z, kind }; B.invArrived = false; B.invT = 0;
+  B.state = 'investigate'; B.noise = { x, z, kind, lvl:0 }; B.invArrived = false; B.invT = 0;
   sfx.hm();
   say(pick({ flush:FLUSH_REACT, spaghetti:SPAG_REACT, dog:DOG_REACT, lizard:LIZARD_REACT, makar:MAKAR_REACT, pool:MAKAR_REACT }[kind]), 2.6, 'angry', 2);
   banner({ flush:'Бронислав услышал смыв и идёт проверить!', spaghetti:'Бронислав услышал хруст и бежит на кухню!', dog:'Бобик лает! Бронислав идёт посмотреть!', lizard:'Ящерка тебя лижет! Бронислав услышал и идёт в зал!', makar:'Макар орёт из подвала! Бронислав идёт в кладовку!', pool:'Макар увидел тебя из бассейна и зовёт Бронислава!' }[kind], 'warn', 2.4);
 }
 /* ---- Makar brain: plays танчики in headphones, sometimes fetches огурцы, chases you if he spots you ---- */
 let mbubbleT = 0;
-const makarNear = () => MK.outside ? !P.cellar : P.cellar;   // on the same floor as you
+const makarNear = () => MK.outside ? !P.cellar && !P.level : P.cellar;   // on the same floor as you
 function makarSay(text, time = 2.4, priority = 1){
   if (!makarNear()) return;
   $('mbubble').textContent = text; $('mbubble').classList.add('on'); mbubbleT = time;
@@ -3671,6 +3891,16 @@ function goUp(){
     return chased ? () => makeNoise(HATCH.x, HATCH.z - .9, 'makar') : null;
   });
 }
+// the stairs: a short fade, then you are on the other floor; a chasing Bronislav heard where you went
+function goFloor(lv){
+  const chased = B.state === 'chase';
+  startTransit(lv ? 'Второй этаж' : 'Первый этаж', lv ? 'Ты поднялся по крутой лестнице.' : 'Ты спустился по лестнице.', () => {
+    const e = lv ? STAIRS.top : STAIRS.bottom;
+    Object.assign(P, { level:lv, x:e.x, z:e.z, fy:0 }); yaw = Math.PI/2; pitch = 0;
+    if (chased){ Object.assign(B.lastSeen, { x:e.x, z:e.z, lvl:lv }); B.lostT = 0; }
+    return null;
+  });
+}
 let boltP = 0, outT = 0;
 function startCellarEscape(){
   state = 'cellarOut'; outT = 2.2; sfx.creak(); sfx.unlock();
@@ -3794,7 +4024,7 @@ function updatePlayer(dt){
   const mx = (fx*f + rx*s), mz = (fz*f + rz*s), ml = Math.hypot(mx, mz) || 1;
   if (len){ P.x += mx/ml*speed*dt; P.z += mz/ml*speed*dt; }
   // admin «Полёт»: Space up, X down; you pass over anything lower than your feet
-  if (cheat('fly') && !P.cellar){
+  if (cheat('fly') && !P.cellar && !P.level){
     const up = keys.Space || upHeld || pad.up, down = keys.KeyX || downHeld || pad.down;
     if (up){ landing = false; P.standing = false; }
     const floor = groundAt(P.x, P.z, P.fy);
@@ -3820,6 +4050,7 @@ function updatePlayer(dt){
 function syncBron(dt, t){
   const g = bron.group;
   g.position.set(B.x, 0, B.z);
+  const floorY = B.climb ? B.climbY : B.level ? Y2 : 0;
   g.rotation.y = B.a;
   const pose = B.pose;
   const moving = pose === 'walk' && (B.state === 'walk' || B.state === 'chase' || B.state === 'suspicious');
@@ -3846,7 +4077,7 @@ function syncBron(dt, t){
   if (pose === 'film' || pose === 'vlog' || bron.stick.visible) armR = pose === 'vlog' ? -2.1 : -1.45;
   bron.legL.rotation.x = pose === 'walk' ? legs : legs; bron.legR.rotation.x = pose === 'walk' ? -legs : legs;
   bron.armL.rotation.x = armL; bron.armR.rotation.x = armR;
-  g.position.y = y;
+  g.position.y = floorY + y;
 }
 function syncWorld(dt, t){
   keyObj.rotation.y += dt*2; keyObj.position.y = keySpot.y + .05 + Math.sin(t*3)*.02;
@@ -3856,8 +4087,8 @@ function syncWorld(dt, t){
   toiletDoor.pivot.rotation.y = toiletDoor.angle;
   // interior doors swing open for whoever walks up to them
   for (const d of interiorDoors){
-    const pNear = !P.hidden && (state === 'play') && Math.hypot(P.x - d.cx, P.z - d.cz) < 1.5;
-    const bNear = Math.hypot(B.x - d.cx, B.z - d.cz) < 1.5;
+    const pNear = !P.hidden && (state === 'play') && !P.level && Math.hypot(P.x - d.cx, P.z - d.cz) < 1.5;
+    const bNear = !B.level && !B.climb && Math.hypot(B.x - d.cx, B.z - d.cz) < 1.5;
     const wasClosed = d.hold <= 0;
     if (pNear || bNear){ d.hold = 1.4; if (wasClosed && state === 'play') sfx.door(Math.max(0, 1 - Math.hypot(d.cx - P.x, d.cz - P.z)/10)); }
     else d.hold -= dt;
@@ -3932,7 +4163,7 @@ function updateCamera(dt, t){
   const targetEye = P.hidden && P.hidden !== 'menu' ? 1.55 : P.crouch ? 1.0 : 1.6;
   P.eye += (targetEye - P.eye)*Math.min(1, dt*8);
   const bob = P.moving && !P.fy ? Math.sin(P.bob)*.035 : 0;
-  camera.position.set(P.x, P.eye + bob + (P.fy || 0) + (P.cellar ? CEL.y : 0), P.z);
+  camera.position.set(P.x, P.eye + bob + (P.fy || 0) + (P.cellar ? CEL.y : 0) + (P.level ? Y2 : 0), P.z);
   camera.rotation.set(pitch, yaw, 0);
 }
 
@@ -3940,10 +4171,10 @@ const tmpV = new THREE.Vector3();
 function updateBubble(){
   const bub = $('bubble');
   if (!bub.classList.contains('on')) return;
-  tmpV.set(B.x, (B.sitting ? 2.15 : 2.65), B.z).project(camera);
+  tmpV.set(B.x, (B.climb ? B.climbY : B.level ? Y2 : 0) + (B.sitting ? 2.15 : 2.65), B.z).project(camera);
   const d = Math.hypot(B.x - camera.position.x, B.z - camera.position.z);
   if (tmpV.z > 1 || d > 16){ bub.style.left = '-999px'; return; }
-  const muffled = !clearSight(B.x, B.z, camera.position.x, camera.position.z, false);
+  const muffled = B.level !== P.level || !clearSight(B.x, B.z, camera.position.x, camera.position.z, false, P.level);
   bub.classList.toggle('muffled', muffled);
   const x = (tmpV.x*.5 + .5)*innerWidth, y = (-tmpV.y*.5 + .5)*innerHeight;
   bub.style.left = clamp(x, 90, innerWidth - 90) + 'px';
