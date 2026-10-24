@@ -392,6 +392,9 @@ const FLUSH_REACT = ['Э! Кто там воду смывает?!','Слышь! 
 const SPAG_REACT = ['Э-э! Кто мои спагетти ломает?!','Слышь! Это мой контент, не трогай!','Чё за хруст на кухне?!'];
 const FLUSH_ARRIVE = ['Никого… Бачок сам смылся, что ли?','Хм. Пусто. Странно, братан.'];
 const DOG_REACT = ['Чё там Бобик разгавкался?!','Бобик, кого там учуял?','Э! Кто там во дворе?!'];
+const VAC_REACT = ['Э! Кто включил мой пылесос?!','Пылесос сам не включается, братан!','Чё он поехал? Я его не запускал!'];
+const VAC_GRAB = ['Иди сюда, железка.','Попался, пылесос.','Ну и куда ты собрался?'];
+const VAC_DOCK = ['Всё, на базу. Заряжайся.','Стоять на зарядке и не рыпаться.','Кто его включает? Подписчики, это полтергейст!'];
 const DOG_ARRIVE = ['Бобик, ну чё ты? Никого же нет.','Кошку, что ли, увидел? Сиди тихо.'];
 const LIZARD_REACT = ['Э! Кто там с моей ящеркой лижется?!','Чё там ящерка расчавкалась?!','Слышь! Кто ящерку дразнит?!'];
 const LIZARD_ARRIVE = ['Ящерка, ты кого там облизывала? Никого же нет.','Голодная, что ли? Ща покормлю… потом.'];
@@ -2405,6 +2408,76 @@ function updateLizard(dt, t){
     if (liz.bug && k < .5){ liz.bug.visible = false; liz.bug = null; }
   } else liz.tongue.visible = false;
 }
+// робот-пылесос on a dock in the corridor by the socket. Switch it on and it bumbles round the ground floor;
+// Bronislav hears the start-up chime, comes for it and carries it back to the dock
+const DOCK = { x:8.6, z:6.84, park:{ x:8.6, z:6.5 } };
+const vac = { x:DOCK.park.x, z:DOCK.park.z, a:Math.PI, on:false, carried:false, runT:0, humT:0, turnT:0 };
+{
+  const shell = M(0x1c1c20, { rough:.25, env:1.2 }), top = M(0x4a4e56, { rough:.2, metal:.3, env:1.3 });
+  vac.g = grp(house, vac.x, 0, vac.z);
+  cyl(vac.g, 0, .042, 0, .17, .17, .07, shell, 32);
+  cyl(vac.g, 0, .078, 0, .15, .16, .006, top, 32);
+  cyl(vac.g, 0, .083, -.05, .035, .035, .012, M(0x2a2a2e, { rough:.4 }), 20);   // the lidar turret
+  const bumper = new THREE.Mesh(new THREE.TorusGeometry(.17, .012, 6, 32, Math.PI), M(0x2a2a2e, { rough:.5 })); bumper.rotation.x = Math.PI/2; bumper.position.y = .035; bumper.rotation.z = Math.PI; vac.g.add(bumper);
+  vac.led = sph(vac.g, 0, .085, .08, .012, BASIC(0x3aff6a, { toneMapped:false }), 1, .5, 1, 8);
+  vac.brush = grp(vac.g, .12, .012, .1);
+  for (let i = 0; i < 3; i++){ const b = rbox(vac.brush, 0, 0, 0, .1, .003, .006, M(0x3a3a3e, { rough:.6 }), .001); b.rotation.y = i*Math.PI*2/3; b.position.set(Math.cos(i*Math.PI*2/3)*.05, 0, -Math.sin(i*Math.PI*2/3)*.05); }
+  vac.g.rotation.y = vac.a;
+  // dock against the wall
+  rbox(house, DOCK.x, .06, DOCK.z, .32, .12, .1, shell, .02);
+  rbox(house, DOCK.x, .01, DOCK.z - .12, .32, .02, .18, shell, .008);
+  sph(house, DOCK.x, .1, DOCK.z - .051, .008, BASIC(0x3aff6a, { toneMapped:false }), 1, 1, .5, 8);
+  sadd('Робот-пылесос', 'Мебель', vac.g);
+}
+function vacSound(f){ const d = Math.hypot(vac.x - camera.position.x, vac.z - camera.position.z) + (P.level || P.cellar ? 6 : 0); return Math.max(0, 1 - d/14)*f; }
+function vacOn(){
+  vac.on = true; vac.runT = 45; vac.turnT = 0; vac.a = Math.PI;
+  [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, .12, vacSound(.18), 'triangle'), i*110));   // start-up chime
+  banner('Робот-пылесос поехал!', 'good', 2);
+  setTimeout(() => callBronForVac(), 600);
+}
+function vacOff(stopped){
+  vac.on = false;
+  if (stopped) [784, 659, 523].forEach((f, i) => setTimeout(() => tone(f, .14, vacSound(.15), 'triangle'), i*120));   // battery flat
+}
+function callBronForVac(){
+  if (state !== 'play' || B.state === 'chase' || B.state === 'vacuum' || !vac.on) return;
+  standUp();
+  B.state = 'vacuum'; B.field = null;
+  sfx.hm();
+  say(pick(VAC_REACT), 2.6, 'angry', 2);
+  banner('Бронислав услышал пылесос и идёт его выключать!', 'warn', 2.4);
+}
+function resetVac(){
+  Object.assign(vac, { x:DOCK.park.x, z:DOCK.park.z, a:Math.PI, on:false, carried:false, runT:0 });
+}
+function updateVac(dt, t){
+  // if Bronislav dropped it (he spotted you, or got you), it stays where it fell, switched off
+  if (vac.carried && B.state !== 'vacuum'){ vac.carried = false; vac.x = B.x + Math.sin(B.a)*.5; vac.z = B.z + Math.cos(B.a)*.5; }
+  if (vac.on && state === 'play'){
+    vac.runT -= dt;
+    if (vac.runT <= 0){ vacOff(true); }
+    else {
+      // drive straight; on a bump turn away a random amount, like the real thing
+      const sp = .32*dt, nx = vac.x + Math.sin(vac.a)*sp, nz = vac.z + Math.cos(vac.a)*sp;
+      const q = { x:nx, z:nz }; pushOut(q, .18);
+      const blocked = nx < .3 || nx > W - .3 || nz < .3 || nz > D - .3 || Math.hypot(q.x - nx, q.z - nz) > 1e-4;
+      vac.turnT -= dt;
+      if (blocked){
+        if (vac.turnT <= 0){ noise(.05, vacSound(.25), 600); vac.turnT = .4; }
+        vac.a += (Math.PI*.5 + Math.random()*Math.PI)*(Math.random() < .5 ? 1 : -1);
+      } else { vac.x = nx; vac.z = nz; }
+      vac.humT -= dt;
+      if (vac.humT <= 0){ noise(.42, vacSound(.12), 900); vac.humT = .4; }
+    }
+  }
+  vac.brush.rotation.y += vac.on ? dt*18 : 0;
+  vac.led.material.color.set(vac.on ? ((t*3 | 0) % 2 ? 0x3a8aff : 0x0a2a60) : 0x3aff6a);
+  if (vac.carried){
+    const fy = B.climb ? B.climbY : B.level ? Y2 : 0;
+    vac.g.position.set(B.x + Math.sin(B.a)*.42, fy + 1.05, B.z + Math.cos(B.a)*.42); vac.g.rotation.set(-.5, B.a, 0);
+  } else { vac.g.position.set(vac.x, 0, vac.z); vac.g.rotation.set(0, vac.a, 0); }
+}
 // things lying around that you can pocket; they just go into the inventory
 const PICKUPS = [];
 function pickup(id, x, y, z, build){
@@ -3151,7 +3224,7 @@ const MOODS = { calm:[1.0, .95], hype:[1.12, 1.0], angry:[1.2, .9], sly:[.88, .8
 function moodNow(){
   if (B.state === 'chase') return 'angry';
   if (B.state === 'suspicious' || B.state === 'search') return 'sly';
-  if (B.state === 'investigate') return 'angry';
+  if (B.state === 'investigate' || B.state === 'vacuum') return 'angry';
   if (B.state === 'task') return B.task === 'toilet' ? 'lazy' : B.task === 'computer' || B.task === 'vlog' || B.task === 'spaghetti' ? 'hype' : 'calm';
   return 'calm';
 }
@@ -3247,7 +3320,7 @@ function resetWorld(){
   briefsOnDetector.visible = false;
   clearSpawns(true); closeSpawn();
   dog.alert = 0; dog.cd = 0; dog.barking = 0;
-  resetLizard();
+  resetLizard(); resetVac();
   resetMakar(); P.cellar = false; hatch.open = 0; boltP = 0; cel.bolt.position.x = CEL.door.x + .12;
   inv = []; invKey = '-'; 
   for (const b of spagBits) house.remove(b); spagBits.length = 0; if (spagPack) spagPack.rotation.z = .15;
@@ -3357,6 +3430,7 @@ function startRespawn(byMakar){
 }
 function doRespawn(){
   const tookKey = hasKey || doorOpen;
+  resetVac();
   // caught downstairs: back to the bedroom, Макар back to his танчики
   if (P.cellar) $('goalText').textContent = goalBefore;
   makarSit(); MK.speakT = 4; $('mbubble').classList.remove('on');
@@ -3450,6 +3524,8 @@ function findAction(){
     return { type:'cellarDown', text:'<kbd>E</kbd>открыть люк и спуститься в подвал' };
   if (Math.hypot(STAIRS.bottom.x - P.x, STAIRS.bottom.z - P.z) < 1.0 && facing(STAIRS.x2, STAIRS.bottom.z) > .5)
     return { type:'upstairs', text:'<kbd>E</kbd>подняться на второй этаж' };
+  if (!vac.on && !vac.carried && Math.hypot(vac.x - P.x, vac.z - P.z) < 1.2 && facing(vac.x, vac.z) > .4)
+    return { type:'vacuum', text:'<kbd>E</kbd>включить робот-пылесос' };
   return hideIn();
 }
 function doAction(){
@@ -3473,6 +3549,7 @@ function doAction(){
   }
   if (action.type === 'cellarDown'){ goDown(); return; }
   if (action.type === 'upstairs'){ goFloor(1); return; }
+  if (action.type === 'vacuum'){ vacOn(); return; }
   if (action.type === 'downstairs'){ goFloor(0); return; }
   if (action.type === 'cellarUp'){ goUp(); return; }
   if (action.type === 'feed'){
@@ -3707,6 +3784,21 @@ function updateBronOnFloor(dt){
       }
       break;
     }
+    case 'vacuum':   // run to the vacuum, pick it up, carry it back to the dock
+      B.pose = 'walk';
+      if (B.meter >= 1){ enterChase(); break; }
+      if (B.meter > .3){ toSuspicious(); break; }
+      if (!vac.carried){
+        if (navStep(vac.x, vac.z, 2.3, dt, undefined, 0) || (!B.level && !B.climb && Math.hypot(vac.x - B.x, vac.z - B.z) < .9)){
+          vac.carried = true; vac.on = false; say(pick(VAC_GRAB), 2, 'angry', 2);
+        }
+      } else if (navStep(DOCK.park.x, DOCK.park.z - .45, B_WALK*1.3, dt, 'dock', 0) || (!B.level && Math.hypot(DOCK.park.x - B.x, DOCK.park.z - .45 - B.z) < .3)){
+        vac.carried = false; vac.x = DOCK.park.x; vac.z = DOCK.park.z; vac.a = Math.PI;
+        tone(880, .1, vacSound(.15), 'triangle');
+        say(pick(VAC_DOCK), 2.6, 'sly', 2);
+        nextTask();
+      }
+      break;
     case 'search':
       B.pose = 'walk';
       B.searchT -= dt; B.a += dt*1.6;
@@ -4077,7 +4169,7 @@ function syncBron(dt, t){
   bron.stick.visible = B.state === 'task' && B.task === 'vlog';
   bron.recTag.visible = bron.stick.visible || pose === 'type';
   bron.spag.visible = pose === 'spaghetti';
-  bron.mark.visible = B.state === 'suspicious' || B.state === 'search' || B.state === 'investigate';
+  bron.mark.visible = B.state === 'suspicious' || B.state === 'search' || B.state === 'investigate' || (B.state === 'vacuum' && !vac.carried);
   bron.markBang.visible = B.state === 'chase' || state === 'caught' || state === 'alarm' || (state === 'blackout' && !powerOn);
   bron.eyeMat.color.copy(B.state === 'chase' || state === 'caught' ? EYE_RED : EYE_DARK);
   let legs = 0, armL = 0, armR = 0, y = 0;
@@ -4095,6 +4187,7 @@ function syncBron(dt, t){
   if (pose === 'vlog'){ armL = Math.sin(t*3)*.5 - .3; }
   if (pose === 'film' || pose === 'vlog' || bron.stick.visible) armR = pose === 'vlog' ? -2.1 : -1.45;
   bron.legL.rotation.x = pose === 'walk' ? legs : legs; bron.legR.rotation.x = pose === 'walk' ? -legs : legs;
+  if (vac.carried){ armL = armR = -1.15; }   // both hands on the vacuum
   bron.armL.rotation.x = armL; bron.armR.rotation.x = armR;
   g.position.y = floorY + y;
 }
@@ -4227,6 +4320,7 @@ function updateHud(d, dt){
   else if (B.state === 'suspicious'){ text = 'что-то услышал…'; cls = 'warn'; }
   else if (B.state === 'chase'){ text = 'гонится за тобой!'; cls = 'danger'; }
   else if (B.state === 'investigate'){ text = { flush:'идёт на звук смыва', spaghetti:'бежит на кухню: спагетти!', dog:'идёт на лай Бобика', lizard:'идёт на чавканье ящерки', makar:'идёт на крик Макара', pool:'идёт на крик Макара' }[B.noise ? B.noise.kind : 'flush']; cls = 'warn'; }
+  else if (B.state === 'vacuum'){ text = vac.carried ? 'несёт пылесос на базу' : 'бежит выключать пылесос'; cls = 'warn'; }
   else { text = 'ищет тебя'; cls = 'warn'; }
   if (P.cellar){
     text = { game:'играет в танчики', snack:'идёт за огурцами', return:'возвращается к игре', suspicious:'что-то услышал…', chase:'гонится за тобой!', search:'ищет тебя',
@@ -4274,7 +4368,7 @@ function frame(){
   }
   T += dt;
   let d = 99;
-  if (!spawnOpen){ updateDog(dt, T); updateLizard(dt, T); }
+  if (!spawnOpen){ updateDog(dt, T); updateLizard(dt, T); updateVac(dt, T); }
   if (state === 'play'){ if (!spawnOpen){ updatePlayer(dt); if (state === 'play') d = updateBron(dt); if (state === 'play') updateMakar(dt); } updateHud(d, dt); }
   else if (state === 'menu'){ updateBron(dt); }
   else if (state === 'caught'){ caughtT -= dt; if (caughtT <= 0){ if (catches >= maxCatches()) endRun(1); else startRespawn(); } }
