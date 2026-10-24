@@ -92,6 +92,9 @@ button:focus-visible{outline:2px solid var(--lamp);outline-offset:3px}
 #bubble.on{opacity:1}
 #bubble.muffled{background:rgba(240,228,206,.55);font-style:italic}
 #bubble.muffled::after{border-top-color:rgba(240,228,206,.55)}
+#mbubble{position:fixed;z-index:6;pointer-events:none;transform:translate(-50%,-100%);background:#cfe8c0;color:#13200c;font-weight:800;font-size:15px;padding:7px 12px;border-radius:12px;white-space:nowrap;opacity:0;transition:opacity .2s}
+#mbubble::after{content:"";position:absolute;left:50%;bottom:-7px;margin-left:-7px;border:7px solid transparent;border-bottom:0;border-top-color:#cfe8c0}
+#mbubble.on{opacity:1}
 #lockHint{left:50%;top:58%;transform:translateX(-50%);font-size:14px;color:var(--chalk);padding:7px 14px}
 
 /* inside a wardrobe: dark doors with a crack in the middle */
@@ -200,6 +203,7 @@ h2.good{color:var(--safe)}
 <div id="blackout"></div>
 <div id="flash"></div>
 <div id="bubble"></div>
+<div id="mbubble"></div>
 
 <div class="hud" id="hudTL" hidden>
   <div class="goal plate" id="goal"><span class="label">Задача</span><b id="goalText">Найди ключ от входной двери</b></div>
@@ -243,7 +247,7 @@ h2.good{color:var(--safe)}
     <div class="row">
       <button class="go" id="goBtn" type="button">НАЧАТЬ ПОБЕГ</button>
       <button class="ghost" id="joyBtn" type="button" aria-pressed="true">Джойстик: вкл</button>
-      <button class="ghost" id="endingsBtn" type="button">Концовки <span class="count" id="endingsCount">0/8</span></button>
+      <button class="ghost" id="endingsBtn" type="button">Концовки <span class="count" id="endingsCount">0/11</span></button>
       <button class="ghost" id="adminBtn" type="button" hidden>Админ-панель</button>
     </div>
   </div>
@@ -251,7 +255,7 @@ h2.good{color:var(--safe)}
 
 <section class="screen" id="endingsScreen" hidden>
   <div class="card">
-    <div class="eyebrow">Открыто <span id="endingsOpened">0 из 8</span></div>
+    <div class="eyebrow">Открыто <span id="endingsOpened">0 из 11</span></div>
     <h2>Концовки</h2>
     <ol class="endings" id="endingsList"></ol>
     <div class="admin-gate" id="adminGate"></div>
@@ -370,6 +374,9 @@ const ENDINGS = [
   { id:6, name:'Стрим окончен', good:true, hint:'Найди ключ от электрощитка и выключи свет.', how:'Ты открыл электрощиток и выключил свет во всём доме.', text:'Стрим Бронислава оборвался на самом интересном месте. Пока он в темноте искал фонарик, ты спокойно ушёл из дома.', quote:'Э! Кто свет вырубил?! У меня стрим идёт, пацаны!' },
   { id:7, name:'Угнал жигули', good:true, hint:'Найди ключи от машины и уезжай на ней.', how:'Ты завёл жигули Бронислава и уехал.', text:'Бронислав выбежал во двор, но было поздно: ты уже ехал по улице на его «семёрке». Новый ролик называется «У меня угнали машину».', quote:'Э! Это моя «семёрка»! Стой! Подписчики, звоните в полицию!' },
   { id:8, name:'Трусы-дымовуха', good:true, hint:'Найди на кровати кое-что личное и накинь это на датчик дыма.', how:'Ты накинул трусы Бронислава на датчик дыма.', text:'Датчик не выдержал такого запаха и поднял пожарную тревогу. Бронислав выбежал на улицу спасать компьютер, а пожарные открыли дверь и вывели тебя из дома.', quote:'Пацаны, это не пожар! Это мои трусы! Не снимайте!' },
+  { id:9, name:'Макар тебя поймал', good:false, hint:'Спустись в подвал через люк в кладовке и попадись Макару.', how:'Макар поймал тебя в подвале.', text:'Он запер тебя в погребе вместе с банками огурцов и позвал Бронислава. Ролик назвали «Поймали вора в подвале».', quote:'Брони-и-ислав! Я его поймал! Мне за это премия положена?' },
+  { id:10, name:'Сбежал от Макара', good:true, hint:'Пусть Макар погонится за тобой, а ты уйди через дверь погреба.', how:'Макар гнался за тобой, но ты ушёл через дверь погреба.', text:'Ты отодвинул ржавый засов и выскочил в огород. Макар застрял в дверях с банкой огурцов в руках.', quote:'Э-э! Стой! Бронислав меня убьёт!' },
+  { id:11, name:'Мимо Макара', good:true, hint:'Выберись через погреб так, чтобы Макар тебя не заметил.', how:'Ты прокрался мимо Макара и ушёл через дверь погреба.', text:'Макар так увлёкся танчиками, что даже не снял наушники. Ты тихо ушёл огородами.', quote:'Чё? Дверью хлопнуло? Да не, показалось. Ещё катку!' },
 ];
 const maxCatches = () => DIFF[difficulty].lives;
 const WALK_PHRASES = ['Так, чё там дальше по плану…','Подписчики ждут. Погнали.','Ща будет контент.'];
@@ -380,6 +387,14 @@ const DOG_REACT = ['Чё там Бобик разгавкался?!','Бобик
 const DOG_ARRIVE = ['Бобик, ну чё ты? Никого же нет.','Кошку, что ли, увидел? Сиди тихо.'];
 const LIZARD_REACT = ['Э! Кто там с моей ящеркой лижется?!','Чё там ящерка расчавкалась?!','Слышь! Кто ящерку дразнит?!'];
 const LIZARD_ARRIVE = ['Ящерка, ты кого там облизывала? Никого же нет.','Голодная, что ли? Ща покормлю… потом.'];
+const MAKAR_REACT = ['Чё там Макар орёт?!','Макар, чё случилось?!','Макар! Кто в подвале?!'];
+const MAKAR_ARRIVE = ['Макар, ну и где? Никого же нет.','Макар опять в танчики переиграл…'];
+const MAKAR_GAME = ['Так, ещё катку…','Куда ты едешь, нуб?!','Бах! Минус один!','Бронислав стримит, а я тут в подвале сиди…','Я в топе, мам!'];
+const MAKAR_SNACK = ['Огурчика бы…','Где тут мамины огурцы?'];
+const MAKAR_SUSPECT = ['Э… кто там?','Бронислав, это ты?','Чё за шорох?'];
+const MAKAR_CHASE = ['Стой, говорю!','Не уйдёшь, я тут каждую банку знаю!','Брони-и-ислав! Тут чужой!','Куда побежал?!'];
+const MAKAR_SEARCH = ['Куда делся?','Выходи, я тебя видел!'];
+const MAKAR_GIVEUP = ['Показалось. Ладно, катка ждёт.','Пойду доиграю.'];
 const SPAG_ARRIVE = ['Кто сломал мои спагетти?! Найду — будешь в трендах!','Моя пачка… Ну всё, это война.'];
 const SUSPECT_PHRASES = ['Э… кто тут?','Слышь, мне показалось, или чё?','Кто там шуршит, а?','Хм… Странный звук.'];
 const CHASE_PHRASES = ['Слышь, стоять!','О-о! Контент пошёл!','Э, ты куда, братан?!','Улыбнись, тебя снимают!','От камеры не убежишь!'];
@@ -406,7 +421,7 @@ scene.background = HAZE.clone();
 scene.fog = new THREE.Fog(HAZE.clone(), 35, 140);
 const camera = new THREE.PerspectiveCamera(72, 1, 0.04, 220);
 camera.rotation.order = 'YXZ';
-scene.add(new THREE.HemisphereLight(C(0xcfe0ff), C(0x7a6a50), 0.85));
+const hemi = new THREE.HemisphereLight(C(0xcfe0ff), C(0x7a6a50), 0.85); scene.add(hemi);
 
 /* ================= procedural textures ================= */
 function canvasTex(w, h, draw, linear){
@@ -1772,6 +1787,96 @@ const gateLeaf = { pivot:new THREE.Group(), open:0 };
   sunLight.shadow.bias = -.0006; sunLight.shadow.normalBias = .03;
   scene.add(sunLight, sunLight.target);
 }
+/* ---- подвал: reached through a люк in the кладовка. It is built off to the side and 3.2 m down,
+   so its colliders keep heights from its own floor and nothing upstairs overlaps it.
+   Макар, Bronislav's younger brother, plays танчики here; a bolted door leads out to the огород ---- */
+const CEL = { x1:23, z1:-14, x2:33, z2:-6, y:-3.2, h:2.3,
+  arrive:{ x:23.75, z:-9.8 }, foot:{ x:23.55, z:-10.15 }, door:{ x:31.6, z:-6.0, front:{ x:31.6, z:-6.6 } },
+  chair:{ x:30.0, z:-10.0 }, stand:{ x:30.75, z:-10.0 }, shelf:{ x:27.7, z:-12.9 } };
+const HATCH = { x:15.4, z:9.8 };
+const cellar = grp(scene, 0, CEL.y, 0);
+const celCols = [];
+function cbox(cx, y0, cz, w, h, d, m, solid){
+  const mesh = box(cellar, cx, y0, cz, w, h, d, m);
+  if (solid) celCols.push(addCollider(cx - w/2, cz - d/2, cx + w/2, cz + d/2, y0 + h));
+  return mesh;
+}
+const cel = {};
+{
+  const brick = M(0xb0a090, { map:brickTex, rough:.92, env:.15 }), conc = M(0xffffff, { map:rep(concreteTex, 4, 3), rough:.95, env:.15 });
+  const boards = M(0x9a8a78, { map:boardsTex, rough:.9, env:.15 }), wood = M(0xffffff, { map:lightWoodTex, rough:.8, env:.2 }), dark = M(0xffffff, { map:darkWoodTex, rough:.75, env:.2 });
+  const cx = (CEL.x1 + CEL.x2)/2, cz = (CEL.z1 + CEL.z2)/2, w = CEL.x2 - CEL.x1, d = CEL.z2 - CEL.z1;
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(w, d), conc); floor.rotation.x = -Math.PI/2; floor.position.set(cx, 0, cz); cellar.add(floor);
+  casters.push(box(cellar, cx, CEL.h, cz, w + .6, .3, d + .6, boards));   // ceiling, also keeps the sun out
+  for (const [x, z, bw, bd] of [[cx, CEL.z1 - .15, w + .6, .3], [cx, CEL.z2 + .15, w + .6, .3], [CEL.x1 - .15, cz, .3, d], [CEL.x2 + .15, cz, .3, d]])
+    casters.push(cbox(x, 0, z, bw, CEL.h, bd, brick, true));
+  for (let x = CEL.x1 + 1.2; x < CEL.x2; x += 2.2) box(cellar, x, CEL.h - .18, cz, .16, .18, d, dark);   // beams
+  tube(cellar, [[CEL.x1, CEL.h - .3, CEL.z1 + .25], [CEL.x2, CEL.h - .3, CEL.z1 + .25]], .04, mat.steel, 8);   // pipes
+  tube(cellar, [[CEL.x1, CEL.h - .4, CEL.z1 + .4], [CEL.x2, CEL.h - .4, CEL.z1 + .4]], .025, M(0x7a3a2a, { rough:.6, metal:.4 }), 8);
+  // wooden stairs up to the люк along the west wall (you climb them with E, they are solid otherwise)
+  for (let i = 0; i < 9; i++) box(cellar, 23.5, 0, -10.75 - i*.36, .95, .05 + i*.255, .36, i % 2 ? wood : M(0xffffff, { map:lightWoodTex, rough:.85, env:.2 }));
+  for (const sx of [-1, 1]){ const r = rbox(cellar, 23.5 + sx*.5, 1.4, -12.2, .05, .05, 3.6, dark, .01); r.rotation.x = .56; }
+  celCols.push(addCollider(23.0, -14.0, 24.02, -10.57, CEL.h));
+  rbox(cellar, 23.5, CEL.h - .02, -13.55, .9, .03, .8, BASIC(0x2a1e12), .005);   // underside of the люк
+  // bare bulb on a cord and the CRT's blue glow
+  cyl(cellar, 27.5, CEL.h - .25, -10, .004, .004, .5, mat.blackPlastic, 6);
+  sph(cellar, 27.5, CEL.h - .55, -10, .045, BASIC(0xfff0c8, { toneMapped:false }));
+  cel.bulb = new THREE.PointLight(C(0xffb862), 1.15, 8, 1.6); cel.bulb.position.set(27.5, CEL.h - .6, -10); cellar.add(cel.bulb);
+  cel.tv = new THREE.PointLight(C(0x7fb0ff), .6, 4, 1.5); cel.tv.position.set(31.7, 1.0, -10); cellar.add(cel.tv);
+  // shelves with соленья on the south wall
+  celCols.push(addCollider(26.2, -13.95, 29.2, -13.55, 1.8));
+  for (const s of [-1, 1]) rbox(cellar, 27.7 + s*1.5, .9, -13.75, .04, 1.8, .4, wood, .004);
+  for (let i = 0; i < 4; i++) rbox(cellar, 27.7, .02 + i*.58, -13.75, 3.0, .03, .4, wood, .004);
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 9; j++){
+    const x = 26.5 + j*.3, y = .04 + i*.58;
+    lathe(cellar, x, y, -13.7, [[0, 0], [.07, 0], [.075, .02], [.075, .17], [.05, .2], [.045, .22], [0, .22]], M([0xb03020, 0x3a7a2a, 0xe0a020, 0x7a2a5a][(i + j) % 4], { rough:.08, transparent:true, opacity:.82, env:1.4 }), 14);
+    cyl(cellar, x, y + .23, -13.7, .048, .048, .02, mat.steel, 12);
+  }
+  // potato sacks and crates you can crouch behind
+  const sack = M(0x9a7a50, { map:fabricTex, rough:.95 });
+  for (const [x, z] of [[24.9, -6.55], [25.6, -6.5], [25.25, -7.1]]) sph(cellar, x, .32, z, .34, sack, 1, .95, .9, 14);
+  celCols.push(addCollider(24.5, -7.45, 26.0, -6.0, .75));
+  cbox(27.0, 0, -8.4, 1.3, .55, .7, dark, true); cbox(27.2, .55, -8.4, .8, .4, .6, wood);
+  cbox(28.7, 0, -11.5, .8, .8, .8, wood, true);
+  // workbench with a vise in the south-east corner
+  cbox(32.4, .8, -13.2, .9, .06, 1.4, dark, true);
+  for (const [x, z] of [[32.05, -13.8], [32.75, -13.8], [32.05, -12.6], [32.75, -12.6]]) box(cellar, x, 0, z, .06, .8, .06, dark);
+  rbox(cellar, 32.3, .92, -12.8, .14, .1, .1, mat.steel, .01);
+  // Макар's corner: rug, old armchair facing an old TV with a console
+  const rug = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.8), M(0x9a5a4a, { map:rep(carpetTex, 1, 1), rough:.95 })); rug.rotation.x = -Math.PI/2; rug.position.set(30.9, .006, -10); cellar.add(rug);
+  const chairM = M(0x5a6a3a, { map:fabricTex, rough:.95, env:.2 });
+  rbox(cellar, 30.0, .3, -10, .7, .3, .8, chairM, .06, 3);
+  rbox(cellar, 29.72, .75, -10, .2, .7, .8, chairM, .07, 3);
+  for (const s of [-1, 1]) rbox(cellar, 30.0, .55, -10 + s*.36, .7, .22, .14, chairM, .05, 3);
+  celCols.push(addCollider(29.62, -10.43, 30.38, -9.57, .9));
+  cbox(32.4, 0, -10, .5, .55, 1.1, dark, true);
+  box(cellar, 32.42, .55, -10, .52, .48, .56, M(0x2a2a2e, { rough:.4 }));
+  const tvScreen = new THREE.Mesh(new THREE.PlaneGeometry(.44, .34), BASIC(0xffffff, { toneMapped:false, map:canvasTex(256, 192, (c, w, h) => {
+    c.fillStyle = '#3a5a2a'; c.fillRect(0, 0, w, h); c.fillStyle = '#5a7a3a'; for (let i = 0; i < 40; i++) c.fillRect(Math.random()*w, Math.random()*h, 10, 4);
+    const tank = (x, y, col) => { c.fillStyle = col; c.fillRect(x, y, 34, 20); c.fillRect(x + 10, y - 8, 14, 10); c.fillRect(x + 22, y - 5, 22, 4); };
+    tank(40, 120, '#c8b860'); tank(170, 60, '#a03a2a');
+    c.fillStyle = '#fff'; c.font = 'bold 18px monospace'; c.fillText('СЧЁТ 9000', 10, 22);
+  }) }));
+  tvScreen.position.set(32.15, .79, -10); tvScreen.rotation.y = -Math.PI/2; cellar.add(tvScreen);
+  rbox(cellar, 31.9, .03, -9.65, .25, .06, .18, M(0x1c1c20, { rough:.4 }), .01);   // console on the floor
+  // the door out to the огород, with a heavy bolt
+  rbox(cellar, CEL.door.x, .98, CEL.door.z - .03, 1.0, 2.0, .06, dark, .01);
+  for (let i = -2; i <= 2; i++) rbox(cellar, CEL.door.x + i*.19, .98, CEL.door.z - .065, .17, 1.92, .02, M(0xffffff, { map:darkWoodTex, rough:.85 }), .004);
+  cel.bolt = rbox(cellar, CEL.door.x + .12, 1.05, CEL.door.z - .1, .42, .05, .05, M(0x6a6a6a, { rough:.4, metal:.9 }), .01);
+  rbox(cellar, CEL.door.x + .38, 1.05, CEL.door.z - .09, .06, .1, .04, M(0x4a4a4a, { rough:.5, metal:.9 }), .005);
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(.5, .14), M(0xffffff, { map:labelTex('В ОГОРОД', '#d8c8a0', '#3a2a18', 256, 72, 'bold 36px sans-serif'), rough:.8 }));
+  sign.position.set(CEL.door.x, 2.12, CEL.door.z - .02); sign.rotation.y = Math.PI; cellar.add(sign);
+}
+// люк in the кладовка floor: the lid swings up while you are downstairs
+const hatch = { pivot:null, open:0 };
+{
+  const hole = new THREE.Mesh(new THREE.PlaneGeometry(.86, .66), BASIC(0x050403)); hole.rotation.x = -Math.PI/2; hole.position.set(HATCH.x, .006, HATCH.z); house.add(hole);
+  for (const s of [-1, 1]){ rbox(house, HATCH.x, .008, HATCH.z + s*.36, .98, .016, .06, mat.darkWood, .004); rbox(house, HATCH.x + s*.46, .008, HATCH.z, .06, .016, .78, mat.darkWood, .004); }
+  hatch.pivot = grp(house, HATCH.x, .012, HATCH.z - .33);   // hinge on the north edge
+  rbox(hatch.pivot, 0, .015, .33, .86, .03, .66, M(0xffffff, { map:darkWoodTex, rough:.75 }), .006);
+  for (const z of [.12, .54]) rbox(hatch.pivot, 0, .034, z, .8, .01, .05, mat.darkWood, .003);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.04, .007, 8, 20), mat.steel); ring.rotation.x = Math.PI/2; ring.position.set(0, .034, .56); hatch.pivot.add(ring);
+}
 // every surface receives the sun's shadow; only big occluders cast it
 scene.traverse(o => { if (o.isMesh || o.isInstancedMesh){ o.receiveShadow = true; } });
 for (const m of casters) m.castShadow = true;
@@ -2333,6 +2438,127 @@ const bron = (() => {
   return { group:g, legL, legR, armL, armR, stick, spag, halves, recTag, mark, markBang, eyeMat };
 })();
 
+/* ================= Макар, Bronislav's younger brother, lives in the подвал ================= */
+const MKS = 1.05;
+const makar = (() => {
+  const g = new THREE.Group();
+  const suitM = M(0x2f7a46, { map:fabricTex, bumpMap:fabricTex, bumpScale:.003, rough:.85, env:.3 }), stripeM = M(0xf4f4f2, { rough:.7 });
+  const skinM = M(0xf0c0a0, { rough:.55, env:.35 }), hairM = M(0x1a1410, { rough:.9 }), blackM = M(0x141416, { rough:.35, env:1 });
+  const capsule = (parent, r, len, m, taper = .9) => {
+    cyl(parent, 0, -len/2, 0, r, r*taper, len, m, 14);
+    sph(parent, 0, 0, 0, r, m, 1, 1, 1, 12); sph(parent, 0, -len, 0, r*taper, m, 1, 1, 1, 12);
+  };
+  const limbPivot = (x, y) => { const p = new THREE.Group(); p.position.set(x, y, 0); g.add(p); return p; };
+  // tracksuit with white stripes, black sneakers
+  const legL = limbPivot(-.13, .9), legR = limbPivot(.13, .9);
+  for (const [leg, s] of [[legL, -1], [legR, 1]]){
+    capsule(leg, .1, .74, suitM, .85);
+    rbox(leg, s*.095, -.37, 0, .012, .7, .03, stripeM, .004);
+    rbox(leg, 0, -.85, .05, .16, .09, .3, blackM, .04, 3);
+  }
+  rbox(g, 0, 1.3, 0, .66, .8, .38, suitM, .13, 4);
+  rbox(g, 0, 1.3, .19, .012, .74, .01, M(0xc9ced3, { rough:.3, metal:1 }), .004);   // zip
+  const armL = limbPivot(-.42, 1.62), armR = limbPivot(.42, 1.62);
+  for (const [arm, s] of [[armL, -1], [armR, 1]]){
+    sph(arm, 0, .02, 0, .12, suitM, 1, 1, 1, 12);
+    capsule(arm, .085, .62, suitM, .9);
+    rbox(arm, s*.08, -.3, 0, .012, .6, .03, stripeM, .004);
+    rbox(arm, 0, -.76, .01, .075, .13, .1, skinM, .035, 3);
+  }
+  cyl(g, 0, 1.74, 0, .09, .1, .12, skinM, 12);
+  // head: messy black hair, round glasses, a gaming headset on the ears
+  sph(g, 0, 1.98, 0, .24, skinM, 1, 1.08, 1, 22);
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(.255, 20, 10, 0, Math.PI*2, 0, Math.PI*.48), hairM); hair.position.y = 2.0; hair.rotation.x = -.18; g.add(hair);
+  for (let i = 0; i < 5; i++) sph(g, -.14 + i*.07, 2.15, .17, .05, hairM, 1, .6, .8, 8);
+  const eyeMat = new THREE.MeshBasicMaterial({ color:EYE_DARK.clone() });
+  for (const s of [-1, 1]){
+    sph(g, s*.085, 2.0, .208, .018, eyeMat, 1, 1, .5, 10);
+    const lens = new THREE.Mesh(new THREE.TorusGeometry(.05, .008, 8, 20), blackM); lens.position.set(s*.085, 2.0, .225); g.add(lens);
+    const cup = cyl(g, s*.24, 1.99, 0, .07, .07, .06, M(0x2a8a4a, { rough:.4, env:1 }), 18); cup.rotation.z = Math.PI/2;
+  }
+  rbox(g, 0, 2.0, .225, .06, .01, .01, blackM, .003);
+  const band = new THREE.Mesh(new THREE.TorusGeometry(.25, .018, 8, 24, Math.PI), blackM); band.position.y = 2.0; g.add(band);
+  tube(g, [[.25, 1.95, .04], [.2, 1.88, .16], [.07, 1.88, .22]], .008, blackM, 8);   // mic
+  sph(g, 0, 1.92, .23, .035, skinM, 1, 1, 1, 10);
+  // gamepad in both hands while he plays
+  const pad = new THREE.Group(); pad.position.set(0, 1.12, .52); g.add(pad);
+  rbox(pad, 0, 0, 0, .16, .03, .08, blackM, .015);
+  for (const s of [-1, 1]) sph(pad, s*.07, -.01, -.02, .03, blackM, 1, .8, 1.2, 8);
+  sph(pad, .04, .02, 0, .008, BASIC(0xff3a3a), 1, 1, 1, 6);
+  const name = textSprite('МАКАР', '#6ad08a', .7); name.position.y = 2.55; g.add(name);
+  const mark = textSprite('?', '#ffb44a', 1.2); mark.position.y = 2.95; g.add(mark);
+  const markBang = textSprite('!', '#ff3b2f', 1.3); markBang.position.y = 2.95; g.add(markBang);
+  g.scale.setScalar(MKS);
+  g.traverse(o => { if (o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
+  scene.add(g);
+  return { group:g, legL, legR, armL, armR, pad, mark, markBang, eyeMat };
+})();
+const MK = { x:CEL.chair.x, z:CEL.chair.z, a:Math.PI/2, state:'game', pose:'sit', sitting:true, meter:0, seen:false, phase:0, prevPhase:0,
+  taskT:30, susT:0, grabT:0, searchT:0, speakT:4, lostT:0, chased:false, met:false, stim:{ x:0, z:0 }, lastSeen:{ x:0, z:0 }, field:null, fieldCell:-1, fieldAge:0 };
+// his own little nav grid for the подвал
+const MCELL = .25, MGW = (CEL.x2 - CEL.x1)/MCELL, MGH = (CEL.z2 - CEL.z1)/MCELL;
+const mBlocked = new Uint8Array(MGW*MGH);
+const mCell = (x, z) => clamp(Math.floor((z - CEL.z1)/MCELL), 0, MGH - 1)*MGW + clamp(Math.floor((x - CEL.x1)/MCELL), 0, MGW - 1);
+const mcx = c => CEL.x1 + (c % MGW + .5)*MCELL, mcz = c => CEL.z1 + ((c/MGW|0) + .5)*MCELL;
+{
+  const R = .3;
+  for (let c = 0; c < mBlocked.length; c++){
+    const x = mcx(c), z = mcz(c);
+    mBlocked[c] = x < CEL.x1 + R || x > CEL.x2 - R || z < CEL.z1 + R || z > CEL.z2 - R ? 1 : 0;
+    if (!mBlocked[c]) for (const b of celCols) if (x > b.x1 - R && x < b.x2 + R && z > b.z1 - R && z < b.z2 + R){ mBlocked[c] = 1; break; }
+  }
+}
+function mFree(c){
+  if (!mBlocked[c]) return c;
+  let best = c, bd = INF;
+  for (let k = 0; k < mBlocked.length; k++) if (!mBlocked[k]){ const d = Math.hypot(mcx(k) - mcx(c), mcz(k) - mcz(c)); if (d < bd){ bd = d; best = k; } }
+  return best;
+}
+function mField(t){
+  const f = new Float32Array(mBlocked.length).fill(INF), q = [t]; f[t] = 0;
+  for (let h = 0; h < q.length; h++){
+    const c = q[h], i = c % MGW, j = c/MGW|0;
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){
+      const ni = i + di, nj = j + dj;
+      if (ni < 0 || nj < 0 || ni >= MGW || nj >= MGH) continue;
+      const n = nj*MGW + ni;
+      if (mBlocked[n] || f[n] <= f[c] + 1) continue;
+      f[n] = f[c] + 1; q.push(n);
+    }
+  }
+  return f;
+}
+function mLineFree(ax, az, bx, bz){
+  const n = Math.ceil(Math.hypot(bx - ax, bz - az)/.1);
+  for (let i = 1; i <= n; i++) if (mBlocked[mCell(ax + (bx - ax)*i/n, az + (bz - az)*i/n)]) return false;
+  return true;
+}
+// one step towards (tx, tz): straight when the way is clear, otherwise down the BFS field; true once there
+function makarStep(tx, tz, speed, dt){
+  if (Math.hypot(tx - MK.x, tz - MK.z) < .12) return true;
+  let ax = tx, az = tz;
+  if (!mLineFree(MK.x, MK.z, tx, tz)){
+    const tc = mFree(mCell(tx, tz));
+    MK.fieldAge += dt;
+    if (MK.fieldCell !== tc || !MK.field || MK.fieldAge > .5){ MK.field = mField(tc); MK.fieldCell = tc; MK.fieldAge = 0; }
+    const c = mFree(mCell(MK.x, MK.z)), i = c % MGW, j = c/MGW|0;
+    let best = c;
+    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++){
+      const ni = i + di, nj = j + dj;
+      if (ni < 0 || nj < 0 || ni >= MGW || nj >= MGH) continue;
+      const n = nj*MGW + ni;
+      if (MK.field[n] < MK.field[best]) best = n;
+    }
+    ax = mcx(best); az = mcz(best);
+  }
+  const dx = ax - MK.x, dz = az - MK.z, l = Math.hypot(dx, dz) || 1, st = Math.min(speed*dt, l);
+  MK.x += dx/l*st; MK.z += dz/l*st;
+  MK.a = turnTo(MK.a, Math.atan2(dx, dz), dt*8);
+  MK.phase += speed*dt*3.2;
+  pushOut(MK, .28);
+  return Math.hypot(tx - MK.x, tz - MK.z) < .15;
+}
+
 /* ================= audio ================= */
 let ac = null, muted = false;
 function initAudio(){
@@ -2382,6 +2608,7 @@ sadd('Ключи от машины', KI, carKeyObj, { key:'car' });
 for (const it of PICKUPS) sadd(INV_DEFS[it.id].name, KI, it.g, { item:it.id });
 sadd('Бронислав (статуя)', PERS, bron.group);
 sadd('Бобик (статуя)', PERS, dog.g);
+sadd('Макар (статуя)', PERS, makar.group);
 const spawned = [];
 function spawnObject(def){
   const box = new THREE.Box3().setFromObject(def.src), c = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
@@ -2634,17 +2861,17 @@ function moodNow(){
   if (B.state === 'task') return B.task === 'toilet' ? 'lazy' : B.task === 'computer' || B.task === 'vlog' || B.task === 'spaghetti' ? 'hype' : 'calm';
   return 'calm';
 }
-function speak(text, mood = 'calm', priority = 1, fixedVol){
-  if (!VOICE.ok || muted || (state !== 'play' && state !== 'caught' && state !== 'won' && state !== 'alarm' && state !== 'blackout' && state !== 'driving') || text.startsWith('*')) return;
-  const d = Math.hypot(B.x - camera.position.x, B.z - camera.position.z);
-  const los = clearSight(B.x, B.z, camera.position.x, camera.position.z, false);
+function speak(text, mood = 'calm', priority = 1, fixedVol, who = B){
+  if (!VOICE.ok || muted || (state !== 'play' && state !== 'caught' && state !== 'mcaught' && state !== 'won' && state !== 'alarm' && state !== 'blackout' && state !== 'driving') || text.startsWith('*')) return;
+  const d = Math.hypot(who.x - camera.position.x, who.z - camera.position.z);
+  const los = clearSight(who.x, who.z, camera.position.x, camera.position.z, false);
   const v = fixedVol ?? Math.max(0, 1 - d/20)*(los ? 1 : .55);
   if (v < .06) return;
   if (speechSynthesis.speaking || speechSynthesis.pending){ if (priority < 2) return; speechSynthesis.cancel(); }
   const u = new SpeechSynthesisUtterance(text.replace(/[*«»]/g, ''));
   u.lang = 'ru-RU'; if (VOICE.v) u.voice = VOICE.v;
   const [rate, pitch] = MOODS[mood] || MOODS.calm;
-  u.rate = rate; u.pitch = VOICE.male ? pitch : pitch*.62;   // no male voice installed → pull a female one down
+  u.rate = rate; u.pitch = (VOICE.male ? pitch : pitch*.62)*(who === MK ? 1.4 : 1);   // no male voice installed → pull a female one down; Макар is younger
   u.volume = Math.min(1, v);
   try { speechSynthesis.speak(u); } catch (e) {}
 }
@@ -2727,6 +2954,7 @@ function resetWorld(){
   clearSpawns(true); closeSpawn();
   dog.alert = 0; dog.cd = 0; dog.barking = 0;
   resetLizard();
+  resetMakar(); P.cellar = false; hatch.open = 0; boltP = 0; cel.bolt.position.x = CEL.door.x + .12;
   inv = []; invKey = '-'; 
   for (const b of spagBits) house.remove(b); spagBits.length = 0; if (spagPack) spagPack.rotation.z = .15;
   flushCd = spagCd = 0; B.noise = null;
@@ -2739,7 +2967,7 @@ function startRun(){
   initAudio();
   if (VOICE.ok){ try { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(' ')); } catch (e) {} }
   resetWorld();
-  Object.assign(P, { x:3.0, z:3.7, crouch:false, fy:0, hidden:null, moving:false, noisy:false, bob:0, eye:1.6 });
+  Object.assign(P, { x:3.0, z:3.7, crouch:false, fy:0, hidden:null, moving:false, noisy:false, bob:0, eye:1.6, cellar:false });
   yaw = -Math.PI*.9; pitch = 0; crouchToggle = false;
   elapsed = 0; chases = 0; hbT = 0; catches = 0; usedFlush = usedSpag = false;
   syncLives();
@@ -2807,7 +3035,7 @@ function endRun(id){
   try { document.exitPointerLock?.(); } catch (err) {}
   setHud(false);
   $('fade').classList.remove('on');
-  $('bubble').classList.remove('on'); $('vignette').style.opacity = 0;
+  $('bubble').classList.remove('on'); $('mbubble').classList.remove('on'); $('vignette').style.opacity = 0;
   const isNew = unlockEnding(id);
   $('endEyebrow').textContent = `Концовка №${id}` + (isNew ? ' · открыта впервые' : '');
   $('endTitle').textContent = e.name;
@@ -2846,7 +3074,7 @@ function doRespawn(){
   $('closet').hidden = true;
   Object.assign(B, { x:15, z:1.28, a:Math.PI, state:'task', task:'computer', taskT:rand(10, 14), pose:'type', sitting:true,
     meter:0, lastSeenT:-9, lostT:0, searchT:0, hideSeen:null, speakT:3, field:null, fieldCell:-1, seen:false, noise:null });
-  Object.assign(P, { x:3.0, z:3.7, crouch:false, fy:0, hidden:null, moving:false, noisy:false, bob:0, eye:1.6 });
+  Object.assign(P, { x:3.0, z:3.7, crouch:false, fy:0, hidden:null, moving:false, noisy:false, bob:0, eye:1.6, cellar:false });
   yaw = -Math.PI*.9; pitch = 0; crouchToggle = false;
   if (cheat('key') && !hasKey) giveKey();
   syncLives();
@@ -2857,6 +3085,13 @@ function findAction(){
   if (P.hidden && P.hidden !== 'menu') return { type:'unhide', text:'<kbd>E</kbd>вылезти из шкафа' };
   const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
   const facing = (x, z) => { const dx = x - P.x, dz = z - P.z, l = Math.hypot(dx, dz) || 1; return (dx*fx + dz*fz)/l; };
+  if (P.cellar){
+    if (Math.hypot(CEL.foot.x - P.x, CEL.foot.z - P.z) < 1.0 && facing(CEL.foot.x, CEL.foot.z - 1.5) > .5)
+      return { type:'cellarUp', text:'<kbd>E</kbd>подняться наверх в кладовку' };
+    if (Math.hypot(CEL.door.front.x - P.x, CEL.door.front.z - P.z) < .9 && facing(CEL.door.x, CEL.door.z) > .6)
+      return { type:'bolt', text:'Держи <kbd>E</kbd> — отодвинуть ржавый засов' };
+    return null;
+  }
   // looking up at a smoke detector wins over anything lying around
   if (inv.includes('briefs') && pitch > .55){
     const spot = SMOKE_SPOTS.find(([x, z]) => Math.hypot(x - P.x, z - P.z) < 1.1);
@@ -2892,6 +3127,8 @@ function findAction(){
     return flushCd > 0 ? { type:'wait', text:'Бачок набирается…' } : { type:'flush', text:'<kbd>E</kbd>смыть унитаз' };
   if (Math.hypot(5.0 - P.x, 11.45 - P.z) < 1.3 && facing(5.0, 11.45) > .35)
     return spagCd > 0 ? { type:'wait', text:'Хрусть! Ещё разок?' } : { type:'spaghetti', text:'<kbd>E</kbd>сломать спагетти Бронислава' };
+  if (Math.hypot(HATCH.x - P.x, HATCH.z - P.z) < 1.1 && facing(HATCH.x, HATCH.z) > .3)
+    return { type:'cellarDown', text:'<kbd>E</kbd>открыть люк и спуститься в подвал' };
   let best = null, bd = 1.25;
   for (const w of wardrobes){
     const d = Math.hypot(w.front.x - P.x, w.front.z - P.z);
@@ -2919,6 +3156,8 @@ function doAction(){
     else banner(`В инвентаре: ${INV_DEFS[it.id].name}`, 'good', 2.2);
     return;
   }
+  if (action.type === 'cellarDown'){ goDown(); return; }
+  if (action.type === 'cellarUp'){ goUp(); return; }
   if (action.type === 'feed'){
     liz.fed = true; liz.eatT = .8; liz.tongueT = 0;
     liz.jarBugs.forEach(b => b.visible = false); liz.terrBugs.forEach(b => b.visible = true);
@@ -3043,7 +3282,7 @@ function perceive(dt){
   const dx = P.x - B.x, dz = P.z - B.z, d = Math.hypot(dx, dz);
   let seen = false;
   const inToilet = toiletDoor.col.active;
-  const ghost = cheat('ghost') || !!D_().blind;   // «Практика»: he never spots you
+  const ghost = cheat('ghost') || !!D_().blind || P.cellar;   // «Практика»: he never spots you; nor down in the подвал
   if (!P.hidden && !inToilet && !ghost){
     const alert = B.state === 'chase' || B.state === 'search';
     const range = alert ? 14 : D_().range;
@@ -3118,7 +3357,7 @@ function updateBron(dt){
       if (!B.invArrived){
         if (navStep(nz.x, nz.z, 2.3, dt) || Math.hypot(nz.x - B.x, nz.z - B.z) < .5){
           B.invArrived = true; B.invT = 3.5;
-          say(pick({ flush:FLUSH_ARRIVE, spaghetti:SPAG_ARRIVE, dog:DOG_ARRIVE, lizard:LIZARD_ARRIVE }[nz.kind]), 3, nz.kind === 'spaghetti' ? 'angry' : 'sly', 2);
+          say(pick({ flush:FLUSH_ARRIVE, spaghetti:SPAG_ARRIVE, dog:DOG_ARRIVE, lizard:LIZARD_ARRIVE, makar:MAKAR_ARRIVE }[nz.kind]), 3, nz.kind === 'spaghetti' ? 'angry' : 'sly', 2);
         }
       } else {
         B.invT -= dt; B.a += dt*1.3;
@@ -3143,8 +3382,166 @@ function makeNoise(x, z, kind){
   standUp();
   B.state = 'investigate'; B.noise = { x, z, kind }; B.invArrived = false; B.invT = 0;
   sfx.hm();
-  say(pick({ flush:FLUSH_REACT, spaghetti:SPAG_REACT, dog:DOG_REACT, lizard:LIZARD_REACT }[kind]), 2.6, 'angry', 2);
-  banner({ flush:'Бронислав услышал смыв и идёт проверить!', spaghetti:'Бронислав услышал хруст и бежит на кухню!', dog:'Бобик лает! Бронислав идёт посмотреть!', lizard:'Ящерка тебя лижет! Бронислав услышал и идёт в зал!' }[kind], 'warn', 2.4);
+  say(pick({ flush:FLUSH_REACT, spaghetti:SPAG_REACT, dog:DOG_REACT, lizard:LIZARD_REACT, makar:MAKAR_REACT }[kind]), 2.6, 'angry', 2);
+  banner({ flush:'Бронислав услышал смыв и идёт проверить!', spaghetti:'Бронислав услышал хруст и бежит на кухню!', dog:'Бобик лает! Бронислав идёт посмотреть!', lizard:'Ящерка тебя лижет! Бронислав услышал и идёт в зал!', makar:'Макар орёт из подвала! Бронислав идёт в кладовку!' }[kind], 'warn', 2.4);
+}
+/* ---- Makar brain: plays танчики in headphones, sometimes fetches огурцы, chases you if he spots you ---- */
+let mbubbleT = 0;
+function makarSay(text, time = 2.4, priority = 1){
+  $('mbubble').textContent = text; $('mbubble').classList.add('on'); mbubbleT = time;
+  speak(text, MK.state === 'chase' ? 'angry' : 'hype', priority, undefined, MK);
+}
+function makarStand(){ if (MK.sitting){ MK.sitting = false; MK.x = CEL.stand.x; MK.z = CEL.stand.z; } }
+function makarSit(){
+  Object.assign(MK, { sitting:true, x:CEL.chair.x, z:CEL.chair.z, a:Math.PI/2, state:'game', pose:'sit', meter:0, taskT:rand(25, 40) });
+}
+function resetMakar(){
+  makarSit();
+  Object.assign(MK, { chased:false, met:false, seen:false, speakT:4, lostT:0, susT:0, grabT:0, searchT:0, field:null, fieldCell:-1 });
+  $('mbubble').classList.remove('on'); mbubbleT = 0;
+}
+function makarChase(){
+  makarStand();
+  MK.state = 'chase'; MK.meter = 1; MK.chased = true; MK.lostT = 0; MK.speakT = 2.5;
+  sfx.sting(); banner('Макар тебя заметил! Беги!', 'warn', 2.2);
+  makarSay('Стоять! Ты кто такой?! Брони-и-ислав!', 2.4, 2);
+}
+function makarCatch(){
+  state = 'mcaught'; caughtT = 1.9; MK.pose = 'grab';
+  $('prompt').hidden = true; $('eye').classList.remove('on');
+  sfx.sting();
+  makarSay('Попался! Брони-и-ислав, я его поймал!', 2.2, 3);
+  try { document.exitPointerLock?.(); } catch (e) {}
+}
+function updateMakar(dt){
+  if (cheat('freeze')){ MK.meter = 0; MK.seen = false; return; }
+  const dx = P.x - MK.x, dz = P.z - MK.z, d = Math.hypot(dx, dz);
+  const ghost = cheat('ghost') || !!D_().blind || !P.cellar;   // «Практика»: he never spots you either
+  const gaming = MK.state === 'game';   // headphones on, eyes on the TV
+  let seen = false;
+  if (!ghost && !P.hidden){
+    const alert = MK.state === 'chase' || MK.state === 'search';
+    if (d < (alert ? 12 : 8) && clearSight(MK.x, MK.z, P.x, P.z, P.crouch)){
+      const cone = (alert ? 100 : gaming ? 35 : 60)*Math.PI/180;
+      if (Math.abs(angDiff(Math.atan2(dx, dz), MK.a)) < cone || d < 1.3) seen = true;
+    }
+  }
+  MK.seen = seen;
+  if (seen){ MK.lastSeen.x = P.x; MK.lastSeen.z = P.z; MK.lostT = 0; } else MK.lostT += dt;
+  if (MK.state !== 'chase'){
+    let gain = 0;
+    if (seen){ gain += .9*(1.6 - d/8)*(P.crouch ? .5 : 1)*(P.moving ? 1 : .6); if (d < 1.3) gain += 2.6; MK.stim.x = P.x; MK.stim.z = P.z; }
+    if (!ghost && P.noisy && d < (gaming ? 2.5 : 6)){ gain += .5; MK.stim.x = P.x; MK.stim.z = P.z; }
+    if (!ghost && boltP > 0 && (actHeld || keys.KeyE || pad.act) && d < 8){ gain += gaming ? .18 : .45; MK.stim.x = P.x; MK.stim.z = P.z; }
+    if (MK.state === 'search' && seen) gain += 3;
+    MK.meter = gain > 0 ? Math.min(1, MK.meter + gain*dt) : Math.max(0, MK.meter - .16*dt);
+    if (MK.meter >= 1){ makarChase(); return; }
+    if (MK.meter > .45 && (MK.state === 'game' || MK.state === 'snack' || MK.state === 'return')){
+      makarStand(); MK.state = 'suspicious'; MK.susT = 0; makarSay(pick(MAKAR_SUSPECT), 2);
+    }
+  }
+  MK.speakT -= dt;
+  switch (MK.state){
+    case 'game':
+      MK.pose = 'sit'; MK.taskT -= dt;
+      if (MK.speakT <= 0){ if (P.cellar) makarSay(pick(MAKAR_GAME), 2.2); MK.speakT = rand(6, 11); }
+      if (MK.taskT <= 0){ makarStand(); MK.state = 'snack'; MK.grabT = 0; if (P.cellar) makarSay(pick(MAKAR_SNACK), 2); }
+      break;
+    case 'snack':
+      MK.pose = 'walk';
+      if (MK.grabT > 0){ MK.grabT -= dt; MK.pose = 'grab'; MK.a = turnTo(MK.a, Math.PI, dt*6); if (MK.grabT <= 0) MK.state = 'return'; }
+      else if (makarStep(CEL.shelf.x, CEL.shelf.z, 1.3, dt)) MK.grabT = 2.2;
+      break;
+    case 'return':
+      MK.pose = 'walk';
+      if (makarStep(CEL.stand.x, CEL.stand.z, 1.3, dt)) makarSit();
+      break;
+    case 'suspicious':
+      MK.pose = 'walk'; MK.susT += dt;
+      if (MK.susT < 1.2) MK.a = turnTo(MK.a, Math.atan2(MK.stim.x - MK.x, MK.stim.z - MK.z), dt*4);
+      else if (makarStep(MK.stim.x, MK.stim.z, 1.4, dt)) MK.a += dt*1.5;   // got there: look around
+      if (MK.susT > 7){ MK.meter = 0; makarSay(pick(MAKAR_GIVEUP), 2.2); MK.state = 'return'; }
+      break;
+    case 'chase': {
+      MK.pose = 'walk';
+      if (!P.cellar){   // you got away up the stairs: he stops at the bottom and grumbles
+        if (makarStep(CEL.arrive.x, CEL.arrive.z, 3, dt)){ MK.state = 'search'; MK.searchT = 3; }
+        break;
+      }
+      makarStep(seen ? P.x : MK.lastSeen.x, seen ? P.z : MK.lastSeen.z, 3.5, dt);
+      if (MK.speakT <= 0){ makarSay(pick(MAKAR_CHASE), 2); MK.speakT = rand(3, 5); }
+      if (d < .85 && !P.hidden && !cheat('god')){ makarCatch(); break; }
+      if (MK.lostT > 4){ MK.state = 'search'; MK.searchT = 4; makarSay(pick(MAKAR_SEARCH), 2); }
+      break;
+    }
+    case 'search':
+      MK.pose = 'walk'; MK.searchT -= dt; MK.a += dt*1.6;
+      if (MK.searchT <= 0){ MK.meter = 0; if (P.cellar) makarSay(pick(MAKAR_GIVEUP), 2.2); MK.state = 'return'; }
+      break;
+  }
+}
+// going up and down through the люк: a short fade, then you are on the other floor
+let transitT = 0, transitFn = null, transitAfter = null, goalBefore = '';
+function startTransit(title, text, fn){
+  state = 'transit'; transitT = 1.2; transitFn = fn; transitAfter = null;
+  $('fadeTitle').textContent = title; $('fadeText').textContent = text; $('fade').classList.add('on');
+  $('prompt').hidden = true; $('eye').classList.remove('on'); $('bubble').classList.remove('on'); $('mbubble').classList.remove('on');
+  sfx.creak();
+}
+function goDown(){
+  startTransit('Подвал', 'Ты открыл люк и спустился по скрипучей лестнице…', () => {
+    Object.assign(P, { cellar:true, x:CEL.arrive.x, z:CEL.arrive.z, fy:0 }); yaw = -Math.PI/2; pitch = 0;
+    if (B.state === 'chase'){ B.state = 'search'; B.searchT = 5; B.meter = .5; }
+    goalBefore = $('goalText').textContent; $('goalText').textContent = 'Выберись через дверь погреба или вернись наверх';
+    const first = !MK.met; MK.met = true;
+    return () => banner(first ? 'Подвал! Тут живёт Макар, брат Бронислава. Не попадись ему!' : 'Подвал. Не попадись Макару!', 'warn', 3.2);
+  });
+}
+function goUp(){
+  const chased = MK.state === 'chase';
+  startTransit('Кладовка', chased ? 'Ты взлетел по лестнице и захлопнул люк перед носом Макара!' : 'Ты тихо поднялся по лестнице обратно в кладовку.', () => {
+    Object.assign(P, { cellar:false, x:HATCH.x, z:HATCH.z - 1.0 }); yaw = 0; pitch = 0;
+    $('goalText').textContent = goalBefore;
+    // he yells for his brother, and Bronislav comes to the кладовка
+    return chased ? () => makeNoise(HATCH.x, HATCH.z - .9, 'makar') : null;
+  });
+}
+let boltP = 0, outT = 0;
+function startCellarEscape(){
+  state = 'cellarOut'; outT = 2.2; sfx.creak(); sfx.unlock();
+  $('prompt').hidden = true; $('mbubble').classList.remove('on');
+  $('fadeTitle').textContent = 'Ты выбрался через погреб!';
+  $('fadeText').textContent = MK.chased ? 'Макар застрял в дверях, а ты уже бежишь огородами.' : 'Макар так и не снял наушники. Ты тихо ушёл огородами.';
+  $('fade').classList.add('on');
+}
+function syncMakar(dt, t){
+  const g = makar.group;
+  g.rotation.y = MK.a;
+  const pose = MK.pose, moving = MK.phase !== MK.prevPhase; MK.prevPhase = MK.phase;
+  let legs = 0, armL = 0, armR = 0, y = 0;
+  const sw = Math.sin(MK.phase);
+  if (pose === 'walk'){ const a = moving ? sw*(MK.state === 'chase' ? .8 : .55) : 0; legs = a; armL = -a*.8; armR = a*.8; y = moving ? Math.abs(sw)*.04 : 0; }
+  if (pose === 'sit'){ legs = -Math.PI/2; armL = -1.15 + Math.sin(t*14)*.04; armR = -1.15 + Math.sin(t*14 + 2)*.04; y = -.47; }
+  if (pose === 'grab'){ armR = -2.3; armL = -.4; }
+  makar.legL.rotation.x = legs; makar.legR.rotation.x = pose === 'walk' ? -legs : legs;
+  makar.armL.rotation.x = armL; makar.armR.rotation.x = armR;
+  g.position.set(MK.x, CEL.y + y, MK.z);
+  makar.pad.visible = pose === 'sit';
+  makar.mark.visible = MK.state === 'suspicious' || MK.state === 'search';
+  makar.markBang.visible = MK.state === 'chase' || state === 'mcaught';
+  makar.eyeMat.color.copy(MK.state === 'chase' || state === 'mcaught' ? EYE_RED : EYE_DARK);
+  cel.tv.intensity = .5 + Math.sin(t*23)*.06 + Math.sin(t*7.3)*.05;
+  // the lid of the люк is up while you are downstairs; the sky light is shut out down there
+  hatch.open += ((P.cellar || state === 'transit' ? 1 : 0) - hatch.open)*Math.min(1, dt*5);
+  hatch.pivot.rotation.x = -hatch.open*1.9;
+  hemi.intensity = P.cellar ? .2 : .85;
+  // his speech bubble
+  const bub = $('mbubble');
+  if (bub.classList.contains('on')){
+    tmpV.set(MK.x, CEL.y + 2.5, MK.z).project(camera);
+    if (!P.cellar || tmpV.z > 1) bub.style.left = '-999px';
+    else { bub.style.left = clamp((tmpV.x*.5 + .5)*innerWidth, 90, innerWidth - 90) + 'px'; bub.style.top = clamp((-tmpV.y*.5 + .5)*innerHeight, 70, innerHeight - 30) + 'px'; }
+  }
 }
 function toSuspicious(){
   standUp(); B.state = 'suspicious'; sfx.hm(); say(pick(SUSPECT_PHRASES), 2);
@@ -3198,8 +3595,16 @@ function updatePlayer(dt){
       if (!toiletDoor.col.active && Math.hypot(B.x - P.x, B.z - P.z) < 14){ B.meter = Math.max(B.meter, .75); B.stim.x = P.x; B.stim.z = P.z; }
     }
   } else unlock = Math.max(0, unlock - dt*.8);
-  $('promptBar').hidden = !(action && action.type === 'door' && unlock > 0);
-  $('promptFill').style.transform = `scaleX(${unlock})`;
+  // the cellar door's rusty bolt (hold); it squeaks, and Макар may hear it
+  if (action && action.type === 'bolt' && holding){
+    const before = boltP; boltP = Math.min(1, boltP + dt/2.2);
+    if (Math.floor(before*4) !== Math.floor(boltP*4)) sfx.unlock();
+    cel.bolt.position.x = CEL.door.x + .12 - boltP*.18;
+    if (boltP >= 1){ boltP = 0; startCellarEscape(); return; }
+  } else boltP = Math.max(0, boltP - dt*.8);
+  const held = action && action.type === 'bolt' ? boltP : unlock;
+  $('promptBar').hidden = !(action && (action.type === 'door' || action.type === 'bolt') && held > 0);
+  $('promptFill').style.transform = `scaleX(${held})`;
 
   if (P.hidden){
     yaw = P.hidden.yaw + clamp(angDiff(yaw, P.hidden.yaw), -.55, .55);
@@ -3223,7 +3628,7 @@ function updatePlayer(dt){
   const mx = (fx*f + rx*s), mz = (fz*f + rz*s), ml = Math.hypot(mx, mz) || 1;
   if (len){ P.x += mx/ml*speed*dt; P.z += mz/ml*speed*dt; }
   // admin «Полёт»: Space up, X down; you pass over anything lower than your feet
-  if (cheat('fly')){
+  if (cheat('fly') && !P.cellar){
     const up = keys.Space || upHeld || pad.up, down = keys.KeyX || downHeld || pad.down;
     if (up){ landing = false; P.standing = false; }
     const floor = groundAt(P.x, P.z, P.fy);
@@ -3350,11 +3755,15 @@ function updateCamera(dt, t){
     const ty = Math.atan2(-hx, -hz), tp = Math.atan2(hy, Math.hypot(hx, hz));
     yaw = turnTo(yaw, ty, dt*6); pitch += (tp - pitch)*Math.min(1, dt*6);
   }
+  if (state === 'mcaught'){
+    const hx = MK.x - P.x, hz = MK.z - P.z, hy = 2.0 - P.eye;
+    yaw = turnTo(yaw, Math.atan2(-hx, -hz), dt*6); pitch += (Math.atan2(hy, Math.hypot(hx, hz)) - pitch)*Math.min(1, dt*6);
+  }
   if (state === 'winning'){ yaw = turnTo(yaw, Math.PI/2, dt*3); }
   const targetEye = P.hidden && P.hidden !== 'menu' ? 1.55 : P.crouch ? 1.0 : 1.6;
   P.eye += (targetEye - P.eye)*Math.min(1, dt*8);
   const bob = P.moving && !P.fy ? Math.sin(P.bob)*.035 : 0;
-  camera.position.set(P.x, P.eye + bob + (P.fy || 0), P.z);
+  camera.position.set(P.x, P.eye + bob + (P.fy || 0) + (P.cellar ? CEL.y : 0), P.z);
   camera.rotation.set(pitch, yaw, 0);
 }
 
@@ -3398,15 +3807,21 @@ function updateHud(d, dt){
   else if (B.state === 'walk') text = TASKS[B.task].going;
   else if (B.state === 'suspicious'){ text = 'что-то услышал…'; cls = 'warn'; }
   else if (B.state === 'chase'){ text = 'гонится за тобой!'; cls = 'danger'; }
-  else if (B.state === 'investigate'){ text = { flush:'идёт на звук смыва', spaghetti:'бежит на кухню: спагетти!', dog:'идёт на лай Бобика', lizard:'идёт на чавканье ящерки' }[B.noise ? B.noise.kind : 'flush']; cls = 'warn'; }
+  else if (B.state === 'investigate'){ text = { flush:'идёт на звук смыва', spaghetti:'бежит на кухню: спагетти!', dog:'идёт на лай Бобика', lizard:'идёт на чавканье ящерки', makar:'идёт на крик Макара' }[B.noise ? B.noise.kind : 'flush']; cls = 'warn'; }
   else { text = 'ищет тебя'; cls = 'warn'; }
+  if (P.cellar){
+    text = { game:'играет в танчики', snack:'идёт за огурцами', return:'возвращается к игре', suspicious:'что-то услышал…', chase:'гонится за тобой!', search:'ищет тебя' }[MK.state];
+    cls = MK.state === 'chase' ? 'danger' : MK.state === 'suspicious' || MK.state === 'search' ? 'warn' : '';
+  }
+  st.querySelector('.label').textContent = P.cellar ? 'Макар' : 'Бронислав';
   $('statusText').textContent = text;
   st.className = 'status plate ' + cls;
-  const eye = $('eye');
-  eye.classList.toggle('on', B.meter > .02 && state === 'play');
-  eye.classList.toggle('hot', B.meter > .6);
-  $('eyeFill').style.transform = `scaleX(${B.meter})`;
-  const danger = B.state === 'chase' ? clamp(1.2 - d/12, .35, 1) : B.meter*.6;
+  const eye = $('eye'), meter = P.cellar ? MK.meter : B.meter;
+  eye.classList.toggle('on', meter > .02 && state === 'play');
+  eye.classList.toggle('hot', meter > .6);
+  $('eyeFill').style.transform = `scaleX(${meter})`;
+  const danger = P.cellar ? (MK.state === 'chase' ? clamp(1.2 - Math.hypot(MK.x - P.x, MK.z - P.z)/8, .35, 1) : MK.meter*.6)
+    : B.state === 'chase' ? clamp(1.2 - d/12, .35, 1) : B.meter*.6;
   $('vignette').style.opacity = (danger*.9).toFixed(3);
   hbT -= dt;
   if (hbT <= 0 && danger > .1){ sfx.heart(.3 + danger*.6); hbT = 1.1 - danger*.7; }
@@ -3440,9 +3855,17 @@ function frame(){
   T += dt;
   let d = 99;
   if (!spawnOpen){ updateDog(dt, T); updateLizard(dt, T); }
-  if (state === 'play'){ if (!spawnOpen){ updatePlayer(dt); if (state === 'play') d = updateBron(dt); } updateHud(d, dt); }
+  if (state === 'play'){ if (!spawnOpen){ updatePlayer(dt); if (state === 'play') d = updateBron(dt); if (state === 'play') updateMakar(dt); } updateHud(d, dt); }
   else if (state === 'menu'){ updateBron(dt); }
   else if (state === 'caught'){ caughtT -= dt; if (caughtT <= 0){ if (catches >= maxCatches()) endRun(1); else startRespawn(); } }
+  else if (state === 'mcaught'){ caughtT -= dt; if (caughtT <= 0) endRun(9); }
+  else if (state === 'cellarOut'){ outT -= dt; if (outT <= 0) endRun(MK.chased ? 10 : 11); }
+  else if (state === 'transit'){
+    transitT -= dt;
+    if (transitFn && transitT < .65){ transitAfter = transitFn(); transitFn = null; }
+    if (transitT <= .3) $('fade').classList.remove('on');
+    if (transitT <= 0){ state = 'play'; if (transitAfter) transitAfter(); transitAfter = null; }
+  }
   else if (state === 'respawn'){
     respawnT -= dt;
     if (!respawned && respawnT < 1.7){ respawned = true; doRespawn(); }
@@ -3466,7 +3889,9 @@ function frame(){
   else if (state === 'winning'){ winT -= dt; P.x -= dt*1.6; P.z += ((GATE.z1 + GATE.z2)/2 - P.z)*Math.min(1, dt*4); P.moving = true; P.bob += dt*6; if (winT <= 0) endRun(winEnding()); }
   if (bannerT > 0){ bannerT -= dt; if (bannerT <= 0) $('banner').classList.remove('on'); }
   if (bubbleT > 0){ bubbleT -= dt; if (bubbleT <= 0) $('bubble').classList.remove('on'); }
+  if (mbubbleT > 0){ mbubbleT -= dt; if (mbubbleT <= 0) $('mbubble').classList.remove('on'); }
   syncBron(dt, T);
+  syncMakar(dt, T);
   syncWorld(dt, T);
   if ((++shadowTick) % 3 === 0) renderer.shadowMap.needsUpdate = true;
   updateCamera(dt, T);
