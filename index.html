@@ -65,6 +65,15 @@ button:focus-visible{outline:2px solid var(--lamp);outline-offset:3px}
 #mute,#spawnBtn{pointer-events:auto;padding:6px 10px;font-size:13px}
 #spawnBtn{border-color:rgba(82,224,142,.45);color:var(--safe)}
 #spawnMenu .card{width:min(900px,100%)}
+.pc{width:min(720px,100%);background:linear-gradient(160deg,#123a6a,#0b1f3a);border:12px solid #1c1c20;border-radius:14px;padding:26px 20px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.pc-login{display:flex;flex-direction:column;align-items:center;gap:12px;color:#fff;text-align:center}
+.pc-avatar{width:84px;height:84px;border-radius:50%;background:#ff6a00;color:#111;display:grid;place-items:center;font-family:var(--display);font-size:44px}
+#pcPass{width:min(280px,100%);padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;font-size:16px;text-align:center}
+#pcErr{color:#ff8a80;min-height:1.3em;margin:0;font-size:14px}
+.pc-video{position:relative}
+#pcVideo{width:100%;height:auto;display:block;border-radius:6px;background:#000}
+#pcClose{position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:6px;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:18px}
+#pcNoExit{position:absolute;top:48px;right:8px;margin:0;padding:4px 8px;border-radius:6px;background:rgba(0,0,0,.7);color:#ff8a80;font-size:13px;font-weight:700;opacity:0;transition:opacity .2s}
 .spawn-cat{display:flex;flex-direction:column;gap:8px}
 .spawn-cat + .spawn-cat{margin-top:14px}
 .spawn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(170px,100%),1fr));gap:8px}
@@ -247,7 +256,7 @@ h2.good{color:var(--safe)}
     <div class="row">
       <button class="go" id="goBtn" type="button">НАЧАТЬ ПОБЕГ</button>
       <button class="ghost" id="joyBtn" type="button" aria-pressed="true">Джойстик: вкл</button>
-      <button class="ghost" id="endingsBtn" type="button">Концовки <span class="count" id="endingsCount">0/13</span></button>
+      <button class="ghost" id="endingsBtn" type="button">Концовки <span class="count" id="endingsCount">0/14</span></button>
       <button class="ghost" id="adminBtn" type="button" hidden>Админ-панель</button>
     </div>
   </div>
@@ -255,7 +264,7 @@ h2.good{color:var(--safe)}
 
 <section class="screen" id="endingsScreen" hidden>
   <div class="card">
-    <div class="eyebrow">Открыто <span id="endingsOpened">0 из 13</span></div>
+    <div class="eyebrow">Открыто <span id="endingsOpened">0 из 14</span></div>
     <h2>Концовки</h2>
     <ol class="endings" id="endingsList"></ol>
     <div class="admin-gate" id="adminGate"></div>
@@ -302,6 +311,18 @@ h2.good{color:var(--safe)}
   </div>
 </section>
 
+<section class="screen" id="pcScreen" hidden>
+  <div class="pc">
+    <div class="pc-login" id="pcLogin">
+      <div class="pc-avatar">Б</div>
+      <b>Бронислав</b>
+      <input id="pcPass" type="password" placeholder="Пароль" autocomplete="off" spellcheck="false" aria-label="Пароль">
+      <p id="pcErr"></p>
+      <div class="row" style="justify-content:center"><button class="go" id="pcGo" type="button">Войти</button><button class="ghost" id="pcExit" type="button">Отойти от компьютера</button></div>
+    </div>
+    <div class="pc-video" id="pcVideoBox" hidden><canvas id="pcVideo" width="640" height="360"></canvas><button id="pcClose" type="button" aria-label="Закрыть видео">✕</button><p id="pcNoExit">Видео не закрывается!</p></div>
+  </div>
+</section>
 <section class="screen" id="endScreen" hidden>
   <div class="card">
     <div class="eyebrow" id="endEyebrow">Конец забега</div>
@@ -373,6 +394,7 @@ const INV_DEFS = {
   sausage:{ name:'Докторская колбаса',  short:'Колбаса',  icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="11" width="24" height="10" rx="5" fill="#e09a96" stroke="#9a4a46" stroke-width="1.5"/><path d="M4 16H1.5M28 16h2.5" stroke="#d6b46a" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="15" r="1" fill="#f6d8d4"/><circle cx="19" cy="17" r="1" fill="#f6d8d4"/></svg>' },
   torch: { name:'Фонарик',              short:'Фонарик',  icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="12.5" width="17" height="7" rx="2" fill="#2a2a2e" stroke="#8a8f96" stroke-width="1.2"/><path d="M20 10h5l3 3v6l-3 3h-5z" fill="#f2c20a"/><path d="M28 13.5v5" stroke="#fff6c0" stroke-width="2"/><rect x="9" y="14.5" width="4" height="3" rx="1" fill="#e5483a"/></svg>' },
   briefs:{ name:'Трусы Бронислава',     short:'Трусы',    icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 7h24l2 18h-11l-3-9-3 9H2z" fill="#d0303a" stroke="#7a1418" stroke-width="1.4" stroke-linejoin="round"/><rect x="4" y="6" width="24" height="4" rx="1" fill="#f2f2f2" stroke="#9aa0a6" stroke-width="1"/><g fill="#ffffff"><circle cx="9" cy="15" r="1.6"/><circle cx="22" cy="14" r="1.6"/><circle cx="7" cy="21" r="1.6"/><circle cx="25" cy="21" r="1.6"/></g></svg>' },
+  note:  { name:'Бумажка с паролем',    short:'Пароль',   icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 5h20v18l-5 5H6z" fill="#ffe066" stroke="#c8a020" stroke-width="1.4" stroke-linejoin="round"/><path d="M21 28v-5h5" fill="#f2c94c" stroke="#c8a020" stroke-width="1.4" stroke-linejoin="round"/><path d="M10 12h12M10 16h9" stroke="#2f4fb0" stroke-width="1.8" stroke-linecap="round"/></svg>' },
   crowbar:{ name:'Лом',                 short:'Лом',      icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 27L24 6" stroke="#c81e16" stroke-width="3.4" stroke-linecap="round"/><path d="M24 6c3-2 6 0 4 3" fill="none" stroke="#c81e16" stroke-width="3" stroke-linecap="round"/><path d="M7 27l-3 1" stroke="#c81e16" stroke-width="3" stroke-linecap="round"/></svg>' },
   money: { name:'Сто рублей',          short:'100 ₽',    icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="2.5" y="9" width="27" height="14" rx="2" fill="#c7b37c" stroke="#6a5a2a" stroke-width="1.4"/><circle cx="9" cy="16" r="3.4" fill="none" stroke="#6a5a2a" stroke-width="1.2"/><text x="21" y="19.5" font-size="9" text-anchor="middle" fill="#3a3010" font-family="sans-serif" font-weight="700">100</text></svg>' },
 };
@@ -390,6 +412,7 @@ const ENDINGS = [
   { id:11, name:'Мимо Макара', good:true, hint:'Выберись через погреб так, чтобы Макар тебя не заметил.', how:'Ты прокрался мимо Макара и ушёл через дверь погреба.', text:'Макар так увлёкся танчиками, что даже не снял наушники. Ты тихо ушёл огородами.', quote:'Чё? Дверью хлопнуло? Да не, показалось. Ещё катку!' },
   { id:12, name:'Сухой кран', good:true, hint:'Найди в подвале панель управления водой и перекрой воду.', how:'Ты перекрыл воду во всём доме.', text:'Бронислав как раз намылил голову для нового ролика. Он выбежал к соседям за водой и забыл запереть дверь, а ты спокойно ушёл.', quote:'Пацаны, вода кончилась! Я весь в мыле! Стрим на паузе!' },
   { id:13, name:'Кукольный секрет', good:true, hint:'Найди на улице лом и вскрой заколоченную дверь в спальне Бронислава.', how:'Ты сломал доски ломом и нашёл секретную комнату Бронислава.', text:'Там чёрные стены и полки с куклами. Ты сфотографировал всё на телефон, и Бронислав сам открыл тебе дверь, лишь бы ты никому не показал.', quote:'Братан, только не выкладывай! Это… это для ролика было! Иди уже!' },
+  { id:14, name:'Посмотрел компромат', good:true, hint:'Найди на столе Бронислава бумажку с паролем и зайди в его компьютер.', how:'Ты взломал компьютер Бронислава и посмотрел его секретное видео.', text:'На видео Бронислав в одних трусах тряс попой под музыку. Выключить его было нельзя. Бронислав застал тебя у компьютера, покраснел и сам открыл тебе дверь, лишь бы ты молчал.', quote:'Ты ничего не видел, братан. НИЧЕГО. Дверь открыта, иди.' },
 ];
 const maxCatches = () => DIFF[difficulty].lives;
 const WALK_PHRASES = ['Так, чё там дальше по плану…','Подписчики ждут. Погнали.','Ща будет контент.'];
@@ -2802,6 +2825,82 @@ const crowObj = new THREE.Group();
   glow.scale.set(.6, .6, 1); crowObj.add(glow);
   crowObj.position.y = .03; scene.add(crowObj);
 }
+// Bronislav's computer: a sticky note on the desk with this run's password; log in and an unclosable video plays
+const PC = { x:15, z:1.4, screen:{ x:15, z:.62 }, note:{ x:14.35, y:.752, z:.72 } };
+let pcPassword = '', hasNote = false, videoT = 0, videoSlurpT = 0;
+const noteMesh = new THREE.Mesh(new THREE.PlaneGeometry(.1, .1), M(0xffffff, { rough:.9 }));
+noteMesh.rotation.set(-Math.PI/2, 0, .25); noteMesh.position.set(PC.note.x, PC.note.y, PC.note.z); house.add(noteMesh);
+function newPassword(){
+  const words = ['bronya', 'lajk', 'podpiska', 'spagetti', 'zhiguli', 'kontent', 'bobik', 'trusy', 'kolokolchik', 'strim'];
+  pcPassword = pick(words) + (10 + Math.random()*890 | 0);
+  if (noteMesh.material.map) noteMesh.material.map.dispose();
+  noteMesh.material.map = canvasTex(128, 128, (c, w, h) => {
+    c.fillStyle = '#ffe066'; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#2f4fb0'; c.font = 'italic 20px sans-serif'; c.fillText('пароль:', 10, 44);
+    c.font = 'italic bold 21px sans-serif'; c.fillText(pcPassword, 10, 82);
+  });
+  noteMesh.material.needsUpdate = true; noteMesh.visible = true; hasNote = false;
+  INV_DEFS.note.name = `Бумажка с паролем: ${pcPassword}`; INV_DEFS.note.short = pcPassword;
+}
+function openPC(){
+  state = 'pc';
+  try { document.exitPointerLock?.(); } catch (e) {}
+  $('prompt').hidden = true; $('eye').classList.remove('on');
+  $('pcScreen').hidden = false; $('pcLogin').hidden = false; $('pcVideoBox').hidden = true;
+  $('pcPass').value = ''; $('pcErr').textContent = '';
+  setTimeout(() => $('pcPass').focus(), 50);
+}
+function closePC(){
+  $('pcScreen').hidden = true; state = 'play';
+  try { canvas.focus({ preventScroll:true }); } catch (e) {}
+}
+function tryPassword(){
+  if (state !== 'pc') return;
+  if ($('pcPass').value.trim().toLowerCase() === pcPassword){
+    state = 'pcVideo'; videoT = 0; videoSlurpT = 0;
+    $('pcLogin').hidden = true; $('pcVideoBox').hidden = false; $('pcNoExit').style.opacity = 0;
+    $('pcClose').focus();
+  } else {
+    $('pcErr').textContent = hasNote ? 'Неверный пароль. Посмотри на бумажку внимательнее.' : 'Неверный пароль. Может, он где-то записан?';
+    tone(220, .2, .12, 'square', 160);
+  }
+}
+$('pcGo').addEventListener('click', tryPassword);
+$('pcExit').addEventListener('click', closePC);
+$('pcPass').addEventListener('keydown', e => { if (e.key === 'Enter') tryPassword(); if (e.key === 'Escape') closePC(); e.stopPropagation(); });
+$('pcClose').addEventListener('click', () => { $('pcNoExit').style.opacity = 1; tone(180, .15, .12, 'square'); setTimeout(() => $('pcNoExit').style.opacity = 0, 1200); });
+// the video: Bronislav from behind in his heart boxers, wiggling to a beat, with a fake player bar
+function drawPcVideo(t){
+  const cv = $('pcVideo'), c = cv.getContext('2d'), w = cv.width, h = cv.height;
+  const beat = Math.sin(t*12), sway = beat*26, bob = Math.abs(Math.sin(t*6))*8;
+  c.fillStyle = '#1d1030'; c.fillRect(0, 0, w, h);
+  for (let i = 0; i < 6; i++){ c.fillStyle = `hsla(${(t*90 + i*60) % 360},90%,60%,.18)`; c.beginPath(); c.arc(80 + i*100, 60 + Math.sin(t*3 + i)*20, 50, 0, 7); c.fill(); }
+  c.fillStyle = '#3a2a4a'; c.fillRect(0, 290, w, 70);
+  const cx = w/2;
+  // legs
+  c.fillStyle = '#e2a98a'; c.fillRect(cx - 52 + sway*.3, 230 - bob, 34, 70); c.fillRect(cx + 18 + sway*.3, 230 - bob, 34, 70);
+  c.fillStyle = '#f4f4f2'; c.fillRect(cx - 58 + sway*.3, 292 - bob, 44, 14); c.fillRect(cx + 14 + sway*.3, 292 - bob, 44, 14);
+  // the boxers: red with white hearts, wiggling
+  c.save(); c.translate(cx + sway, 205 - bob); c.rotate(beat*.12);
+  c.fillStyle = '#d0303a'; c.beginPath(); c.ellipse(-30, 0, 44, 40, 0, 0, 7); c.ellipse(30, 0, 44, 40, 0, 0, 7); c.fill();
+  c.fillStyle = '#ffffff'; for (const [x, y] of [[-40, -10], [-15, 18], [25, -14], [45, 12], [0, -25]]){ c.font = 'bold 18px sans-serif'; c.fillText('♥', x - 8, y + 6); }
+  c.fillStyle = '#f2f2f2'; c.fillRect(-72, -42, 144, 10);
+  c.restore();
+  // hoodie and head from behind, cap turned backwards
+  c.fillStyle = '#1d1f27'; c.beginPath(); c.roundRect(cx - 70 + sway*.5, 70 - bob, 140, 130, 30); c.fill();
+  c.fillStyle = '#ff6a00'; c.beginPath(); c.arc(cx + sway*.5, 125 - bob, 26, 0, 7); c.fill();
+  c.fillStyle = '#111'; c.font = 'bold 30px sans-serif'; c.textAlign = 'center'; c.fillText('Б', cx + sway*.5, 136 - bob);
+  c.fillStyle = '#1d1f27'; c.fillRect(cx - 110 + sway*.5, 80 - bob + beat*10, 44, 22); c.fillRect(cx + 66 + sway*.5, 80 - bob - beat*10, 44, 22);   // arms up
+  c.fillStyle = '#e2a98a'; c.beginPath(); c.arc(cx - 116 + sway*.5, 82 - bob + beat*10, 14, 0, 7); c.arc(cx + 116 + sway*.5, 82 - bob - beat*10, 14, 0, 7); c.fill();
+  c.fillStyle = '#e2a98a'; c.beginPath(); c.arc(cx + sway*.6, 45 - bob, 36, 0, 7); c.fill();
+  c.fillStyle = '#ff6a00'; c.beginPath(); c.arc(cx + sway*.6, 38 - bob, 37, Math.PI, 0); c.fill(); c.fillRect(cx - 22 + sway*.6, 36 - bob, 44, 10);
+  // overlays: REC, title, a player bar that never lets you out
+  c.textAlign = 'left'; c.fillStyle = (t*2 | 0) % 2 ? '#ff2d4f' : '#7a1020'; c.beginPath(); c.arc(24, 24, 7, 0, 7); c.fill();
+  c.fillStyle = '#fff'; c.font = 'bold 16px sans-serif'; c.fillText('REC  СЕКРЕТНО. НЕ ВЫКЛАДЫВАТЬ!', 38, 30);
+  c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(0, h - 34, w, 34);
+  c.fillStyle = '#555'; c.fillRect(70, h - 19, w - 150, 5); c.fillStyle = '#ff2d4f'; c.fillRect(70, h - 19, (w - 150)*Math.min(1, t/8), 5);
+  c.fillStyle = '#fff'; c.font = '13px sans-serif'; c.fillText(`0:0${Math.min(8, t | 0)} / 0:08`, w - 72, h - 12); c.fillText('▶', 26, h - 11);
+}
 function placeCrowbar(){ crowSpot = pick(CROW_SPOTS); crowObj.position.set(crowSpot.x, .03, crowSpot.z); crowObj.rotation.y = Math.random()*Math.PI*2; crowObj.visible = true; }
 // электрощиток in the сени: grey steel box, counter and a row of breakers inside
 const ELEC_PANEL = { x:.1, z:9.95, front:{ x:.6, z:9.95 } };   // в сенях, справа от входной двери
@@ -3285,6 +3384,8 @@ const pad = { x:0, y:0, run:false, act:false, up:false, down:false, prev:[], see
 addEventListener('keydown', e => {
   keys[e.code] = true;
   if (state === 'play' && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+  if (document.activeElement?.tagName === 'INPUT') return;   // typing the password
+  if (e.code === 'Escape' && state === 'pc') closePC();
   if (e.code === 'KeyM') toggleMute();
   if (state === 'play' && !e.repeat){
     if (e.code === 'KeyE') doAction();
@@ -3555,7 +3656,7 @@ function resetWorld(){
   hasFireKey = false; fireKeyObj.visible = false; firePanel.open = 0; alarmOn = false; alarmGlowEl.style.opacity = 0;
   hasElecKey = false; elecKeyObj.visible = false; elecPanel.open = 0; powerOn = true; blackoutEl.style.opacity = 0;
   hasCarKey = false; carKeyObj.visible = false; carGroup.position.set(-9.2, 0, 3.8); carCol.active = true;
-  hasCrowbar = false; placeCrowbar(); pryP = 0;
+  hasCrowbar = false; placeCrowbar(); pryP = 0; newPassword(); $('pcScreen').hidden = true;
   if (secret.open){ secret.col.active = true; buildNav(); }
   Object.assign(secret, { open:false, seen:false, t:0 }); secret.pivot.rotation.y = 0; secret.boards.visible = true; secret.fallen.visible = false;
   elecPanel.main.rotation.x = 0; elecPanel.main.position.y = -.08; rgb.intensity = .7;
@@ -3754,6 +3855,9 @@ function findAction(){
     return { type:'spawnpick', rec:r, text:`<kbd>E</kbd>взять: ${r.name.toLowerCase()}` };
   for (const it of PICKUPS) if (!it.taken && Math.hypot(it.x - P.x, it.z - P.z) < 1.4 && facing(it.x, it.z) > .4)
     return { type:'item', item:it, text:`<kbd>E</kbd>взять: ${INV_DEFS[it.id].name.toLowerCase()}` };
+  // sitting in his chair, looking at the screen: the computer wins over a key lying on the desk
+  if (Math.hypot(PC.x - P.x, PC.z - P.z) < .9 && facing(PC.screen.x, PC.screen.z) > .85)
+    return Math.hypot(B.x - PC.x, B.z - PC.z) < 1.2 && !B.level ? { type:'wait', text:'За компьютером сидит Бронислав' } : { type:'pc', text:'<kbd>E</kbd>зайти в компьютер Бронислава' };
   if (!hasKey && !keySpot.lvl && Math.hypot(keySpot.x - P.x, keySpot.z - P.z) < 1.5 && facing(keySpot.x, keySpot.z) > .35)
     return { type:'key', text:'<kbd>E</kbd>взять ключ' };
   if (!hasCarKey && carKeyObj.visible && !carSpot.lvl && Math.hypot(carSpot.x - P.x, carSpot.z - P.z) < 1.5 && facing(carSpot.x, carSpot.z) > .35)
@@ -3781,6 +3885,8 @@ function findAction(){
     return { type:'cellarDown', text:'<kbd>E</kbd>открыть люк и спуститься в подвал' };
   if (Math.hypot(STAIRS.bottom.x - P.x, STAIRS.bottom.z - P.z) < 1.0 && facing(STAIRS.x2, STAIRS.bottom.z) > .5)
     return { type:'upstairs', text:'<kbd>E</kbd>подняться на второй этаж' };
+  if (!hasNote && noteMesh.visible && Math.hypot(PC.note.x - P.x, PC.note.z - P.z) < 1.3 && facing(PC.note.x, PC.note.z) > .5)
+    return { type:'note', text:'<kbd>E</kbd>взять бумажку с паролем' };
   if (!hasCrowbar && crowObj.visible && Math.hypot(crowSpot.x - P.x, crowSpot.z - P.z) < 1.4 && facing(crowSpot.x, crowSpot.z) > .35)
     return { type:'crowbar', text:'<kbd>E</kbd>взять лом' };
   if (!vac.on && !vac.carried && Math.hypot(vac.x - P.x, vac.z - P.z) < 1.2 && facing(vac.x, vac.z) > .4)
@@ -3809,6 +3915,12 @@ function doAction(){
   if (action.type === 'cellarDown'){ goDown(); return; }
   if (action.type === 'upstairs'){ goFloor(1); return; }
   if (action.type === 'vacuum'){ vacOn(); return; }
+  if (action.type === 'note'){
+    hasNote = true; noteMesh.visible = false; sfx.key();
+    banner(`Бумажка: «пароль: ${pcPassword}»`, 'good', 4);
+    return;
+  }
+  if (action.type === 'pc'){ openPC(); return; }
   if (action.type === 'crowbar'){
     hasCrowbar = true; crowObj.visible = false; sfx.key();
     banner('Лом! Им можно вскрыть заколоченную дверь в спальне Бронислава', 'good', 3.2);
@@ -4625,7 +4737,7 @@ function updateBubble(){
 let invKey = '', inv = [];
 function syncInventory(){
   // keys follow the has* flags (they can be taken back on a respawn); other things are added on pickup
-  for (const [id, has] of [['door', hasKey], ['fire', hasFireKey], ['elec', hasElecKey], ['car', hasCarKey], ['crowbar', hasCrowbar]]){
+  for (const [id, has] of [['door', hasKey], ['fire', hasFireKey], ['elec', hasElecKey], ['car', hasCarKey], ['crowbar', hasCrowbar], ['note', hasNote]]){
     const i = inv.indexOf(id);
     if (has && i < 0) inv.push(id); else if (!has && i >= 0) inv.splice(i, 1);
   }
@@ -4704,6 +4816,11 @@ function frame(){
   else if (state === 'mcaught'){ caughtT -= dt; if (caughtT <= 0){ if (catches >= maxCatches()) endRun(9); else startRespawn(true); } }
   else if (state === 'cellarOut'){ outT -= dt; if (outT <= 0) endRun(MK.chased ? 10 : 11); }
   else if (state === 'waterOff'){ waterT -= dt; if (waterT <= 0) endRun(12); }
+  else if (state === 'pcVideo'){
+    videoT += dt; drawPcVideo(videoT);
+    videoSlurpT -= dt; if (videoSlurpT <= 0){ tone(rand(110, 150), .1, .14, 'square'); noise(.05, .2, 4000, 'highpass'); videoSlurpT = 60/150; }   // a cheesy beat
+    if (videoT > 8){ $('pcScreen').hidden = true; endRun(14); }
+  }
   else if (state === 'transit'){
     transitT -= dt;
     if (transitFn && transitT < .65){ transitAfter = transitFn(); transitFn = null; }
