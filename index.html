@@ -1623,6 +1623,20 @@ interiorDoor('h', D, BALC.door.a + .1, BALC.door.b - .1, BALC.door.b - .1, -1, '
   cyl(pl, 0, 0, .03, .019, .02, .03, M(0xf2f2f2, { rough:.4 }), 24).rotation.x = Math.PI/2;
   tube(house, [[15.53, .9, .16], [15.53, .82, .2], [15.6, .76, .3]], .004, M(0xf2f2f2, { rough:.4 }), 10);
 }
+// power cords: the PC, the TV and the vacuum's dock are plugged into the nearest sockets
+{
+  const black = M(0x141416, { rough:.45 });
+  const plug = (x, y, z, face, m) => cyl(onWall(x, y, z, face), 0, 0, .03, .019, .02, .03, m, 24).rotation.x = Math.PI/2;
+  // системник: third gang of the socket over the desk, down behind the desk to the back of the case
+  plug(15.6 + SOCKET_STEP, .92, .1, 's', black);
+  tube(house, [[15.671, .9, .14], [15.69, .7, .13], [15.85, .2, .13], [16.15, .06, .14], [16.3, .1, .16], [16.3, .3, .165]], .005, black, 24);
+  // телевизор в зале: the double socket beside its stand
+  plug(6.95 - SOCKET_STEP/2, .3, 4.9, 'n', black);
+  tube(house, [[6.914, .28, 4.86], [6.9, .05, 4.86], [6.65, .03, 4.86], [6.45, .3, 4.86], [6.35, .62, 4.86]], .005, black, 20);
+  // док-станция пылесоса: the corridor socket next to it
+  plug(9.0, .3, 6.9, 'n', black);
+  tube(house, [[9.0, .28, 6.86], [8.99, .05, 6.86], [8.9, .02, 6.865], [8.77, .05, 6.86]], .004, black, 12);
+}
 // smoke detectors on the ceiling with a blinking red LED
 const smokeLeds = [];
 const SMOKE_SPOTS = [[3.7, 1.7], [10.4, 1.4], [16.6, 3.6], [14, 6], [1.5, 6.6], [8.6, 10.6], [16.6, 8.4], [6.5, 6]];
