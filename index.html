@@ -406,6 +406,7 @@ const MAKAR_SUSPECT = ['Э… кто там?','Бронислав, это ты?'
 const MAKAR_CHASE = ['Стой, говорю!','Не уйдёшь, я тут каждую банку знаю!','Брони-и-ислав! Тут чужой!','Куда побежал?!'];
 const MAKAR_SEARCH = ['Куда делся?','Выходи, я тебя видел!'];
 const MAKAR_GIVEUP = ['Показалось. Ладно, катка ждёт.','Пойду доиграю.'];
+const MAKAR_WORK = ['Золотой комп, золотые руки.','Монтирую Брониславу видос. Бесплатно, между прочим.','Так, ещё один рендер…'];
 const MAKAR_SWIM = ['Водичка — огонь!','Бульк!','Бронислав, иди купаться!','Я дельфин, мам!','Кто последний — тот нуб!'];
 const SPAG_ARRIVE = ['Кто сломал мои спагетти?! Найду — будешь в трендах!','Моя пачка… Ну всё, это война.'];
 const SUSPECT_PHRASES = ['Э… кто тут?','Слышь, мне показалось, или чё?','Кто там шуршит, а?','Хм… Странный звук.'];
@@ -1640,10 +1641,10 @@ interiorDoor('h', D, BALC.door.a + .1, BALC.door.b - .1, BALC.door.b - .1, -1, '
 // smoke detectors on the ceiling with a blinking red LED
 const smokeLeds = [];
 const SMOKE_SPOTS = [[3.7, 1.7], [10.4, 1.4], [16.6, 3.6], [14, 6], [1.5, 6.6], [8.6, 10.6], [16.6, 8.4], [6.5, 6]];
-{
+function smokeDetector(parent, x, y, z){
   const white = M(0xf6f5f1, { rough:.45 }), vent = M(0xe3e1db, { rough:.5 });
-  for (const [x, z] of SMOKE_SPOTS){
-    const g = grp(house, x, H, z);
+  {
+    const g = grp(parent, x, y, z);
     cyl(g, 0, -.008, 0, .07, .072, .016, white, 40);
     const dome = new THREE.Mesh(new THREE.SphereGeometry(.062, 32, 10, 0, Math.PI*2, Math.PI*.62, Math.PI*.38), white); dome.position.y = -.008; g.add(dome);
     for (let i = 0; i < 18; i++){ const a = i/18*Math.PI*2; const s = rbox(g, Math.cos(a)*.056, -.026, Math.sin(a)*.056, .003, .012, .012, BASIC(0x55534e), .001); s.rotation.y = -a; }
@@ -1653,6 +1654,7 @@ const SMOKE_SPOTS = [[3.7, 1.7], [10.4, 1.4], [16.6, 3.6], [14, 6], [1.5, 6.6], 
     smokeLeds.push({ led, phase:Math.random()*3 });
   }
 }
+for (const [x, z] of SMOKE_SPOTS) smokeDetector(house, x, H, z);
 
 /* ================= outside: facades, roof, yard, street ================= */
 const YARD = { x1:-13, x2:29, z1:-4, z2:16 };   // east of the сарай: pool, swing, trampoline
@@ -2060,6 +2062,7 @@ const fun = {};
   const forestM = M(0x3d5a34, { rough:1, flatShading:true });
   for (let i = 0; i < 80; i++){ const a = i/80*Math.PI*2, r = 70 + Math.random()*20; const t = new THREE.Mesh(new THREE.ConeGeometry(rand(2, 3.5), rand(8, 14), 6), forestM); t.position.set(4 + Math.cos(a)*r, 4, 6 + Math.sin(a)*r); yard.add(t); }
 }
+let sunLight;
 // daytime sky with clouds and the sun (which lights the yard and throws shadows through the windows)
 {
   const sky = new THREE.Mesh(new THREE.SphereGeometry(180, 32, 16), new THREE.MeshBasicMaterial({ map:skyTex, side:THREE.BackSide, fog:false, depthWrite:false, toneMapped:false }));
@@ -2072,7 +2075,7 @@ const fun = {};
   const SUN_DIR = new THREE.Vector3(-26, 34, 20).normalize();
   const sun = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:C(0xfff6d8).multiplyScalar(3), fog:false, depthWrite:false, toneMapped:false, transparent:true }));
   sun.scale.set(40, 40, 1); sun.position.set(4 + SUN_DIR.x*165, SUN_DIR.y*165, 6 + SUN_DIR.z*165); scene.add(sun);
-  const sunLight = new THREE.DirectionalLight(C(0xfff0d6), 2.6);
+  sunLight = new THREE.DirectionalLight(C(0xfff0d6), 2.6);
   sunLight.position.set(4 + SUN_DIR.x*50, SUN_DIR.y*50, 6 + SUN_DIR.z*50); sunLight.target.position.set(4, 0, 6);
   sunLight.castShadow = true; sunLight.shadow.mapSize.set(2048, 2048);
   Object.assign(sunLight.shadow.camera, { left:-30, right:30, top:30, bottom:-30, near:1, far:140 });
@@ -2082,9 +2085,10 @@ const fun = {};
 /* ---- подвал: reached through a люк in the кладовка. It is built off to the side and 3.2 m down,
    so its colliders keep heights from its own floor and nothing upstairs overlaps it.
    Макар, Bronislav's younger brother, plays танчики here; a bolted door leads out to the огород ---- */
-const CEL = { x1:23, z1:-14, x2:33, z2:-6, y:-3.2, h:2.3,
+const CEL = { x1:23, z1:-30, x2:47, z2:-6, y:-3.2, h:2.3,
   arrive:{ x:23.75, z:-9.8 }, foot:{ x:23.55, z:-10.15 }, door:{ x:31.6, z:-6.0, front:{ x:31.6, z:-6.6 } },
-  chair:{ x:30.0, z:-10.0 }, stand:{ x:30.75, z:-10.0 }, shelf:{ x:27.7, z:-12.9 } };
+  chair:{ x:30.0, z:-10.0 }, stand:{ x:30.75, z:-10.0 }, shelf:{ x:27.7, z:-12.9 },
+  work:{ x:43.5, z:-28.75, stand:{ x:43.5, z:-27.9 } } };   // the golden PC
 const HATCH = { x:15.4, z:9.8 };
 const cellar = grp(scene, 0, CEL.y, 0);
 const celCols = [];
@@ -2095,7 +2099,7 @@ function cbox(cx, y0, cz, w, h, d, m, solid){
 }
 const cel = {};
 {
-  const brick = M(0xb0a090, { map:brickTex, rough:.92, env:.15 }), conc = M(0xffffff, { map:rep(concreteTex, 4, 3), rough:.95, env:.15 });
+  const brick = M(0xb0a090, { map:brickTex, rough:.92, env:.15 }), conc = M(0xffffff, { map:rep(concreteTex, 10, 10), rough:.95, env:.15 });
   const boards = M(0x9a8a78, { map:boardsTex, rough:.9, env:.15 }), wood = M(0xffffff, { map:lightWoodTex, rough:.8, env:.2 }), dark = M(0xffffff, { map:darkWoodTex, rough:.75, env:.2 });
   const cx = (CEL.x1 + CEL.x2)/2, cz = (CEL.z1 + CEL.z2)/2, w = CEL.x2 - CEL.x1, d = CEL.z2 - CEL.z1;
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(w, d), conc); floor.rotation.x = -Math.PI/2; floor.position.set(cx, 0, cz); cellar.add(floor);
@@ -2158,6 +2162,134 @@ const cel = {};
   rbox(cellar, CEL.door.x + .38, 1.05, CEL.door.z - .09, .06, .1, .04, M(0x4a4a4a, { rough:.5, metal:.9 }), .005);
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(.5, .14), M(0xffffff, { map:labelTex('В ОГОРОД', '#d8c8a0', '#3a2a18', 256, 72, 'bold 36px sans-serif'), rough:.8 }));
   sign.position.set(CEL.door.x, 2.12, CEL.door.z - .02); sign.rotation.y = Math.PI; cellar.add(sign);
+}
+// the rest of the big подвал: table tennis and sports lockers (NE), a big red carpet lounge and Makar's golden PC (SE),
+// Makar's bedroom (SW); more bulbs, sockets, switches, smoke detectors
+{
+  const Y = CEL.y, brick = M(0xb0a090, { map:brickTex, rough:.92, env:.15 }), dark = M(0xffffff, { map:darkWoodTex, rough:.75, env:.2 });
+  const bulbAt = (x, z, color = 0xffb862, k = 1.0, shade) => {
+    cyl(cellar, x, CEL.h - .2, z, .004, .004, .4, mat.blackPlastic, 6);
+    if (shade) lathe(cellar, x, CEL.h - .62, z, [[.32, 0], [.3, .05], [.2, .16], [.08, .22], [0, .22]], M(shade, { rough:.4, metal:.5, side:THREE.DoubleSide }), 24);
+    sph(cellar, x, CEL.h - .5, z, .045, BASIC(0xfff0c8, { toneMapped:false }));
+    if (k){ const l = new THREE.PointLight(C(color), k, 9, 1.6); l.position.set(x, CEL.h - .6, z); cellar.add(l); }
+  };
+  bulbAt(40, -10, 0xfff2d8, 1.1, 0x2f6a3a);   // over the tennis table
+  bulbAt(40, -19.5, 0xffc880, 1.0);           // over the red carpet
+  bulbAt(27.5, -25.5, 0xffb862, .8);          // Makar's bedroom
+  bulbAt(28, -17.5, 0, 0); bulbAt(43.5, -26, 0, 0);
+  // ---- table tennis
+  {
+    const g = grp(cellar, 40, 0, -10);
+    const top = canvasTex(256, 142, (c, w, h) => {
+      c.fillStyle = '#1f4f8a'; c.fillRect(0, 0, w, h); c.strokeStyle = '#ffffff'; c.lineWidth = 4; c.strokeRect(2, 2, w - 4, h - 4);
+      c.lineWidth = 2; c.beginPath(); c.moveTo(0, h/2); c.lineTo(w, h/2); c.stroke();
+    });
+    rbox(g, 0, .74, 0, 2.74, .03, 1.525, M(0xffffff, { map:top, rough:.4, env:.6 }), .006);
+    for (const sx of [-1.1, 1.1]) for (const sz of [-.6, .6]) cyl(g, sx, .37, sz, .03, .03, .72, mat.steel, 8);
+    const net = new THREE.Mesh(new THREE.PlaneGeometry(1.7, .155), M(0xffffff, { map:canvasTex(64, 8, (c, w, h) => { c.clearRect(0, 0, w, h); c.strokeStyle = 'rgba(20,20,20,.9)'; for (let i = 0; i <= w; i += 4){ c.beginPath(); c.moveTo(i, 0); c.lineTo(i, h); c.stroke(); } c.fillStyle = '#fff'; c.fillRect(0, 0, w, 2); }), transparent:true, alphaTest:.3, side:THREE.DoubleSide }));
+    net.position.set(0, .83, 0); net.rotation.y = Math.PI/2; g.add(net);
+    for (const s of [-1, 1]) cyl(g, 0, .83, s*.83, .01, .01, .16, mat.steel, 6);
+    for (const [x, c] of [[-.9, 0xc81e16], [.8, 0x141416]]){ const pd = grp(g, x, .77, .3); cyl(pd, 0, 0, 0, .08, .08, .012, M(c, { rough:.6 }), 20); const h = rbox(pd, .11, 0, 0, .1, .02, .03, mat.lightWood, .006); void h; pd.rotation.y = x; }
+    sph(g, .2, .78, -.3, .02, M(0xffffff, { rough:.3 }), 1, 1, 1, 10);
+    celCols.push(addCollider(40 - 1.4, -10 - .8, 40 + 1.4, -10 + .8, .76));
+  }
+  // ---- sports lockers along the north wall (you can hide in them)
+  for (let i = 0; i < 8; i++) locker(35.6 + i*.52, -6.27, 0, -1, i + 1);
+  rbox(cellar, 37.4, .22, -7.75, 3.0, .06, .35, mat.lightWood, .01); for (const x of [36.1, 38.7]) box(cellar, x, 0, -7.75, .06, .2, .3, mat.steel);   // bench
+  celCols.push(addCollider(35.9, -7.95, 38.9, -7.55, .3));
+  // ---- the big red carpet with a gold border, a black leather sofa, bean bags, a coffee table
+  {
+    const rug = new THREE.Mesh(new THREE.PlaneGeometry(9, 6.5), M(0xffffff, { map:canvasTex(360, 260, (c, w, h) => {
+      c.fillStyle = '#9a0e14'; c.fillRect(0, 0, w, h);
+      c.strokeStyle = '#d8a83a'; c.lineWidth = 10; c.strokeRect(12, 12, w - 24, h - 24); c.lineWidth = 3; c.strokeRect(30, 30, w - 60, h - 60);
+      c.fillStyle = '#c0141c'; c.beginPath(); c.ellipse(w/2, h/2, 90, 60, 0, 0, 7); c.fill(); c.strokeStyle = '#d8a83a'; c.lineWidth = 4; c.stroke();
+      c.fillStyle = '#d8a83a'; for (const [x, y] of [[40, 40], [w - 40, 40], [40, h - 40], [w - 40, h - 40]]){ c.beginPath(); c.arc(x, y, 9, 0, 7); c.fill(); }
+    }), rough:.95 }));
+    rug.rotation.x = -Math.PI/2; rug.position.set(40, .007, -19.5); cellar.add(rug);
+    const leather = M(0x141416, { rough:.3, env:.9 });
+    rbox(cellar, 40, .22, -22.2, 2.6, .3, .9, leather, .06, 3); rbox(cellar, 40, .62, -22.58, 2.6, .55, .18, leather, .07, 3);
+    for (const s of [-1, 1]) rbox(cellar, 40 + s*1.25, .42, -22.2, .18, .45, .9, leather, .06, 3);
+    celCols.push(addCollider(38.65, -22.7, 41.35, -21.75, .9));
+    rbox(cellar, 40, .4, -20.2, 1.2, .05, .6, M(0x2a2a2e, { rough:.2, env:1.2 }), .01);
+    for (const [x, z] of [[39.6, -20.2], [40.4, -20.2]]) cyl(cellar, x, .2, z, .025, .025, .4, mat.chrome, 8);
+    celCols.push(addCollider(39.4, -20.5, 40.6, -19.9, .45));
+    for (const [x, z, c] of [[37.4, -18.4, 0xff6a00], [42.6, -18.4, 0x2f6fb0], [40, -16.8, 0xf2c20a]]){ sph(cellar, x, .3, z, .45, M(c, { map:fabricTex, rough:.9 }), 1, .65, 1, 18); celCols.push(addCollider(x - .4, z - .4, x + .4, z + .4, .55)); }
+  }
+  // ---- Makar's workplace: a desk against the south wall with the golden PC, gold-framed monitors, gaming chair
+  {
+    const gold = M(0xd4a017, { rough:.22, metal:1, env:1.6 }), goldGlow = M(0xd4a017, { rough:.25, metal:1, env:1.6, emissive:0xffb020, ei:.35 });
+    const w = CEL.work;
+    rbox(cellar, w.x, .75, w.z - .45, 1.9, .05, .75, M(0x141416, { rough:.35, env:1 }), .01);
+    for (const sx of [-.88, .88]) box(cellar, w.x + sx, 0, w.z - .45, .06, .73, .65, mat.steel);
+    celCols.push(addCollider(w.x - .95, w.z - .85, w.x + .95, w.z - .07, .78));
+    // the golden tower with a glowing window and fans
+    rbox(cellar, w.x + 1.25, .3, w.z - .45, .25, .55, .5, gold, .02);
+    for (const y of [.18, .4]){ const f = new THREE.Mesh(new THREE.TorusGeometry(.06, .009, 8, 24), BASIC(0xffd060, { toneMapped:false })); f.position.set(w.x + 1.124, y, w.z - .45); f.rotation.y = Math.PI/2; cellar.add(f); powered.push(f); }
+    rbox(cellar, w.x + 1.25, .58, w.z - .45, .2, .02, .4, goldGlow, .005);
+    celCols.push(addCollider(w.x + 1.12, w.z - .7, w.x + 1.38, w.z - .2, .6));
+    for (const sx of [-.45, .45]){
+      const mg = grp(cellar, w.x + sx, .78, w.z - .7, sx < 0 ? .2 : -.2);
+      rbox(mg, 0, .32, 0, .66, .4, .04, gold, .01);
+      const scr = new THREE.Mesh(new THREE.PlaneGeometry(.6, .34), M(0x111111, { emissive:0xffffff, emissiveMap:screenTex, ei:.7, rough:.2 })); scr.position.set(0, .32, .022); mg.add(scr); powered.push(scr);
+      cyl(mg, 0, .06, 0, .02, .02, .12, gold, 10); rbox(mg, 0, .005, 0, .2, .01, .14, gold, .004);
+    }
+    rbox(cellar, w.x, .785, w.z - .25, .46, .02, .15, goldGlow, .005);   // keyboard
+    sph(cellar, w.x + .4, .785, w.z - .25, .03, gold, 1, .5, 1.5);
+    const name = new THREE.Mesh(new THREE.PlaneGeometry(1.2, .22), M(0xffffff, { map:labelTex('MAKAR GAMING', '#141416', '#d4a017', 256, 48, 'bold 30px sans-serif'), rough:.4 }));
+    name.position.set(w.x, 1.7, CEL.z1 + .01); cellar.add(name);
+    // gaming chair, black and gold
+    const ch = grp(cellar, w.stand.x, 0, w.stand.z + .2, Math.PI);
+    rbox(ch, 0, .45, 0, .52, .1, .5, M(0x141416, { rough:.5 }), .04); rbox(ch, 0, .85, -.24, .5, .75, .1, M(0x141416, { rough:.5 }), .05);
+    rbox(ch, 0, .85, -.185, .1, .6, .01, gold, .004); cyl(ch, 0, .22, 0, .03, .03, .4, mat.chrome, 8);
+    for (let i = 0; i < 5; i++){ const a = i/5*Math.PI*2; const l = rbox(ch, Math.cos(a)*.17, .04, Math.sin(a)*.17, .34, .03, .04, mat.chrome, .01); l.rotation.y = -a; }
+    // plugged into the socket on the wall behind
+    tube(cellar, [[w.x + .6, .3, CEL.z1 + .04], [w.x + .8, .06, CEL.z1 + .06], [w.x + 1.1, .03, w.z - .3], [w.x + 1.24, .2, w.z - .7]], .005, M(0x141416, { rough:.45 }), 14);
+    cyl(cellar, w.x + .6, .3, CEL.z1 + .03, .019, .02, .03, M(0x141416, { rough:.45 }), 20).rotation.x = Math.PI/2;
+  }
+  // ---- Makar's bedroom in the south-west corner: walls with a doorway, bed, wardrobe, nightstand, a tanks poster
+  {
+    for (const [x, z, w, d] of [[25.0, -21, 4.2, .2], [30.5, -21, 3.4, .2], [32, -25.5, .2, 9.2]]) cbox(x, 0, z, w, CEL.h, d, brick, true);
+    box(cellar, 27.95, 2.05, -21, 1.7, CEL.h - 2.05, .2, brick);   // over the doorway (x 27.1–28.8)
+    const green = M(0x3a6a3a, { map:fabricTex, rough:.95 });
+    rbox(cellar, 24.0, .2, -27.4, 1.0, .3, 2.0, dark, .02); rbox(cellar, 24.0, .42, -27.4, .95, .16, 1.95, M(0xf3f0e8, { rough:.9 }), .05, 3);
+    rbox(cellar, 24.0, .52, -27.1, .98, .08, 1.4, green, .04, 3); rbox(cellar, 24.0, .56, -28.15, .6, .12, .35, M(0xfbfaf6, { rough:.95 }), .06, 3);
+    rbox(cellar, 24.0, .6, -28.38, 1.0, .9, .05, dark, .02);
+    celCols.push(addCollider(23.45, -28.45, 24.55, -26.35, .6));
+    rbox(cellar, 25.0, .28, -29.6, .45, .55, .4, dark, .015); celCols.push(addCollider(24.75, -29.85, 25.25, -29.35, .55));
+    lathe(cellar, 25.0, .56, -29.6, [[0, 0], [.06, 0], [.02, .03], [.015, .2], [0, .2]], mat.brass, 12);
+    lathe(cellar, 25.0, .74, -29.6, [[.1, 0], [.06, .12], [.05, .125]], M(0x7ac87a, { rough:.9, side:THREE.DoubleSide }), 16);
+    const wd = wardrobe(31.6, -28.5, 1.2, .6, -1, 0); wd.group.position.y = Y; celCols.push(colliders[colliders.length - 1]);
+    const rug = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.8), M(0x3a5a8a, { map:rep(carpetTex, 1, 1), rough:.95 })); rug.rotation.x = -Math.PI/2; rug.position.set(26.5, .007, -26.0); cellar.add(rug);
+    const poster = new THREE.Mesh(new THREE.PlaneGeometry(1.2, .8), M(0xffffff, { map:canvasTex(240, 160, (c, w, h) => {
+      c.fillStyle = '#3a4a2a'; c.fillRect(0, 0, w, h); c.fillStyle = '#c8b860'; c.fillRect(50, 90, 110, 34); c.fillRect(85, 70, 50, 24); c.fillRect(130, 78, 80, 8);
+      c.fillStyle = '#f2d23a'; c.font = 'bold 30px sans-serif'; c.textAlign = 'center'; c.fillText('ТАНКИ', w/2, 44);
+    }), rough:.8 }));
+    poster.position.set(23.01, 1.4, -24.6); poster.rotation.y = Math.PI/2; cellar.add(poster);
+  }
+  // ---- sockets, switches, smoke detectors (sockets/switches sit on the walls' inner faces)
+  const sy = Y + .3, wy = Y + .9;
+  socket(23.0, sy, -8.0, 'e'); socket(23.0, sy, -18.0, 'e'); socket(23.0, sy, -26.0, 'e');
+  socket(35.0, sy, -6.0, 'n'); socket(47.0, sy, -12.0, 'w', 2); socket(47.0, sy, -20.0, 'w');
+  socket(43.5 + .6 - SOCKET_STEP, sy, -30.0, 's', 3); socket(31.9, sy, -27.0, 'w');
+  lightSwitch(23.0, wy, -9.4, 'e', 2); lightSwitch(26.85, wy, -20.9, 's'); lightSwitch(26.85, wy, -21.1, 'n');
+  lightSwitch(34.4, wy, -6.0, 'n', 2); lightSwitch(47.0, wy, -18.0, 'w');
+  for (const [x, z] of [[27, -10], [37.5, -10], [40, -17], [27.5, -24.5], [43.5, -25.5], [28, -17], [44, -11]]) smokeDetector(cellar, x, CEL.h, z);
+}
+// a sports locker in the cellar; it plugs into the wardrobe hiding code (one door instead of two)
+function locker(cx, cz, fx, fz, n){
+  const w = .5, d = .5, g = new THREE.Group(); g.position.set(cx, CEL.y, cz); g.rotation.y = Math.atan2(fx, fz);
+  const steel = M([0x3a6a9a, 0x9a3a3a][n % 2], { rough:.4, metal:.6, env:1 });
+  rbox(g, 0, .95, 0, w, 1.9, d, steel, .01);
+  const pivot = new THREE.Group(); pivot.position.set(-w/2, 0, d/2);
+  rbox(pivot, w/2, .95, .012, w - .02, 1.84, .02, steel, .005);
+  for (let i = 0; i < 4; i++) rbox(pivot, w/2, 1.6 - i*.05, .025, .26, .012, .006, M(0x1c1c20, { rough:.6 }), .002);   // vents
+  const num = new THREE.Mesh(new THREE.PlaneGeometry(.1, .08), M(0xffffff, { map:labelTex(String(n), '#f2f2f2', '#141416', 64, 48, 'bold 34px sans-serif'), rough:.5 })); num.position.set(w/2, 1.3, .026); pivot.add(num);
+  rbox(pivot, w - .06, 1.0, .03, .03, .1, .02, mat.chrome, .005);
+  g.add(pivot); cellar.parent.add(g);
+  celCols.push(addCollider(cx - w/2, cz - d/2, cx + w/2, cz + d/2, 1.9));
+  const o = { x:cx, z:cz, fx, fz, d, lvl:0, group:g, doors:[{ pivot, s:-1 }], open:0, openTarget:0,
+              front:{ x:cx + fx*(d/2 + .5), z:cz + fz*(d/2 + .5) }, yaw:Math.atan2(-fx, -fz) };
+  wardrobes.push(o); return o;
 }
 // люк in the кладовка floor: the lid swings up while you are downstairs
 const hatch = { pivot:null, open:0 };
@@ -2864,7 +2996,7 @@ const makar = (() => {
   return { group:g, legL, legR, armL, armR, pad, mark, markBang, eyeMat };
 })();
 const MK = { x:CEL.chair.x, z:CEL.chair.z, a:Math.PI/2, state:'game', pose:'sit', sitting:true, meter:0, seen:false, phase:0, prevPhase:0,
-  taskT:30, susT:0, grabT:0, searchT:0, speakT:4, lostT:0, chased:false, met:false, outside:false, tripT:300, swimT:0, shoutCd:0, stim:{ x:0, z:0 }, lastSeen:{ x:0, z:0 }, field:null, fieldCell:-1, fieldAge:0 };
+  taskT:30, susT:0, grabT:0, searchT:0, speakT:4, lostT:0, workT:0, hideSeen:null, chased:false, met:false, outside:false, tripT:300, swimT:0, shoutCd:0, stim:{ x:0, z:0 }, lastSeen:{ x:0, z:0 }, field:null, fieldCell:-1, fieldAge:0 };
 // his own little nav grid for the подвал
 const MCELL = .25, MGW = (CEL.x2 - CEL.x1)/MCELL, MGH = (CEL.z2 - CEL.z1)/MCELL;
 const mBlocked = new Uint8Array(MGW*MGH);
@@ -3473,13 +3605,6 @@ function findAction(){
   if (P.hidden && P.hidden !== 'menu') return { type:'unhide', text:'<kbd>E</kbd>вылезти из шкафа' };
   const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
   const facing = (x, z) => { const dx = x - P.x, dz = z - P.z, l = Math.hypot(dx, dz) || 1; return (dx*fx + dz*fz)/l; };
-  if (P.cellar){
-    if (Math.hypot(CEL.foot.x - P.x, CEL.foot.z - P.z) < 1.0 && facing(CEL.foot.x, CEL.foot.z - 1.5) > .5)
-      return { type:'cellarUp', text:'<kbd>E</kbd>подняться наверх в кладовку' };
-    if (Math.hypot(CEL.door.front.x - P.x, CEL.door.front.z - P.z) < .9 && facing(CEL.door.x, CEL.door.z) > .6)
-      return { type:'bolt', text:'Держи <kbd>E</kbd> — отодвинуть ржавый засов' };
-    return null;
-  }
   const near = sp => Math.hypot(sp.x - P.x, sp.z - P.z) < 1.5 && facing(sp.x, sp.z) > .35;
   const hideIn = () => {
     let best = null, bd = 1.25;
@@ -3490,6 +3615,13 @@ function findAction(){
     }
     return best && { type:'hide', w:best, text:'<kbd>E</kbd>спрятаться в шкаф' };
   };
+  if (P.cellar){
+    if (Math.hypot(CEL.foot.x - P.x, CEL.foot.z - P.z) < 1.0 && facing(CEL.foot.x, CEL.foot.z - 1.5) > .5)
+      return { type:'cellarUp', text:'<kbd>E</kbd>подняться наверх в кладовку' };
+    if (Math.hypot(CEL.door.front.x - P.x, CEL.door.front.z - P.z) < .9 && facing(CEL.door.x, CEL.door.z) > .6)
+      return { type:'bolt', text:'Держи <kbd>E</kbd> — отодвинуть ржавый засов' };
+    return hideIn();
+  }
   if (P.level){
     if (Math.hypot(STAIRS.top.x - P.x, STAIRS.top.z - P.z) < 1.0 && facing(STAIRS.top.x, STAIRS.z1) > .4)
       return { type:'downstairs', text:'<kbd>E</kbd>спуститься на первый этаж' };
@@ -3610,6 +3742,7 @@ function doAction(){
     const watched = (B.state === 'chase' || B.state === 'suspicious' || B.state === 'search') && elapsed - B.lastSeenT < .6;
     B.hideSeen = watched ? w : null;
     if (watched && B.state !== 'chase') enterChase();
+    MK.hideSeen = P.cellar && MK.state === 'chase' && MK.lostT < .6 ? w : null;
   } else if (action.type === 'flush'){
     flushCd = 5; sfx.flushBig(1); usedFlush = true;
     makeNoise(11.5, 10.6, 'flush');
@@ -3841,13 +3974,17 @@ function makarSay(text, time = 2.4, priority = 1){
   $('mbubble').textContent = text; $('mbubble').classList.add('on'); mbubbleT = time;
   speak(text, MK.state === 'chase' ? 'angry' : 'hype', priority, undefined, MK);
 }
-function makarStand(){ if (MK.sitting){ MK.sitting = false; MK.x = CEL.stand.x; MK.z = CEL.stand.z; } }
+function makarStand(){
+  if (!MK.sitting) return;
+  const s = MK.state === 'work' ? CEL.work.stand : CEL.stand;
+  MK.sitting = false; MK.x = s.x; MK.z = s.z;
+}
 function makarSit(){
   Object.assign(MK, { outside:false, sitting:true, x:CEL.chair.x, z:CEL.chair.z, a:Math.PI/2, state:'game', pose:'sit', meter:0, taskT:rand(25, 40) });
 }
 function resetMakar(){
   makarSit();
-  Object.assign(MK, { chased:false, met:false, seen:false, speakT:4, lostT:0, susT:0, grabT:0, searchT:0, field:null, fieldCell:-1, tripT:300, swimT:0, shoutCd:0 });
+  Object.assign(MK, { chased:false, met:false, seen:false, speakT:4, lostT:0, susT:0, grabT:0, searchT:0, field:null, fieldCell:-1, tripT:300, swimT:0, shoutCd:0, hideSeen:null });
   $('mbubble').classList.remove('on'); mbubbleT = 0;
 }
 function makarChase(){
@@ -3857,8 +3994,12 @@ function makarChase(){
   makarSay('Стоять! Ты кто такой?! Брони-и-ислав!', 2.4, 2);
 }
 // he uses up your attempts just like Bronislav; the last one ends the run
-function makarCatch(){
+function makarCatch(inLocker){
   state = 'mcaught'; caughtT = 1.9; MK.pose = 'grab';
+  if (inLocker){   // he yanks the door open and pulls you out
+    const w = P.hidden; w.group.visible = true; w.openTarget = 1; $('closet').hidden = true;
+    P.x = w.front.x; P.z = w.front.z; P.hidden = null; MK.hideSeen = null;
+  }
   catches++; syncLives();
   $('prompt').hidden = true; $('eye').classList.remove('on');
   sfx.sting();
@@ -3914,7 +4055,7 @@ function updateMakar(dt){
     if (MK.state === 'search' && seen) gain += 3;
     MK.meter = gain > 0 ? Math.min(1, MK.meter + gain*dt) : Math.max(0, MK.meter - .16*dt);
     if (MK.meter >= 1){ makarChase(); return; }
-    if (MK.meter > .45 && (MK.state === 'game' || MK.state === 'snack' || MK.state === 'return' || MK.state === 'toDoor')){
+    if (MK.meter > .45 && ['game', 'snack', 'return', 'toDoor', 'toWork', 'work'].includes(MK.state)){
       if (MK.state === 'toDoor') MK.tripT = Math.min(MK.tripT, 20);   // he'll try again soon
       makarStand(); MK.state = 'suspicious'; MK.susT = 0; makarSay(pick(MAKAR_SUSPECT), 2);
     }
@@ -3924,7 +4065,11 @@ function updateMakar(dt){
     case 'game':
       MK.pose = 'sit'; MK.taskT -= dt;
       if (MK.speakT <= 0){ if (P.cellar) makarSay(pick(MAKAR_GAME), 2.2); MK.speakT = rand(6, 11); }
-      if (MK.taskT <= 0){ makarStand(); MK.state = 'snack'; MK.grabT = 0; if (P.cellar) makarSay(pick(MAKAR_SNACK), 2); }
+      if (MK.taskT <= 0){
+        makarStand();
+        if (Math.random() < .5){ MK.state = 'snack'; MK.grabT = 0; if (P.cellar) makarSay(pick(MAKAR_SNACK), 2); }
+        else { MK.state = 'toWork'; MK.workT = rand(20, 30); if (P.cellar) makarSay('Так, пора поработать за золотым компом.', 2.2); }
+      }
       break;
     case 'snack':
       MK.pose = 'walk';
@@ -3947,12 +4092,25 @@ function updateMakar(dt){
         if (makarStep(CEL.arrive.x, CEL.arrive.z, 3, dt)){ MK.state = 'search'; MK.searchT = 3; }
         break;
       }
-      makarStep(seen ? P.x : MK.lastSeen.x, seen ? P.z : MK.lastSeen.z, 3.5, dt);
+      if (!(P.hidden && MK.hideSeen)) makarStep(seen ? P.x : MK.lastSeen.x, seen ? P.z : MK.lastSeen.z, 3.5, dt);
       if (MK.speakT <= 0){ makarSay(pick(MAKAR_CHASE), 2); MK.speakT = rand(3, 5); }
       if (d < .85 && !P.hidden && !cheat('god')){ makarCatch(); break; }
+      if (P.hidden && MK.hideSeen && !cheat('god')){
+        if (makarStep(MK.hideSeen.front.x, MK.hideSeen.front.z, 3.5, dt) || Math.hypot(MK.hideSeen.front.x - MK.x, MK.hideSeen.front.z - MK.z) < .6){ makarCatch(true); }
+        break;
+      }
       if (MK.lostT > 4){ MK.state = 'search'; MK.searchT = 4; makarSay(pick(MAKAR_SEARCH), 2); }
       break;
     }
+    case 'toWork':   // to the golden PC in the far corner
+      MK.pose = 'walk';
+      if (makarStep(CEL.work.stand.x, CEL.work.stand.z, 1.4, dt)) Object.assign(MK, { state:'work', sitting:true, x:CEL.work.stand.x, z:CEL.work.stand.z + .15, a:Math.PI, speakT:4 });
+      break;
+    case 'work':
+      MK.pose = 'type'; MK.workT -= dt;
+      if (MK.speakT <= 0){ if (P.cellar) makarSay(pick(MAKAR_WORK), 2.2); MK.speakT = rand(7, 12); }
+      if (MK.workT <= 0){ MK.sitting = false; MK.x = CEL.work.stand.x; MK.z = CEL.work.stand.z; MK.state = 'return'; }
+      break;
     case 'toDoor':   // in the подвал, to the door out to the огород
       MK.pose = 'walk';
       if (makarStep(CEL.door.front.x, CEL.door.front.z, 1.4, dt)){
@@ -4041,6 +4199,7 @@ function syncMakar(dt, t){
   let legs = 0, armL = 0, armR = 0, y = 0;
   const sw = Math.sin(MK.phase);
   if (pose === 'walk'){ const a = moving ? sw*(MK.state === 'chase' ? .8 : .55) : 0; legs = a; armL = -a*.8; armR = a*.8; y = moving ? Math.abs(sw)*.04 : 0; }
+  if (pose === 'type'){ legs = -Math.PI/2; armL = -1.25 + Math.sin(t*22)*.05; armR = -1.25 + Math.sin(t*22 + 1.5)*.05; y = -.47; }
   if (pose === 'sit'){ legs = -Math.PI/2; armL = -1.15 + Math.sin(t*14)*.04; armR = -1.15 + Math.sin(t*14 + 2)*.04; y = -.47; }
   if (pose === 'grab'){ armR = -2.3; armL = -.4; }
   if (pose === 'swim'){ armL = -2.6 + Math.sin(t*3.2)*1.1; armR = -2.6 - Math.sin(t*3.2)*1.1; legs = Math.sin(t*5)*.25; y = Math.sin(t*2)*.03 - .1; }
@@ -4055,7 +4214,8 @@ function syncMakar(dt, t){
   // the lid of the люк is up while you are downstairs; the sky light is shut out down there
   hatch.open += ((P.cellar || state === 'transit' ? 1 : 0) - hatch.open)*Math.min(1, dt*5);
   hatch.pivot.rotation.x = -hatch.open*1.9;
-  hemi.intensity = P.cellar ? .2 : .85;
+  hemi.intensity = P.cellar ? .3 : .85;
+  sunLight.intensity = P.cellar ? 0 : 2.6;   // the big cellar reaches past the sun's shadow map, so the sun is simply off down there
   // his speech bubble
   const bub = $('mbubble');
   if (bub.classList.contains('on')){
@@ -4338,7 +4498,7 @@ function updateHud(d, dt){
   else { text = 'ищет тебя'; cls = 'warn'; }
   if (P.cellar){
     text = { game:'играет в танчики', snack:'идёт за огурцами', return:'возвращается к игре', suspicious:'что-то услышал…', chase:'гонится за тобой!', search:'ищет тебя',
-      toDoor:'идёт купаться', toPool:'идёт к бассейну', swim:'купается в бассейне', fromPool:'возвращается в подвал' }[MK.state];
+      toDoor:'идёт купаться', toPool:'идёт к бассейну', toWork:'идёт к золотому ПК', work:'работает за золотым ПК', swim:'купается в бассейне', fromPool:'возвращается в подвал' }[MK.state];
     cls = MK.state === 'chase' ? 'danger' : MK.state === 'suspicious' || MK.state === 'search' ? 'warn' : '';
   }
   st.querySelector('.label').textContent = P.cellar ? 'Макар' : 'Бронислав';
