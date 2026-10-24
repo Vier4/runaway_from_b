@@ -27,7 +27,7 @@ There is also an on-screen joystick (toggle it in the main menu).
 
 ## Endings
 
-There are 7 endings. Unlocking all of them opens the admin panel with cheats: invisibility, flying, object spawning and more.
+There are 8 endings. Unlocking all of them opens the admin panel with cheats: invisibility, flying, object spawning and more.
 
 ## Tech
 

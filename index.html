@@ -243,7 +243,7 @@ h2.good{color:var(--safe)}
     <div class="row">
       <button class="go" id="goBtn" type="button">НАЧАТЬ ПОБЕГ</button>
       <button class="ghost" id="joyBtn" type="button" aria-pressed="true">Джойстик: вкл</button>
-      <button class="ghost" id="endingsBtn" type="button">Концовки <span class="count" id="endingsCount">0/7</span></button>
+      <button class="ghost" id="endingsBtn" type="button">Концовки <span class="count" id="endingsCount">0/8</span></button>
       <button class="ghost" id="adminBtn" type="button" hidden>Админ-панель</button>
     </div>
   </div>
@@ -251,7 +251,7 @@ h2.good{color:var(--safe)}
 
 <section class="screen" id="endingsScreen" hidden>
   <div class="card">
-    <div class="eyebrow">Открыто <span id="endingsOpened">0 из 7</span></div>
+    <div class="eyebrow">Открыто <span id="endingsOpened">0 из 8</span></div>
     <h2>Концовки</h2>
     <ol class="endings" id="endingsList"></ol>
     <div class="admin-gate" id="adminGate"></div>
@@ -358,7 +358,8 @@ const INV_DEFS = {
   remote:{ name:'Пульт от телевизора',  short:'Пульт',    icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="11" y="3" width="10" height="26" rx="3" fill="#2a2a2e" stroke="#8a8f96" stroke-width="1.5"/><circle cx="16" cy="8" r="2" fill="#e5483a"/><g fill="#c9ced3"><rect x="13" y="13" width="2.4" height="2.4"/><rect x="16.6" y="13" width="2.4" height="2.4"/><rect x="13" y="17" width="2.4" height="2.4"/><rect x="16.6" y="17" width="2.4" height="2.4"/><rect x="13" y="21" width="2.4" height="2.4"/><rect x="16.6" y="21" width="2.4" height="2.4"/></g></svg>' },
   sausage:{ name:'Докторская колбаса',  short:'Колбаса',  icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="11" width="24" height="10" rx="5" fill="#e09a96" stroke="#9a4a46" stroke-width="1.5"/><path d="M4 16H1.5M28 16h2.5" stroke="#d6b46a" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="15" r="1" fill="#f6d8d4"/><circle cx="19" cy="17" r="1" fill="#f6d8d4"/></svg>' },
   torch: { name:'Фонарик',              short:'Фонарик',  icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="12.5" width="17" height="7" rx="2" fill="#2a2a2e" stroke="#8a8f96" stroke-width="1.2"/><path d="M20 10h5l3 3v6l-3 3h-5z" fill="#f2c20a"/><path d="M28 13.5v5" stroke="#fff6c0" stroke-width="2"/><rect x="9" y="14.5" width="4" height="3" rx="1" fill="#e5483a"/></svg>' },
-  money: { name:'Сто рублей',           short:'100 ₽',    icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="2.5" y="9" width="27" height="14" rx="2" fill="#c7b37c" stroke="#6a5a2a" stroke-width="1.4"/><circle cx="9" cy="16" r="3.4" fill="none" stroke="#6a5a2a" stroke-width="1.2"/><text x="21" y="19.5" font-size="9" text-anchor="middle" fill="#3a3010" font-family="sans-serif" font-weight="700">100</text></svg>' },
+  briefs:{ name:'Трусы Бронислава',     short:'Трусы',    icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 7h24l2 18h-11l-3-9-3 9H2z" fill="#d0303a" stroke="#7a1418" stroke-width="1.4" stroke-linejoin="round"/><rect x="4" y="6" width="24" height="4" rx="1" fill="#f2f2f2" stroke="#9aa0a6" stroke-width="1"/><g fill="#ffffff"><circle cx="9" cy="15" r="1.6"/><circle cx="22" cy="14" r="1.6"/><circle cx="7" cy="21" r="1.6"/><circle cx="25" cy="21" r="1.6"/></g></svg>' },
+  money: { name:'Сто рублей',          short:'100 ₽',    icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="2.5" y="9" width="27" height="14" rx="2" fill="#c7b37c" stroke="#6a5a2a" stroke-width="1.4"/><circle cx="9" cy="16" r="3.4" fill="none" stroke="#6a5a2a" stroke-width="1.2"/><text x="21" y="19.5" font-size="9" text-anchor="middle" fill="#3a3010" font-family="sans-serif" font-weight="700">100</text></svg>' },
 };
 const ENDINGS = [
   { id:1, name:'Звезда канала', good:false, hint:'Попадись Брониславу, когда у тебя кончатся попытки.', how:'Бронислав поймал тебя, и попытки кончились.', text:'Он выложил ролик «Гость, который не смог сбежать». Ты теперь самый популярный человек на его канале.', quote:'Ну всё, братан. Ты теперь звезда моего канала!' },
@@ -368,6 +369,7 @@ const ENDINGS = [
   { id:5, name:'Пожарная тревога', good:true, hint:'Найди ключ от пожарного щитка и включи тревогу.', how:'Ты открыл пожарный щиток и включил тревогу.', text:'Бронислав в панике выбежал на улицу спасать свой компьютер, а приехавшие пожарные открыли дверь и вывели тебя из дома.', quote:'Пожар?! Пацаны, спасаем технику! Стрим окончен!' },
   { id:6, name:'Стрим окончен', good:true, hint:'Найди ключ от электрощитка и выключи свет.', how:'Ты открыл электрощиток и выключил свет во всём доме.', text:'Стрим Бронислава оборвался на самом интересном месте. Пока он в темноте искал фонарик, ты спокойно ушёл из дома.', quote:'Э! Кто свет вырубил?! У меня стрим идёт, пацаны!' },
   { id:7, name:'Угнал жигули', good:true, hint:'Найди ключи от машины и уезжай на ней.', how:'Ты завёл жигули Бронислава и уехал.', text:'Бронислав выбежал во двор, но было поздно: ты уже ехал по улице на его «семёрке». Новый ролик называется «У меня угнали машину».', quote:'Э! Это моя «семёрка»! Стой! Подписчики, звоните в полицию!' },
+  { id:8, name:'Трусы-дымовуха', good:true, hint:'Найди на кровати кое-что личное и накинь это на датчик дыма.', how:'Ты накинул трусы Бронислава на датчик дыма.', text:'Датчик не выдержал такого запаха и поднял пожарную тревогу. Бронислав выбежал на улицу спасать компьютер, а пожарные открыли дверь и вывели тебя из дома.', quote:'Пацаны, это не пожар! Это мои трусы! Не снимайте!' },
 ];
 const maxCatches = () => DIFF[difficulty].lives;
 const WALK_PHRASES = ['Так, чё там дальше по плану…','Подписчики ждут. Погнали.','Ща будет контент.'];
@@ -376,6 +378,8 @@ const SPAG_REACT = ['Э-э! Кто мои спагетти ломает?!','Сл
 const FLUSH_ARRIVE = ['Никого… Бачок сам смылся, что ли?','Хм. Пусто. Странно, братан.'];
 const DOG_REACT = ['Чё там Бобик разгавкался?!','Бобик, кого там учуял?','Э! Кто там во дворе?!'];
 const DOG_ARRIVE = ['Бобик, ну чё ты? Никого же нет.','Кошку, что ли, увидел? Сиди тихо.'];
+const LIZARD_REACT = ['Э! Кто там с моей ящеркой лижется?!','Чё там ящерка расчавкалась?!','Слышь! Кто ящерку дразнит?!'];
+const LIZARD_ARRIVE = ['Ящерка, ты кого там облизывала? Никого же нет.','Голодная, что ли? Ща покормлю… потом.'];
 const SPAG_ARRIVE = ['Кто сломал мои спагетти?! Найду — будешь в трендах!','Моя пачка… Ну всё, это война.'];
 const SUSPECT_PHRASES = ['Э… кто тут?','Слышь, мне показалось, или чё?','Кто там шуршит, а?','Хм… Странный звук.'];
 const CHASE_PHRASES = ['Слышь, стоять!','О-о! Контент пошёл!','Э, ты куда, братан?!','Улыбнись, тебя снимают!','От камеры не убежишь!'];
@@ -1420,9 +1424,10 @@ lightSwitch(3.5, .9, 6.9, 'n'); lightSwitch(.1, .9, 8.15, 'e'); lightSwitch(5.1,
 }
 // smoke detectors on the ceiling with a blinking red LED
 const smokeLeds = [];
+const SMOKE_SPOTS = [[3.7, 1.7], [10.4, 1.4], [16.6, 3.6], [14, 6], [1.5, 6.6], [8.6, 10.6], [16.6, 8.4], [6.5, 6]];
 {
   const white = M(0xf6f5f1, { rough:.45 }), vent = M(0xe3e1db, { rough:.5 });
-  for (const [x, z] of [[3.7, 1.7], [10.4, 1.4], [16.6, 3.6], [14, 6], [1.5, 6.6], [8.6, 10.6], [16.6, 8.4], [6.5, 6]]){
+  for (const [x, z] of SMOKE_SPOTS){
     const g = grp(house, x, H, z);
     cyl(g, 0, -.008, 0, .07, .072, .016, white, 40);
     const dome = new THREE.Mesh(new THREE.SphereGeometry(.062, 32, 10, 0, Math.PI*2, Math.PI*.62, Math.PI*.38), white); dome.position.y = -.008; g.add(dome);
@@ -1899,6 +1904,125 @@ function updateDog(dt, t){
   dog.tail.rotation.z = dog.alert > .5 ? 0 : Math.sin(t*9)*.5;
   dog.tail.rotation.x = dog.alert > .5 ? -1.2 : -.7;
 }
+// ящерка in a terrarium on the round table in the зал, a jar of кузнечики next to it.
+// Hungry, she licks you when she spots you and Bronislav comes to the slurping; once fed she leaves you alone
+const LIZ = { x:8.73, z:2.73, jar:{ x:8.95, z:2.33 }, noise:{ x:9.5, z:3.5 } };
+const liz = { alert:0, lickT:0, cd:0, fed:false, warned:false, tongueT:0, tgt:new THREE.Vector3(), atPlayer:false, bug:null, eatT:0, lickFx:0 };
+{
+  const TOP = .763, L = .42, DP = .26, HT = .24;
+  const g = grp(house, LIZ.x, TOP, LIZ.z, Math.PI/4);   // long side along the table edge
+  const glass = M(0xd8eef4, { rough:.05, env:1.6, transparent:true, opacity:.2, depthWrite:false });
+  const black = M(0x1c1c20, { rough:.5 });
+  rbox(g, 0, .012, 0, L, .024, DP, black, .006);
+  rbox(g, 0, .034, 0, L - .02, .022, DP - .02, M(0xc9a46a, { rough:.95 }), .004);   // sand
+  for (const s of [-1, 1]){
+    rbox(g, 0, .024 + HT/2, s*(DP/2 - .003), L, HT, .004, glass, .001);
+    rbox(g, s*(L/2 - .003), .024 + HT/2, 0, .004, HT, DP, glass, .001);
+    rbox(g, 0, .024 + HT, s*DP/2, L, .012, .012, black, .003);
+    rbox(g, s*L/2, .024 + HT, 0, .012, .012, DP, black, .003);
+    for (const sz of [-1, 1]) rbox(g, s*L/2, .024 + HT/2, sz*DP/2, .012, HT, .012, black, .003);
+  }
+  sph(g, -.14, .05, -.06, .045, M(0x8a8478, { rough:.9 }), 1.2, .7, 1, 10);   // rock
+  tube(g, [[-.17, .045, .08], [-.05, .1, .03], [.08, .13, -.07], [.17, .16, -.09]], .009, mat.darkWood, 16);   // branch
+  cyl(g, .14, .052, .08, .035, .03, .016, M(0x3a3a40, { rough:.4 }), 20);   // water dish
+  cyl(g, .14, .058, .08, .029, .029, .004, M(0x9fd0e0, { rough:.05, env:1.5 }), 20);
+  // the lizard: faces her local +x, turns on yawG and rears up on body
+  const yawG = grp(g, 0, .045, 0), body = grp(yawG); yawG.scale.setScalar(1.4);
+  const skin = M(0x5fa83a, { rough:.55, env:.6 }), belly = M(0xd8d07a, { rough:.7 }), dark = M(0x2f6a1e, { rough:.6 });
+  sph(body, 0, .018, 0, .045, skin, 1.3, .45, .7, 16);
+  sph(body, 0, .012, 0, .04, belly, 1.2, .3, .6, 12);
+  for (const [x, z] of [[-.03, .01], [0, -.012], [.03, .006]]) sph(body, x, .036, z, .008, dark, 1.4, .4, 1, 8);
+  const tail = cyl(body, -.1, .012, 0, .004, .018, .12, skin, 10); tail.rotation.z = Math.PI/2;
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]){
+    const leg = cyl(body, sx*.035, .008, sz*.032, .006, .006, .03, skin, 6); leg.rotation.x = sz*1.1;
+    sph(body, sx*.035, .002, sz*.045, .008, skin, 1.2, .4, 1.2, 8);
+  }
+  const head = grp(body, .068, .024, 0);
+  sph(head, .015, 0, 0, .026, skin, 1.4, .7, .9, 14);
+  for (const sz of [-1, 1]) sph(head, .022, .01, sz*.017, .006, M(0x111111, { rough:.2, env:1.4 }), 1, 1, 1, 8);
+  const mouth = new THREE.Object3D(); mouth.position.set(.05, -.004, 0); head.add(mouth);
+  const lickTxt = textSprite('ЛИЗЬ!', '#ff7ab0', .45); lickTxt.position.set(0, .42, 0); lickTxt.visible = false; g.add(lickTxt);
+  // кузнечики: small green bugs, in the jar at first and on the sand once you pour them in
+  const bugM = M(0x7cb83a, { rough:.6 }), bugHead = M(0x4f8a26, { rough:.6 });
+  const bug = (parent, x, y, z, ry, rz = 0) => {
+    const b = grp(parent, x, y, z, ry); b.rotation.z = rz;
+    sph(b, 0, 0, 0, .009, bugM, 2.2, .8, .8, 8); sph(b, .018, .002, 0, .006, bugHead, 1, 1, 1, 8);
+    for (const s of [-1, 1]){ const l = rbox(b, -.008, .006, s*.006, .022, .003, .003, bugHead, .001); l.rotation.z = .5; }
+    return b;
+  };
+  const terrBugs = [[.06, -.07], [.12, -.02], [-.03, .08], [.02, .02], [-.09, -.02], [.1, .06]].map(([x, z]) => bug(g, x, .052, z, Math.random()*6));
+  terrBugs.forEach(b => b.visible = false);
+  const jar = grp(house, LIZ.jar.x, TOP, LIZ.jar.z);
+  cyl(jar, 0, .07, 0, .05, .05, .14, M(0xe6f4f0, { rough:.05, env:1.6, transparent:true, opacity:.28, depthWrite:false, side:THREE.DoubleSide }), 24, true);
+  cyl(jar, 0, .002, 0, .05, .05, .004, glass, 24);
+  cyl(jar, 0, .147, 0, .053, .053, .016, M(0xc8a030, { rough:.3, metal:1, env:1.2 }), 24);
+  const jarBugs = Array.from({ length:7 }, (_, i) => bug(jar, rand(-.025, .025), .015 + i*.016, rand(-.025, .025), Math.random()*6, rand(-.6, .6)));
+  const lbl = new THREE.Mesh(new THREE.PlaneGeometry(.085, .04), M(0xffffff, { map:labelTex('КУЗНЕЧИКИ', '#f4ecd0', '#2f6a1e', 256, 120, 'bold 40px sans-serif'), rough:.7 }));
+  lbl.position.set(0, .06, 0); lbl.rotation.y = Math.atan2(LIZ.jar.x - 8.5, LIZ.jar.z - 2.5); lbl.translateZ(.052); jar.add(lbl);
+  // the tongue lives in world space so it can stretch all the way to your face
+  const tongueGeo = new THREE.CylinderGeometry(.003, .006, 1, 6); tongueGeo.translate(0, .5, 0);
+  const tongue = new THREE.Mesh(tongueGeo, M(0xe8577a, { rough:.35, env:.8 })); tongue.visible = false; scene.add(tongue);
+  Object.assign(liz, { g, yawG, body, head, mouth, lickTxt, terrBugs, jar, jarBugs, tongue });
+  sadd('Террариум с ящеркой', 'Мебель', g);
+  sadd('Банка с кузнечиками', 'Мебель', jar);
+}
+const UPV = new THREE.Vector3(0, 1, 0), tA = new THREE.Vector3(), tB = new THREE.Vector3();
+function lizardLookAt(x, z){ return Math.atan2(-(z - LIZ.z), x - LIZ.x) - Math.PI/4; }   // her yaw inside the terrarium
+function lick(){
+  const v = Math.max(.2, 1 - Math.hypot(LIZ.x - camera.position.x, LIZ.z - camera.position.z)/12);
+  tone(rand(480, 620), .16, .16*v, 'sine', rand(1100, 1400)); noise(.14, .3*v, 2600, 'highpass');
+  setTimeout(() => tone(rand(900, 1100), .08, .1*v, 'sine', 400), 140);
+  liz.tongueT = .32; liz.atPlayer = true; liz.lickFx = .35;
+  liz.lickTxt.visible = true; liz.lickTxt.scale.set(.72*rand(.9, 1.15), .18*rand(.9, 1.15), 1);
+}
+function resetLizard(){
+  Object.assign(liz, { alert:0, lickT:0, cd:0, fed:false, warned:false, tongueT:0, bug:null, eatT:0, lickFx:0 });
+  liz.jarBugs.forEach(b => b.visible = true); liz.terrBugs.forEach(b => b.visible = false);
+  liz.tongue.visible = false; liz.lickTxt.visible = false;
+}
+function updateLizard(dt, t){
+  liz.cd -= dt;
+  const dx = P.x - LIZ.x, dz = P.z - LIZ.z, d = Math.hypot(dx, dz);
+  const range = P.crouch ? 1.6 : 2.6;
+  const sees = state === 'play' && !P.hidden && !cheat('ghost') && d < range && P.fy < 1 && clearSight(LIZ.x, LIZ.z, P.x, P.z, P.crouch);
+  liz.alert = sees ? Math.min(1.5, liz.alert + dt*.9) : Math.max(0, liz.alert - dt*.5);
+  const hungry = !liz.fed, licking = hungry && sees && liz.alert >= 1;
+  if (hungry && sees && liz.alert > .3 && !liz.warned){ liz.warned = true; banner('Ящерка тебя заметила! Насыпь ей кузнечиков, а то залижет', 'warn', 2.6); }
+  if (liz.alert === 0) liz.warned = false;
+  if (licking){
+    liz.lickT -= dt;
+    if (liz.lickT <= 0){ lick(); liz.lickT = rand(.45, .8); }
+    if (liz.cd <= 0){ liz.cd = 8; makeNoise(LIZ.noise.x, LIZ.noise.z, 'lizard'); }
+  }
+  // fed: she snaps up the кузнечики one by one
+  const left = liz.fed && liz.terrBugs.filter(b => b.visible);
+  if (left && left.length){
+    liz.eatT -= dt;
+    if (liz.eatT <= 0 && liz.tongueT <= 0){
+      liz.bug = pick(left); liz.bug.getWorldPosition(liz.tgt);
+      liz.tongueT = .32; liz.atPlayer = false; liz.eatT = rand(1.2, 2);
+      if (Math.hypot(LIZ.x - camera.position.x, LIZ.z - camera.position.z) < 6) noise(.05, .15, 3000, 'highpass');
+    }
+  }
+  // pose: watch you, turn to the bug she is eating, otherwise wander her head around
+  const yawTarget = liz.bug ? lizardLookAt(liz.tgt.x, liz.tgt.z) : liz.alert > .15 ? lizardLookAt(P.x, P.z) : Math.sin(t*.4)*1.2;
+  liz.yawG.rotation.y = turnTo(liz.yawG.rotation.y, yawTarget, dt*(liz.alert > .15 ? 6 : 1.5));
+  liz.body.rotation.z += ((licking ? .45 : 0) - liz.body.rotation.z)*Math.min(1, dt*8);
+  liz.head.rotation.z = liz.alert > .15 ? .15 : Math.sin(t*1.3)*.08;
+  liz.lickFx = Math.max(0, liz.lickFx - dt);
+  if (liz.lickFx <= 0) liz.lickTxt.visible = false;
+  // tongue: shoots out to the target and back
+  if (liz.tongueT > 0){
+    liz.tongueT -= dt;
+    if (liz.atPlayer){ liz.tgt.copy(camera.position); liz.tgt.y -= .25; }
+    const k = clamp(liz.tongueT/.32, 0, 1), p = 1 - Math.abs(2*k - 1);
+    liz.mouth.getWorldPosition(tA);
+    tB.subVectors(liz.tgt, tA); const len = Math.max(.01, tB.length() - (liz.atPlayer ? .2 : 0)); tB.normalize();
+    liz.tongue.position.copy(tA); liz.tongue.quaternion.setFromUnitVectors(UPV, tB); liz.tongue.scale.set(1, len*p + .001, 1);
+    liz.tongue.visible = true;
+    if (liz.bug && k < .5){ liz.bug.visible = false; liz.bug = null; }
+  } else liz.tongue.visible = false;
+}
 // things lying around that you can pocket; they just go into the inventory
 const PICKUPS = [];
 function pickup(id, x, y, z, build){
@@ -1922,6 +2046,24 @@ pickup('torch', 1.05, .03, 10.65, g => {
   const lens = new THREE.Mesh(new THREE.CircleGeometry(.03, 20), M(0xfff8d8, { rough:.05, env:1.5 })); lens.position.set(.136, 0, 0); lens.rotation.y = Math.PI/2; g.add(lens);
   g.rotation.y = .7;
 });
+// Bronislav's семейные трусы: red with white hearts and a white waistband
+function buildBriefs(g){
+  const s = new THREE.Shape();
+  s.moveTo(-.17, .13); s.lineTo(.17, .13); s.lineTo(.2, -.15); s.lineTo(.035, -.15); s.quadraticCurveTo(0, -.03, -.035, -.15); s.lineTo(-.2, -.15); s.closePath();
+  const tex = canvasTex(64, 64, (c, w, h) => {
+    c.fillStyle = '#d0303a'; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#ffffff';
+    for (const [x, y] of [[16, 16], [48, 48]]){ c.beginPath(); c.arc(x - 4, y - 2, 5, 0, Math.PI*2); c.arc(x + 4, y - 2, 5, 0, Math.PI*2); c.moveTo(x - 9, y); c.lineTo(x, y + 10); c.lineTo(x + 9, y); c.fill(); }
+  });
+  tex.repeat.set(6, 6);
+  const cloth = new THREE.Mesh(new THREE.ShapeGeometry(s), M(0xffffff, { map:tex, rough:.95, side:THREE.DoubleSide }));
+  cloth.rotation.x = -Math.PI/2; g.add(cloth);
+  rbox(g, 0, .004, -.12, .35, .008, .035, M(0xf2f2f2, { rough:.9 }), .003);
+}
+pickup('briefs', .95, .585, 1.65, g => { buildBriefs(g); g.rotation.y = .5; });
+// the same трусы hanging on a smoke detector once you throw them there
+const briefsOnDetector = grp(scene, 0, H - .085, 0);
+buildBriefs(briefsOnDetector); briefsOnDetector.rotation.z = .12; briefsOnDetector.visible = false;
 pickup('money', 1.75, .585, 1.75, g => {
   const n = new THREE.Mesh(new THREE.PlaneGeometry(.15, .065), M(0xffffff, { map:labelTex('100', '#c7b37c', '#3a3010', 128, 56, 'bold 34px sans-serif'), rough:.8, side:THREE.DoubleSide }));
   n.rotation.x = -Math.PI/2; n.rotation.z = .3; g.add(n);
@@ -2529,7 +2671,7 @@ const B = {
   meter:0, stim:{ x:0, z:0 }, lastSeen:{ x:0, z:0 }, lastSeenT:-9, lostT:0, searchT:0, hideSeen:null,
   phase:0, lastStep:0, speakT:3, field:null, fieldCell:-1, fieldAge:0, seen:false, snapT:1, sfxT:0, chases:0, grabT:0,
 };
-let hasFireKey = false, alarmOn = false, alarmT = 0;
+let hasFireKey = false, alarmOn = false, alarmT = 0, alarmEnding = 5;
 let hasElecKey = false, powerOn = true, blackT = 0;
 let hasCarKey = false, driveT = 0;
 let flushCd = 0, spagCd = 0, catches = 0, usedFlush = false, usedSpag = false, respawnT = 0, respawned = false;
@@ -2581,8 +2723,10 @@ function resetWorld(){
   Object.assign(B, { x:15, z:1.28, a:Math.PI, state:'task', task:'computer', taskT:rand(12, 16), pose:'type', sitting:true,
     meter:0, lastSeenT:-9, lostT:0, searchT:0, hideSeen:null, speakT:2.5, field:null, fieldCell:-1, seen:false, grabT:0 });
   for (const it of PICKUPS){ it.taken = false; it.g.visible = true; }
+  briefsOnDetector.visible = false;
   clearSpawns(true); closeSpawn();
   dog.alert = 0; dog.cd = 0; dog.barking = 0;
+  resetLizard();
   inv = []; invKey = '-'; 
   for (const b of spagBits) house.remove(b); spagBits.length = 0; if (spagPack) spagPack.rotation.z = .15;
   flushCd = spagCd = 0; B.noise = null;
@@ -2640,14 +2784,16 @@ function startBlackout(){
     setTimeout(() => { if (state === 'blackout') say('Э! Кто свет вырубил?! У меня стрим идёт, пацаны!', 3, 'angry', 3); }, 400);
   }, 650);
 }
-function startAlarm(){
-  state = 'alarm'; alarmT = 3.6; alarmOn = true; firePanel.open = 0;
+// ending 5: the fire panel; ending 8: трусы on a smoke detector
+function startAlarm(ending = 5){
+  state = 'alarm'; alarmT = 3.6; alarmOn = true; alarmEnding = ending; firePanel.open = 0;
   $('prompt').hidden = true; $('eye').classList.remove('on');
-  banner('ПОЖАРНАЯ ТРЕВОГА!', 'warn', 3.4);
-  sfx.unlock();
+  banner(ending === 8 ? 'Датчик дыма не выдержал запаха! ПОЖАРНАЯ ТРЕВОГА!' : 'ПОЖАРНАЯ ТРЕВОГА!', 'warn', 3.4);
+  if (ending === 5) sfx.unlock();
   for (let i = 0; i < 14; i++) setTimeout(() => { if (alarmOn) tone(i % 2 ? 960 : 720, .24, .16, 'square'); }, 250 + i*250);
   standUp(); B.state = 'panic'; B.pose = 'vlog';
-  setTimeout(() => { if (alarmOn) say('Пожар?! Где пожар?! Спасаем технику, пацаны!', 3, 'angry', 3); }, 500);
+  const line = ending === 8 ? 'Пожар?! Чем это так воняет?! Спасаем технику, пацаны!' : 'Пожар?! Где пожар?! Спасаем технику, пацаны!';
+  setTimeout(() => { if (alarmOn) say(line, 3, 'angry', 3); }, 500);
 }
 function syncLives(){
   const n = maxCatches(), el = $('lives');
@@ -2711,6 +2857,14 @@ function findAction(){
   if (P.hidden && P.hidden !== 'menu') return { type:'unhide', text:'<kbd>E</kbd>вылезти из шкафа' };
   const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
   const facing = (x, z) => { const dx = x - P.x, dz = z - P.z, l = Math.hypot(dx, dz) || 1; return (dx*fx + dz*fz)/l; };
+  // looking up at a smoke detector wins over anything lying around
+  if (inv.includes('briefs') && pitch > .55){
+    const spot = SMOKE_SPOTS.find(([x, z]) => Math.hypot(x - P.x, z - P.z) < 1.1);
+    if (spot) return { type:'briefs', spot, text:'<kbd>E</kbd>накинуть трусы на датчик дыма' };
+  }
+  // looking straight at the terrarium or the jar wins over the пульт lying next to them
+  if (!liz.fed && ((Math.hypot(LIZ.jar.x - P.x, LIZ.jar.z - P.z) < 1.4 && facing(LIZ.jar.x, LIZ.jar.z) > .9) || (Math.hypot(LIZ.x - P.x, LIZ.z - P.z) < 1.4 && facing(LIZ.x, LIZ.z) > .9)))
+    return { type:'feed', text:'<kbd>E</kbd>насыпать кузнечиков ящерке' };
   for (const r of spawned) if (r.pick && !r.taken && Math.hypot(r.x - P.x, r.z - P.z) < 1.4 && facing(r.x, r.z) > .4)
     return { type:'spawnpick', rec:r, text:`<kbd>E</kbd>взять: ${r.name.toLowerCase()}` };
   for (const it of PICKUPS) if (!it.taken && Math.hypot(it.x - P.x, it.z - P.z) < 1.4 && facing(it.x, it.z) > .4)
@@ -2761,7 +2915,23 @@ function doAction(){
   if (action.type === 'item'){
     const it = action.item; it.taken = true; it.g.visible = false; sfx.key();
     if (!inv.includes(it.id)) inv.push(it.id);
-    banner(`В инвентаре: ${INV_DEFS[it.id].name}`, 'good', 2.2);
+    if (it.id === 'briefs') banner('Трусы Бронислава! Встань под датчик дыма и посмотри вверх', 'good', 3.4);
+    else banner(`В инвентаре: ${INV_DEFS[it.id].name}`, 'good', 2.2);
+    return;
+  }
+  if (action.type === 'feed'){
+    liz.fed = true; liz.eatT = .8; liz.tongueT = 0;
+    liz.jarBugs.forEach(b => b.visible = false); liz.terrBugs.forEach(b => b.visible = true);
+    noise(.4, .2, 3000, 'highpass');
+    banner('Ящерка хрустит кузнечиками. Теперь она тебя не тронет', 'good', 2.8);
+    return;
+  }
+  if (action.type === 'briefs'){
+    const [x, z] = action.spot;
+    inv.splice(inv.indexOf('briefs'), 1);
+    briefsOnDetector.position.x = x; briefsOnDetector.position.z = z; briefsOnDetector.visible = true;
+    sfx.creak();
+    startAlarm(8);
     return;
   }
   if (action.type === 'firekey'){
@@ -2948,7 +3118,7 @@ function updateBron(dt){
       if (!B.invArrived){
         if (navStep(nz.x, nz.z, 2.3, dt) || Math.hypot(nz.x - B.x, nz.z - B.z) < .5){
           B.invArrived = true; B.invT = 3.5;
-          say(pick({ flush:FLUSH_ARRIVE, spaghetti:SPAG_ARRIVE, dog:DOG_ARRIVE }[nz.kind]), 3, nz.kind === 'spaghetti' ? 'angry' : 'sly', 2);
+          say(pick({ flush:FLUSH_ARRIVE, spaghetti:SPAG_ARRIVE, dog:DOG_ARRIVE, lizard:LIZARD_ARRIVE }[nz.kind]), 3, nz.kind === 'spaghetti' ? 'angry' : 'sly', 2);
         }
       } else {
         B.invT -= dt; B.a += dt*1.3;
@@ -2973,8 +3143,8 @@ function makeNoise(x, z, kind){
   standUp();
   B.state = 'investigate'; B.noise = { x, z, kind }; B.invArrived = false; B.invT = 0;
   sfx.hm();
-  say(pick({ flush:FLUSH_REACT, spaghetti:SPAG_REACT, dog:DOG_REACT }[kind]), 2.6, 'angry', 2);
-  banner({ flush:'Бронислав услышал смыв и идёт проверить!', spaghetti:'Бронислав услышал хруст и бежит на кухню!', dog:'Бобик лает! Бронислав идёт посмотреть!' }[kind], 'warn', 2.4);
+  say(pick({ flush:FLUSH_REACT, spaghetti:SPAG_REACT, dog:DOG_REACT, lizard:LIZARD_REACT }[kind]), 2.6, 'angry', 2);
+  banner({ flush:'Бронислав услышал смыв и идёт проверить!', spaghetti:'Бронислав услышал хруст и бежит на кухню!', dog:'Бобик лает! Бронислав идёт посмотреть!', lizard:'Ящерка тебя лижет! Бронислав услышал и идёт в зал!' }[kind], 'warn', 2.4);
 }
 function toSuspicious(){
   standUp(); B.state = 'suspicious'; sfx.hm(); say(pick(SUSPECT_PHRASES), 2);
@@ -3126,7 +3296,7 @@ function syncWorld(dt, t){
   }
   for (const s of smokeLeds) s.led.visible = alarmOn ? (t*6 | 0) % 2 === 0 : (t + s.phase) % 3 < .12;
   fireKeyObj.rotation.y += dt*2; fireKeyObj.position.y = fireSpot.y + .05 + Math.sin(t*3 + 1)*.02;
-  firePanel.open += ((alarmOn ? 1 : 0) - firePanel.open)*Math.min(1, dt*5);
+  firePanel.open += ((alarmOn && alarmEnding === 5 ? 1 : 0) - firePanel.open)*Math.min(1, dt*5);
   firePanel.pivot.rotation.y = -firePanel.open*1.7;
   alarmGlowEl.style.opacity = alarmOn ? ((t*4 | 0) % 2 ? .9 : .25) : 0;
   // wardrobe doors
@@ -3228,7 +3398,7 @@ function updateHud(d, dt){
   else if (B.state === 'walk') text = TASKS[B.task].going;
   else if (B.state === 'suspicious'){ text = 'что-то услышал…'; cls = 'warn'; }
   else if (B.state === 'chase'){ text = 'гонится за тобой!'; cls = 'danger'; }
-  else if (B.state === 'investigate'){ text = { flush:'идёт на звук смыва', spaghetti:'бежит на кухню: спагетти!', dog:'идёт на лай Бобика' }[B.noise ? B.noise.kind : 'flush']; cls = 'warn'; }
+  else if (B.state === 'investigate'){ text = { flush:'идёт на звук смыва', spaghetti:'бежит на кухню: спагетти!', dog:'идёт на лай Бобика', lizard:'идёт на чавканье ящерки' }[B.noise ? B.noise.kind : 'flush']; cls = 'warn'; }
   else { text = 'ищет тебя'; cls = 'warn'; }
   $('statusText').textContent = text;
   st.className = 'status plate ' + cls;
@@ -3269,7 +3439,7 @@ function frame(){
   }
   T += dt;
   let d = 99;
-  if (!spawnOpen) updateDog(dt, T);
+  if (!spawnOpen){ updateDog(dt, T); updateLizard(dt, T); }
   if (state === 'play'){ if (!spawnOpen){ updatePlayer(dt); if (state === 'play') d = updateBron(dt); } updateHud(d, dt); }
   else if (state === 'menu'){ updateBron(dt); }
   else if (state === 'caught'){ caughtT -= dt; if (caughtT <= 0){ if (catches >= maxCatches()) endRun(1); else startRespawn(); } }
@@ -3291,7 +3461,7 @@ function frame(){
   }
   else if (state === 'alarm'){
     alarmT -= dt; B.a += dt*5; B.phase += dt*8;
-    if (alarmT <= 0){ alarmOn = false; endRun(5); }
+    if (alarmT <= 0){ alarmOn = false; endRun(alarmEnding); }
   }
   else if (state === 'winning'){ winT -= dt; P.x -= dt*1.6; P.z += ((GATE.z1 + GATE.z2)/2 - P.z)*Math.min(1, dt*4); P.moving = true; P.bob += dt*6; if (winT <= 0) endRun(winEnding()); }
   if (bannerT > 0){ bannerT -= dt; if (bannerT <= 0) $('banner').classList.remove('on'); }
