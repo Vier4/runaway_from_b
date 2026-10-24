@@ -247,7 +247,7 @@ h2.good{color:var(--safe)}
     <div class="row">
       <button class="go" id="goBtn" type="button">НАЧАТЬ ПОБЕГ</button>
       <button class="ghost" id="joyBtn" type="button" aria-pressed="true">Джойстик: вкл</button>
-      <button class="ghost" id="endingsBtn" type="button">Концовки <span class="count" id="endingsCount">0/12</span></button>
+      <button class="ghost" id="endingsBtn" type="button">Концовки <span class="count" id="endingsCount">0/13</span></button>
       <button class="ghost" id="adminBtn" type="button" hidden>Админ-панель</button>
     </div>
   </div>
@@ -255,7 +255,7 @@ h2.good{color:var(--safe)}
 
 <section class="screen" id="endingsScreen" hidden>
   <div class="card">
-    <div class="eyebrow">Открыто <span id="endingsOpened">0 из 12</span></div>
+    <div class="eyebrow">Открыто <span id="endingsOpened">0 из 13</span></div>
     <h2>Концовки</h2>
     <ol class="endings" id="endingsList"></ol>
     <div class="admin-gate" id="adminGate"></div>
@@ -335,6 +335,8 @@ const W = 18, D = 12, H = 2.7;          // house footprint (m) and ceiling
 const Y2 = 2.9, H2 = 2.5;               // second floor: where its floor is, and its ceiling height
 // the stairs climb along the north side of the corridor's east end; you step off upstairs south of the stairwell
 const STAIRS = { x1:16.4, x2:17.95, z1:5.15, z2:5.85, bottom:{ x:15.95, z:5.5 }, top:{ x:17.35, z:6.45 } };
+// a boarded-up door in Bronislav's bedroom; behind it, his secret room
+const SECRET = { x:16.0, a:3.3, b:4.3, front:{ x:15.45, z:3.8 } };
 const BALC = { x1:10.6, x2:13.8, z1:D, z2:13.35, door:{ a:11.6, b:12.8 } };   // balcony off the upstairs guest room
 const DIFF = {
   classic: { label:'Практика', blind:true, lives:3, range:9, cone:55, detect:.85, chase:3.2 },   // he never sees you
@@ -371,6 +373,7 @@ const INV_DEFS = {
   sausage:{ name:'Докторская колбаса',  short:'Колбаса',  icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="11" width="24" height="10" rx="5" fill="#e09a96" stroke="#9a4a46" stroke-width="1.5"/><path d="M4 16H1.5M28 16h2.5" stroke="#d6b46a" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="15" r="1" fill="#f6d8d4"/><circle cx="19" cy="17" r="1" fill="#f6d8d4"/></svg>' },
   torch: { name:'Фонарик',              short:'Фонарик',  icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="12.5" width="17" height="7" rx="2" fill="#2a2a2e" stroke="#8a8f96" stroke-width="1.2"/><path d="M20 10h5l3 3v6l-3 3h-5z" fill="#f2c20a"/><path d="M28 13.5v5" stroke="#fff6c0" stroke-width="2"/><rect x="9" y="14.5" width="4" height="3" rx="1" fill="#e5483a"/></svg>' },
   briefs:{ name:'Трусы Бронислава',     short:'Трусы',    icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 7h24l2 18h-11l-3-9-3 9H2z" fill="#d0303a" stroke="#7a1418" stroke-width="1.4" stroke-linejoin="round"/><rect x="4" y="6" width="24" height="4" rx="1" fill="#f2f2f2" stroke="#9aa0a6" stroke-width="1"/><g fill="#ffffff"><circle cx="9" cy="15" r="1.6"/><circle cx="22" cy="14" r="1.6"/><circle cx="7" cy="21" r="1.6"/><circle cx="25" cy="21" r="1.6"/></g></svg>' },
+  crowbar:{ name:'Лом',                 short:'Лом',      icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 27L24 6" stroke="#c81e16" stroke-width="3.4" stroke-linecap="round"/><path d="M24 6c3-2 6 0 4 3" fill="none" stroke="#c81e16" stroke-width="3" stroke-linecap="round"/><path d="M7 27l-3 1" stroke="#c81e16" stroke-width="3" stroke-linecap="round"/></svg>' },
   money: { name:'Сто рублей',          short:'100 ₽',    icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="2.5" y="9" width="27" height="14" rx="2" fill="#c7b37c" stroke="#6a5a2a" stroke-width="1.4"/><circle cx="9" cy="16" r="3.4" fill="none" stroke="#6a5a2a" stroke-width="1.2"/><text x="21" y="19.5" font-size="9" text-anchor="middle" fill="#3a3010" font-family="sans-serif" font-weight="700">100</text></svg>' },
 };
 const ENDINGS = [
@@ -386,6 +389,7 @@ const ENDINGS = [
   { id:10, name:'Сбежал от Макара', good:true, hint:'Пусть Макар погонится за тобой, а ты уйди через дверь погреба.', how:'Макар гнался за тобой, но ты ушёл через дверь погреба.', text:'Ты отодвинул ржавый засов и выскочил в огород. Макар застрял в дверях с банкой огурцов в руках.', quote:'Э-э! Стой! Бронислав меня убьёт!' },
   { id:11, name:'Мимо Макара', good:true, hint:'Выберись через погреб так, чтобы Макар тебя не заметил.', how:'Ты прокрался мимо Макара и ушёл через дверь погреба.', text:'Макар так увлёкся танчиками, что даже не снял наушники. Ты тихо ушёл огородами.', quote:'Чё? Дверью хлопнуло? Да не, показалось. Ещё катку!' },
   { id:12, name:'Сухой кран', good:true, hint:'Найди в подвале панель управления водой и перекрой воду.', how:'Ты перекрыл воду во всём доме.', text:'Бронислав как раз намылил голову для нового ролика. Он выбежал к соседям за водой и забыл запереть дверь, а ты спокойно ушёл.', quote:'Пацаны, вода кончилась! Я весь в мыле! Стрим на паузе!' },
+  { id:13, name:'Кукольный секрет', good:true, hint:'Найди на улице лом и вскрой заколоченную дверь в спальне Бронислава.', how:'Ты сломал доски ломом и нашёл секретную комнату Бронислава.', text:'Там чёрные стены и полки с куклами. Ты сфотографировал всё на телефон, и Бронислав сам открыл тебе дверь, лишь бы ты никому не показал.', quote:'Братан, только не выкладывай! Это… это для ролика было! Иди уже!' },
 ];
 const maxCatches = () => DIFF[difficulty].lives;
 const WALK_PHRASES = ['Так, чё там дальше по плану…','Подписчики ждут. Погнали.','Ща будет контент.'];
@@ -834,13 +838,12 @@ const WINDOWS = [
   { dir:'h', c:0,  a:2.0,  b:3.0,  inner:1,  curtain:0x3a6a3a, room:'Реквизитная', y:Y2 },
   { dir:'h', c:0,  a:6.0,  b:7.0,  inner:1,  curtain:0x3a6a3a, room:'Реквизитная', y:Y2 },
   { dir:'h', c:0,  a:11.0, b:12.0, inner:1,  curtain:0xff6a00, room:'Спальня Бронислава', y:Y2 },
-  { dir:'h', c:0,  a:15.0, b:16.0, inner:1,  curtain:0xff6a00, room:'Спальня Бронислава', y:Y2 },
+  { dir:'h', c:0,  a:14.6, b:15.6, inner:1,  curtain:0xff6a00, room:'Спальня Бронислава', y:Y2 },
   { dir:'h', c:D,  a:3.0,  b:4.0,  inner:-1, curtain:0x7a3b52, room:'Качалка', y:Y2 },
   { dir:'h', c:D,  a:6.5,  b:7.5,  inner:-1, curtain:0x7a3b52, room:'Качалка', y:Y2 },
   { dir:'h', c:D,  a:15.0, b:16.0, inner:-1, curtain:0x2f5f9a, room:'Гостевая', y:Y2 },
   { dir:'v', c:0,  a:2.0,  b:3.0,  inner:1,  curtain:0x3a6a3a, room:'Реквизитная', y:Y2 },
   { dir:'v', c:0,  a:9.0,  b:10.0, inner:1,  curtain:0x7a3b52, room:'Качалка', y:Y2 },
-  { dir:'v', c:W,  a:2.0,  b:3.0,  inner:-1, curtain:0xff6a00, room:'Спальня Бронислава', y:Y2 },
   { dir:'v', c:W,  a:9.0,  b:10.0, inner:-1, curtain:0x2f5f9a, room:'Гостевая', y:Y2 },
 ];
 const gapsFor = (dir, c, lv = 0) => WINDOWS.filter(w => w.dir === dir && w.c === c && !!w.y === !!lv).map(w => [w.a - .1, w.b + .1, 'w']);
@@ -1349,6 +1352,7 @@ const ucol = (x1, z1, x2, z2, top) => addCollider(x1, z1, x2, z2, top, { lvl:1 }
   wallLine('h', 5, 0, W, [[3.8, 5.1], [13.2, 14.5]], 0, 1);
   wallLine('h', 7, 0, W, [[3.8, 5.1], [13.2, 14.5]], 0, 1);
   wallLine('v', 9, 0, 5, [], 0, 1);
+  wallLine('v', SECRET.x, 0, 5, [[SECRET.a - .1, SECRET.b + .1]], 0, 1);   // the secret room behind the bedroom
   wallLine('v', 9, 7, D, [], 0, 1);
   floorPlane(.4, 5.6, 16.0, 6.4, carpetTex, 1.4, Y2 + .006, 0x9acc9a, .95);   // дорожка в холле
   for (const [x, z] of [[4.5, 2.5], [13.5, 2.5], [4.5, 9.5], [13.5, 9.5], [8, 6]]) lamp(x, z, 0, 0, 0, Y2 + H2);
@@ -1608,10 +1612,68 @@ interiorDoor('h', 5, 13.3, 14.4, 14.4, -1, 'wood', 1);   // спальня Бр�
 interiorDoor('h', 7, 3.9, 5.0, 3.9, 1, 'white', 1);      // качалка
 interiorDoor('h', 7, 13.3, 14.4, 14.4, 1, 'glass', 1);   // гостевая
 interiorDoor('h', D, BALC.door.a + .1, BALC.door.b - .1, BALC.door.b - .1, -1, 'glass', 1);   // балкон
+// the boarded door: a plain leaf with planks nailed across on the bedroom side; a crowbar breaks them
+const secret = { open:false, seen:false, t:0 };
+{
+  doorFrame('v', SECRET.x, SECRET.a, SECRET.b, frameMat, 1);
+  secret.pivot = grp(house, SECRET.x, Y2, SECRET.a);
+  rbox(secret.pivot, 0, DOOR_H/2, (SECRET.b - SECRET.a)/2, .042, DOOR_H, SECRET.b - SECRET.a - .03, M(0xffffff, { map:walnutTex, rough:.35, env:.7 }), .006);
+  const plankM = M(0xffffff, { map:boardsTex, rough:.9 }), nail = M(0x8a8f96, { rough:.3, metal:1 });
+  secret.boards = grp(house, SECRET.x - .07, Y2, (SECRET.a + SECRET.b)/2);
+  for (const [y, r] of [[.55, .32], [1.15, -.28], [1.7, .22]]){
+    const pl = rbox(secret.boards, 0, y, 0, .03, .13, 1.3, plankM, .01); pl.rotation.x = r;
+    for (const s of [-1, 1]) sph(secret.boards, -.02, y + s*Math.sin(r)*.55, s*Math.cos(r)*.55, .008, nail, 1, 1, 1, 6);
+  }
+  secret.fallen = grp(house, SECRET.x - .5, Y2, (SECRET.a + SECRET.b)/2); secret.fallen.visible = false;
+  for (const [x, z, r] of [[0, -.3, .4], [-.2, .2, -.7], [.1, .45, 1.2]]){ const pl = rbox(secret.fallen, x, .02, z, .13, .03, 1.2, plankM, .01); pl.rotation.y = r; }
+  secret.col = addCollider(SECRET.x - .1, SECRET.a, SECRET.x + .1, SECRET.b, DOOR_H, { lvl:1 });
+}
+// Bronislav's secret room: black walls, shelves of dolls, «Я Бронислав, который обожает кукол»
+{
+  const blackM = M(0x0d0d10, { rough:.9, env:.1 }), x1 = SECRET.x + .105, x2 = W - .105, z1 = .105, z2 = 4.895, ry = Y2 + H2/2;
+  const plane = (w, h, x, y, z, rot) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), blackM); m.position.set(x, y, z); m.rotation.y = rot; house.add(m); return m; };
+  plane(z2 - z1, H2, x2 - .002, ry, (z1 + z2)/2, -Math.PI/2);                 // east
+  plane(x2 - x1, H2, (x1 + x2)/2, ry, z1 + .002, 0);                          // north
+  plane(x2 - x1, H2, (x1 + x2)/2, ry, z2 - .002, Math.PI);                    // south
+  plane(SECRET.a - .1 - z1, H2, x1 + .002, ry, (z1 + SECRET.a - .1)/2, Math.PI/2);   // west, round the doorway
+  plane(z2 - SECRET.b - .1, H2, x1 + .002, ry, (SECRET.b + .1 + z2)/2, Math.PI/2);
+  plane(SECRET.b - SECRET.a + .2, H2 - 2.17, x1 + .002, Y2 + 2.17 + (H2 - 2.17)/2, (SECRET.a + SECRET.b)/2, Math.PI/2);
+  const fl = new THREE.Mesh(new THREE.PlaneGeometry(x2 - x1, z2 - z1), M(0x1a1416, { rough:.9 })); fl.rotation.x = -Math.PI/2; fl.position.set((x1 + x2)/2, Y2 + .006, (z1 + z2)/2); house.add(fl);
+  const cl = new THREE.Mesh(new THREE.PlaneGeometry(x2 - x1, z2 - z1), blackM); cl.rotation.x = Math.PI/2; cl.position.set((x1 + x2)/2, Y2 + H2 - .006, (z1 + z2)/2); house.add(cl);
+  sph(house, (x1 + x2)/2, Y2 + H2 - .12, 2.5, .05, BASIC(0xff4060, { toneMapped:false }));   // a lone pink bulb
+  // dolls: dress, face, hair, eyes, little arms
+  const skin = M(0xf3d2bf, { rough:.6 }), eye = BASIC(0x111111);
+  const dresses = [0xff7ab0, 0xb07aff, 0x7ad0ff, 0xffd23a, 0xff5a5a, 0x7affb0, 0xffffff];
+  const hairs = [0xf2d27a, 0x3a2414, 0x141416, 0xc8641e, 0xf6f0e0];
+  const doll = (x, y, z, ry_) => {
+    const g = grp(house, x, y, z, ry_);
+    cyl(g, 0, .07, 0, .015, .055, .14, M(pick(dresses), { rough:.7 }), 12);
+    sph(g, 0, .18, 0, .042, skin, 1, 1.05, 1, 12);
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(.046, 12, 8, 0, Math.PI*2, 0, Math.PI*.6), M(pick(hairs), { rough:.8 })); hair.position.set(0, .185, -.004); g.add(hair);
+    for (const s of [-1, 1]){ sph(g, s*.016, .185, .038, .006, eye, 1, 1, .5, 6); const a = cyl(g, s*.04, .11, 0, .008, .008, .07, skin, 6); a.rotation.z = s*.4; }
+  };
+  // shelves on the east and north walls, three rows, packed with dolls
+  const shelfM = M(0x2a1418, { rough:.6 });
+  for (const y of [.75, 1.25, 1.75]){
+    rbox(house, x2 - .14, Y2 + y, (z1 + z2)/2, .26, .03, z2 - z1 - .1, shelfM, .005);
+    for (let z = z1 + .2; z < z2 - .15; z += .17) doll(x2 - .14, Y2 + y + .015, z, -Math.PI/2);
+    rbox(house, (x1 + x2)/2, Y2 + y, z1 + .14, x2 - x1 - .3, .03, .26, shelfM, .005);
+    for (let x = x1 + .25; x < x2 - .3; x += .17) doll(x, Y2 + y + .015, z1 + .14, 0);
+  }
+  addCollider(x2 - .27, z1, x2, z2, 1.8, { lvl:1 }); addCollider(x1, z1, x2, z1 + .27, 1.8, { lvl:1 });
+  // the poster on the south wall
+  const poster = new THREE.Mesh(new THREE.PlaneGeometry(1.3, .9), M(0xffffff, { map:canvasTex(390, 270, (c, w, h) => {
+    c.fillStyle = '#ffb6d9'; c.fillRect(0, 0, w, h); c.strokeStyle = '#ff4f9a'; c.lineWidth = 10; c.strokeRect(5, 5, w - 10, h - 10);
+    c.fillStyle = '#5a1030'; c.textAlign = 'center'; c.font = 'bold 33px sans-serif';
+    c.fillText('Я БРОНИСЛАВ,', w/2, 80); c.fillText('КОТОРЫЙ ОБОЖАЕТ', w/2, 135); c.fillText('КУКОЛ', w/2, 190);
+    c.fillStyle = '#ff2d6a'; c.font = 'bold 44px sans-serif'; c.fillText('♥', w/2, 245);
+  }), rough:.8 }));
+  poster.position.set((x1 + x2)/2 - .1, Y2 + 1.45, z2 - .006); poster.rotation.y = Math.PI; house.add(poster);
+}
 {
   const y = Y2 + .3, ys = Y2 + .9;
   socket(1.0, y, .1, 's'); socket(7.5, y, .1, 's', 2); socket(.1, y, 4.0, 'e');               // реквизитная
-  socket(15.45, y, .1, 's', 2); socket(11.6, y, .1, 's'); socket(17.9, y, 4.0, 'w');          // спальня
+  socket(15.2, y, .1, 's', 2); socket(11.6, y, .1, 's'); socket(15.9, y, 1.5, 'w');          // спальня
   socket(8.0, y, 6.9, 'n'); socket(2.0, y, 5.1, 's');                                         // холл
   socket(.1, y, 8.0, 'e'); socket(8.9, y, 10.5, 'w');                                         // качалка
   socket(9.1, y, 11.3, 'e'); socket(17.9, y, 9.6, 'w', 2);                                    // гостевая
@@ -2723,6 +2785,24 @@ const carKeyObj = new THREE.Group();
   scene.add(carKeyObj);
 }
 let carSpot = KEY_SPOTS[3];
+// лом: lies on the grass at a random spot in the yard each run
+const CROW_SPOTS = [
+  { x:-7.6, z:12.0, where:'у бани' }, { x:19.5, z:4.5, where:'между сараем и поленницей' }, { x:-5.0, z:-.4, where:'у колодца' },
+  { x:24.0, z:8.1, where:'у бассейна' }, { x:27.0, z:9.9, where:'у батута' }, { x:1.8, z:14.5, where:'у теплицы' },
+  { x:-11.6, z:.8, where:'у машины' }, { x:10.0, z:15.0, where:'у забора за домом' },
+];
+let crowSpot = CROW_SPOTS[0], hasCrowbar = false;
+const crowObj = new THREE.Group();
+{
+  const red = M(0xc81e16, { rough:.35, metal:.6, env:1 });
+  const bar = cyl(crowObj, 0, 0, 0, .014, .014, .9, red, 10); bar.rotation.z = Math.PI/2;
+  const hook = new THREE.Mesh(new THREE.TorusGeometry(.06, .014, 8, 16, Math.PI*1.1), red); hook.position.set(.45, .06, 0); hook.rotation.z = -Math.PI/2; crowObj.add(hook);
+  const claw = rbox(crowObj, -.48, .02, 0, .08, .012, .04, red, .004); claw.rotation.z = .5;
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:C(0xff6040), transparent:true, opacity:.45, blending:THREE.AdditiveBlending, depthWrite:false }));
+  glow.scale.set(.6, .6, 1); crowObj.add(glow);
+  crowObj.position.y = .03; scene.add(crowObj);
+}
+function placeCrowbar(){ crowSpot = pick(CROW_SPOTS); crowObj.position.set(crowSpot.x, .03, crowSpot.z); crowObj.rotation.y = Math.random()*Math.PI*2; crowObj.visible = true; }
 // электрощиток in the сени: grey steel box, counter and a row of breakers inside
 const ELEC_PANEL = { x:.1, z:9.95, front:{ x:.6, z:9.95 } };   // в сенях, справа от входной двери
 const elecPanel = { pivot:null, open:0, main:null };
@@ -3475,6 +3555,9 @@ function resetWorld(){
   hasFireKey = false; fireKeyObj.visible = false; firePanel.open = 0; alarmOn = false; alarmGlowEl.style.opacity = 0;
   hasElecKey = false; elecKeyObj.visible = false; elecPanel.open = 0; powerOn = true; blackoutEl.style.opacity = 0;
   hasCarKey = false; carKeyObj.visible = false; carGroup.position.set(-9.2, 0, 3.8); carCol.active = true;
+  hasCrowbar = false; placeCrowbar(); pryP = 0;
+  if (secret.open){ secret.col.active = true; buildNav(); }
+  Object.assign(secret, { open:false, seen:false, t:0 }); secret.pivot.rotation.y = 0; secret.boards.visible = true; secret.fallen.visible = false;
   elecPanel.main.rotation.x = 0; elecPanel.main.position.y = -.08; rgb.intensity = .7;
   for (const m of powered){ if (m.material.emissive) m.material.emissiveIntensity = m.material.userData.ei ?? (m.material.userData.ei = m.material.emissiveIntensity || .5); else { m.material.userData.col ??= m.material.color.clone(); m.material.color.copy(m.material.userData.col); } }
   frontDoor.open = 0; frontDoor.pivot.rotation.y = 0; frontDoor.col.active = true;
@@ -3606,6 +3689,7 @@ function doRespawn(){
   if (hasFireKey){ hasFireKey = false; placeFireKey(); }
   if (hasElecKey){ hasElecKey = false; placeElecKey(); }
   if (hasCarKey){ hasCarKey = false; placeCarKey(); }
+  if (hasCrowbar){ hasCrowbar = false; placeCrowbar(); }
   if (tookKey){
     hasKey = false; unlock = 0;
     placeKey();
@@ -3650,6 +3734,8 @@ function findAction(){
   if (P.level){
     if (Math.hypot(STAIRS.top.x - P.x, STAIRS.top.z - P.z) < 1.0 && facing(STAIRS.top.x, STAIRS.z1) > .4)
       return { type:'downstairs', text:'<kbd>E</kbd>спуститься на первый этаж' };
+    if (!secret.open && Math.hypot(SECRET.front.x - P.x, SECRET.front.z - P.z) < 1.0 && facing(SECRET.x, SECRET.front.z) > .6)
+      return hasCrowbar ? { type:'pry', text:'Держи <kbd>E</kbd> — сломать доски ломом' } : { type:'boarded', text:'Дверь заколочена. Нужен лом' };
     if (!hasKey && keySpot.lvl && near(keySpot)) return { type:'key', text:'<kbd>E</kbd>взять ключ' };
     if (!hasCarKey && carKeyObj.visible && carSpot.lvl && near(carSpot)) return { type:'carkey', text:'<kbd>E</kbd>взять ключи от машины' };
     if (!hasElecKey && elecKeyObj.visible && elecSpot.lvl && near(elecSpot)) return { type:'eleckey', text:'<kbd>E</kbd>взять ключ от электрощитка' };
@@ -3695,6 +3781,8 @@ function findAction(){
     return { type:'cellarDown', text:'<kbd>E</kbd>открыть люк и спуститься в подвал' };
   if (Math.hypot(STAIRS.bottom.x - P.x, STAIRS.bottom.z - P.z) < 1.0 && facing(STAIRS.x2, STAIRS.bottom.z) > .5)
     return { type:'upstairs', text:'<kbd>E</kbd>подняться на второй этаж' };
+  if (!hasCrowbar && crowObj.visible && Math.hypot(crowSpot.x - P.x, crowSpot.z - P.z) < 1.4 && facing(crowSpot.x, crowSpot.z) > .35)
+    return { type:'crowbar', text:'<kbd>E</kbd>взять лом' };
   if (!vac.on && !vac.carried && Math.hypot(vac.x - P.x, vac.z - P.z) < 1.2 && facing(vac.x, vac.z) > .4)
     return { type:'vacuum', text:'<kbd>E</kbd>включить робот-пылесос' };
   return hideIn();
@@ -3721,6 +3809,11 @@ function doAction(){
   if (action.type === 'cellarDown'){ goDown(); return; }
   if (action.type === 'upstairs'){ goFloor(1); return; }
   if (action.type === 'vacuum'){ vacOn(); return; }
+  if (action.type === 'crowbar'){
+    hasCrowbar = true; crowObj.visible = false; sfx.key();
+    banner('Лом! Им можно вскрыть заколоченную дверь в спальне Бронислава', 'good', 3.2);
+    return;
+  }
   if (action.type === 'downstairs'){ goFloor(0); return; }
   if (action.type === 'cellarUp'){ goUp(); return; }
   if (action.type === 'feed'){
@@ -4211,7 +4304,7 @@ function goFloor(lv){
 }
 let boltP = 0, outT = 0;
 // the water is off: the pipes knock and gurgle, Bronislav yells from the shower, you slip out
-let valveP = 0, waterOff = false, waterT = 0;
+let valveP = 0, waterOff = false, waterT = 0, pryP = 0;
 function startWaterOff(){
   state = 'waterOff'; waterOff = true; waterT = 3.6;
   $('prompt').hidden = true; $('eye').classList.remove('on');
@@ -4320,6 +4413,22 @@ function updatePlayer(dt){
     cel.bolt.position.x = CEL.door.x + .12 - boltP*.18;
     if (boltP >= 1){ boltP = 0; startCellarEscape(); return; }
   } else boltP = Math.max(0, boltP - dt*.8);
+  // the boarded door: hold to rip the planks off with the crowbar
+  if (action && action.type === 'pry' && holding){
+    const before = pryP; pryP = Math.min(1, pryP + dt/2.0);
+    if (Math.floor(before*4) !== Math.floor(pryP*4)) noise(.08, .5, 1800, 'highpass');
+    if (pryP >= 1){
+      pryP = 0; secret.open = true; secret.col.active = false; buildNav();
+      secret.boards.visible = false; secret.fallen.visible = true;
+      noise(.3, .6, 900); sfx.creak();
+      banner('Доски сломаны! Что там за дверью?', 'good', 2.6);
+    }
+  } else pryP = Math.max(0, pryP - dt*.8);
+  // step into the secret room: a moment to look round, then the ending
+  if (secret.open && P.level === 1 && P.x > SECRET.x + .15 && P.z < 4.95){
+    if (!secret.seen){ secret.seen = true; secret.t = 3; banner('Секретная комната Бронислава… Тут куклы?!', 'warn', 3); }
+  }
+  if (secret.seen){ secret.t -= dt; if (secret.t <= 0){ endRun(13); return; } }
   // the big red valve: hold to turn it shut; the pipes groan, and Макар may hear it too
   if (action && action.type === 'valve' && holding){
     const before = valveP; valveP = Math.min(1, valveP + dt/2.6);
@@ -4327,8 +4436,8 @@ function updatePlayer(dt){
     if (valveP >= 1){ valveP = 0; startWaterOff(); return; }
   } else valveP = Math.max(0, valveP - dt*.8);
   cel.valve.rotation.z = -valveP*Math.PI*3;
-  const held = action && action.type === 'bolt' ? boltP : action && action.type === 'valve' ? valveP : unlock;
-  $('promptBar').hidden = !(action && (action.type === 'door' || action.type === 'bolt' || action.type === 'valve') && held > 0);
+  const held = !action ? 0 : { bolt:boltP, valve:valveP, pry:pryP, door:unlock }[action.type] || 0;
+  $('promptBar').hidden = !(action && ['door', 'bolt', 'valve', 'pry'].includes(action.type) && held > 0);
   $('promptFill').style.transform = `scaleX(${held})`;
 
   if (P.hidden){
@@ -4447,6 +4556,8 @@ function syncWorld(dt, t){
   if (house.userData.pendulum) house.userData.pendulum.rotation.z = Math.sin(t*3.1)*.18;
   for (const c of yard.userData.clothes || []) c.rotation.y = Math.sin(t*1.3 + c.userData.sway)*.12;
   fun.swing.rotation.x = Math.sin(t*1.1)*.08;
+  secret.pivot.rotation.y += ((secret.open ? -1.4 : 0) - secret.pivot.rotation.y)*Math.min(1, dt*4);   // swings out into the bedroom
+  crowObj.children[crowObj.children.length - 1].material.opacity = .3 + Math.sin(t*3)*.15;
   fun.water.material.map.offset.set(t*.02, Math.sin(t*.5)*.03);
   fun.ring.position.x = 1.2 + Math.sin(t*.3)*.25; fun.ring.position.y = .98 + Math.sin(t*1.7)*.01;
   for (const r of spawned) if (r.pick && !r.taken) r.holder.rotation.y += dt*1.5;
@@ -4514,7 +4625,7 @@ function updateBubble(){
 let invKey = '', inv = [];
 function syncInventory(){
   // keys follow the has* flags (they can be taken back on a respawn); other things are added on pickup
-  for (const [id, has] of [['door', hasKey], ['fire', hasFireKey], ['elec', hasElecKey], ['car', hasCarKey]]){
+  for (const [id, has] of [['door', hasKey], ['fire', hasFireKey], ['elec', hasElecKey], ['car', hasCarKey], ['crowbar', hasCrowbar]]){
     const i = inv.indexOf(id);
     if (has && i < 0) inv.push(id); else if (!has && i >= 0) inv.splice(i, 1);
   }
