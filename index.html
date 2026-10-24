@@ -2856,6 +2856,17 @@ function tone(freq, dur, vol, type = 'sine', slideTo){
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
   o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + .02);
 }
+// оповещатель «Соната-К»: a piezo siren that sweeps up again and again, a shrill «уи-уи-уи»
+function sonataK(dur){
+  if (!ac || muted) return;
+  const t0 = ac.currentTime + .1, o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
+  o.type = 'square';
+  for (let t = 0; t < dur; t += .2){ o.frequency.setValueAtTime(2200, t0 + t); o.frequency.linearRampToValueAtTime(3600, t0 + t + .19); }
+  f.type = 'lowpass'; f.frequency.value = 5200;
+  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(.08, t0 + .03);
+  g.gain.setValueAtTime(.08, t0 + dur - .06); g.gain.linearRampToValueAtTime(0, t0 + dur);
+  o.connect(f).connect(g).connect(ac.destination); o.start(t0); o.stop(t0 + dur + .02);
+}
 function noise(dur, vol, freq, type = 'lowpass'){
   if (!ac || muted || vol < .005) return;
   const len = ac.sampleRate*dur|0, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
@@ -3301,7 +3312,7 @@ function startAlarm(ending = 5){
   $('prompt').hidden = true; $('eye').classList.remove('on');
   banner(ending === 8 ? 'Датчик дыма не выдержал запаха! ПОЖАРНАЯ ТРЕВОГА!' : 'ПОЖАРНАЯ ТРЕВОГА!', 'warn', 3.4);
   if (ending === 5) sfx.unlock();
-  for (let i = 0; i < 14; i++) setTimeout(() => { if (alarmOn) tone(i % 2 ? 960 : 720, .24, .16, 'square'); }, 250 + i*250);
+  sonataK(3.5);
   standUp(); B.state = 'panic'; B.pose = 'vlog';
   const line = ending === 8 ? 'Пожар?! Чем это так воняет?! Спасаем технику, пацаны!' : 'Пожар?! Где пожар?! Спасаем технику, пацаны!';
   setTimeout(() => { if (alarmOn) say(line, 3, 'angry', 3); }, 500);
