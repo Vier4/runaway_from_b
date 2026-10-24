@@ -575,6 +575,16 @@ const boardsTex = canvasTex(256, 256, (g, w, h) => {
     g.fillStyle = 'rgba(0,0,0,.7)'; g.fillRect(i*32 + 31, 0, 1, h);
   }
 });
+// профнастил: trapezoid ribs, five to a metre
+const profTex = canvasTex(160, 8, (g, w, h) => {
+  g.fillStyle = '#2c553a'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 5; i++){
+    const x = i*32;
+    g.fillStyle = '#4a805c'; g.fillRect(x + 3, 0, 3, h);
+    g.fillStyle = '#3b6d4c'; g.fillRect(x + 6, 0, 11, h);
+    g.fillStyle = '#1f3f2a'; g.fillRect(x + 17, 0, 4, h);
+  }
+});
 const barkTex = canvasTex(128, 256, (g, w, h) => { g.fillStyle = '#3d2c1e'; g.fillRect(0, 0, w, h); for (let i = 0; i < 60; i++){ g.strokeStyle = `rgba(${20 + Math.random()*40|0},15,8,.7)`; g.lineWidth = rand(1, 3); g.beginPath(); const x = Math.random()*w; g.moveTo(x, Math.random()*h); g.lineTo(x + rand(-3, 3), Math.random()*h); g.stroke(); } });
 const birchTex = canvasTex(128, 256, (g, w, h) => { g.fillStyle = '#e8e4da'; g.fillRect(0, 0, w, h); for (let i = 0; i < 40; i++){ g.fillStyle = 'rgba(20,20,20,.85)'; g.fillRect(Math.random()*w, Math.random()*h, rand(8, 30), rand(1.5, 4)); } });
 const brickTex = canvasTex(256, 256, (g, w, h) => {
@@ -1549,47 +1559,51 @@ function facade(side){
   const slabM = M(0xffffff, { map:concreteTex, rough:.9 });
   for (let x = -2.6; x > -12.9; x -= .72){ const s = rbox(yard, x, .0, 9.0 + rand(-.03, .03), .6, .04, .6, slabM, .008); s.rotation.y = rand(-.04, .04); }
 }
-// fences: green picket fence to the street with a gate and a wicket, board fence elsewhere
+// fences: профнастил (dark green corrugated steel sheets) on brick pillars all round, with ворота and a калитка to the street
 const gateLeaf = { pivot:new THREE.Group(), open:0 };
 {
-  const paint = M(0x5f7f52, { rough:.7 }), postM = M(0xffffff, { map:darkWoodTex, rough:.8 });
-  const sh = new THREE.Shape(); sh.moveTo(-.04, 0); sh.lineTo(.04, 0); sh.lineTo(.04, 1.32); sh.lineTo(0, 1.4); sh.lineTo(-.04, 1.32); sh.closePath();
-  const picketGeo = new THREE.ExtrudeGeometry(sh, { depth:.02, bevelEnabled:false });
-  const spans = [[YARD.z1, 2.0], [5.6, GATE.z1 - .05], [GATE.z2 + .05, YARD.z2]];
+  const FH = 2.0;
+  const sheetM = M(0xffffff, { map:profTex, bumpMap:profTex, bumpScale:.025, rough:.42, metal:.35, env:.8 });
+  const trimM = M(0x24452e, { rough:.4, metal:.4, env:.8 }), railM = M(0x3a3e40, { rough:.5, metal:.6 });
+  const brickM = M(0xc08a6a, { map:brickTex, rough:.9 }), capM = M(0x5a3e30, { rough:.55, metal:.3 });
+  const placed = new Set();
+  const pillar = (x, z) => {
+    const k = x.toFixed(2) + ',' + z.toFixed(2); if (placed.has(k)) return; placed.add(k);
+    casters.push(box(yard, x, 0, z, .36, FH + .2, .36, brickM));
+    rbox(yard, x, FH + .23, z, .44, .06, .44, capM, .01);
+    addCollider(x - .18, z - .18, x + .18, z + .18, FH + .2);
+  };
+  // a sheet between two points; rails on the yard side (side = ±1 towards the yard), top trim
+  const sheet = (parent, x1, z1, x2, z2, side, col = true) => {
+    const len = Math.hypot(x2 - x1, z2 - z1), along = Math.abs(x2 - x1) > .1, cx = (x1 + x2)/2, cz = (z1 + z2)/2;
+    const m = box(parent, cx, .05, cz, along ? len : .02, FH - .05, along ? .02 : len, sheetM); casters.push(m);
+    box(parent, cx, FH - .01, cz, along ? len : .05, .03, along ? .05 : len, trimM);
+    for (const y of [.45, 1.65]) box(parent, cx + (along ? 0 : side*.04), y, cz + (along ? side*.04 : 0), along ? len : .04, .04, along ? .04 : len, railM);
+    if (col) addCollider(Math.min(x1, x2) - .05, Math.min(z1, z2) - .05, Math.max(x1, x2) + .05, Math.max(z1, z2) + .05, FH);
+    return m;
+  };
+  // a run of sheets with pillars every ~2.6 m
+  const run = (x1, z1, x2, z2, side) => {
+    sheet(yard, x1, z1, x2, z2, side);
+    const n = Math.max(1, Math.round(Math.hypot(x2 - x1, z2 - z1)/2.6));
+    for (let i = 0; i <= n; i++) pillar(x1 + (x2 - x1)*i/n, z1 + (z2 - z1)*i/n);
+  };
+  // street side: pillars frame the ворота (z 2.0–5.6) and the калитка
   const x = YARD.x1;
-  let count = 0; for (const [a, b] of spans) count += Math.floor((b - a)/.13);
-  const pickets = new THREE.InstancedMesh(picketGeo, paint, count + 40);
-  const mm = new THREE.Matrix4(), q = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI/2, 0)), one = new THREE.Vector3(1, 1, 1);
-  let n = 0;
-  for (const [a, b] of spans){
-    for (let z = a + .07; z < b; z += .13){ mm.compose(new THREE.Vector3(x - .06, .05, z), q, one); pickets.setMatrixAt(n++, mm); }
-    for (const y of [.35, 1.05]) rbox(yard, x, y, (a + b)/2, .04, .07, b - a, postM, .01);
-    for (let z = a; z <= b + .01; z += 2.4) rbox(yard, x + .05, .8, Math.min(z, b), .09, 1.6, .09, postM, .01);
-    addCollider(x - .1, a, x + .1, b, 1.4);
-  }
-  // wide gate (ворота), closed
-  for (let z = 2.07; z < 5.6; z += .13){ mm.compose(new THREE.Vector3(x - .06, .05, z), q, one); pickets.setMatrixAt(n++, mm); }
-  rbox(yard, x, .35, 3.8, .05, .08, 3.6, postM, .01); rbox(yard, x, 1.05, 3.8, .05, .08, 3.6, postM, .01);
-  addCollider(x - .1, 2.0, x + .1, 5.6, 1.4);
-  pickets.count = n; yard.add(pickets); casters.push(pickets);
-  // wicket (калитка) on a hinge at the north edge, swings out to the street
+  run(x, YARD.z1, x, 1.8, 1); run(x, 5.8, x, GATE.z1 - .2, 1); run(x, GATE.z2 + .2, x, YARD.z2, 1);
+  // ворота, closed: two leaves with a seam and a handle
+  sheet(yard, x, 1.98, x, 5.62, 1);
+  box(yard, x, .1, 3.8, .03, FH - .1, .02, trimM);
+  for (const s of [-1, 1]) rbox(yard, x + s*.03, 1.0, 3.95, .03, .2, .03, railM, .008);
+  // калитка on a hinge at the north edge, swings out to the street
   gateLeaf.pivot.position.set(x, 0, GATE.z2); yard.add(gateLeaf.pivot);
-  for (let z = .07; z < .9; z += .13){ const p = new THREE.Mesh(picketGeo, paint); p.position.set(-.06, .05, -z); p.rotation.y = Math.PI/2; gateLeaf.pivot.add(p); }
-  for (const y of [.35, 1.05]) rbox(gateLeaf.pivot, 0, y, -.45, .04, .07, .9, postM, .01);
-  sph(gateLeaf.pivot, .04, .9, -.82, .025, mat.steel);
+  sheet(gateLeaf.pivot, 0, -.88, 0, -.02, 1, false);
+  for (const s of [-1, 1]) sph(gateLeaf.pivot, s*.04, 1.0, -.8, .025, mat.steel);
   addCollider(x - .1, GATE.z1, x + .1, GATE.z2, .05, { solid:false });   // keeps Bronislav inside the yard
   // mailbox on the street side
   rbox(yard, x - .14, 1.15, 10.3, .14, .32, .3, M(0x1f4fa0, { rough:.5 }), .02);
-  // board fence (глухой забор) on the other three sides
-  const boardsM = M(0xffffff, { map:boardsTex, bumpMap:boardsTex, bumpScale:.01, rough:.92 });
-  const solid = (x1, z1, x2, z2) => {
-    const len = Math.hypot(x2 - x1, z2 - z1), along = Math.abs(x2 - x1) > .1;
-    const f = box(yard, (x1 + x2)/2, 0, (z1 + z2)/2, along ? len : .03, 1.8, along ? .03 : len, boardsM);
-    casters.push(f);
-    addCollider(Math.min(x1, x2) - .05, Math.min(z1, z2) - .05, Math.max(x1, x2) + .05, Math.max(z1, z2) + .05, 1.8);
-    for (let t = 0; t <= len; t += 2.5){ const px = x1 + (x2 - x1)*t/len, pz = z1 + (z2 - z1)*t/len; rbox(yard, px, .95, pz, .1, 1.9, .1, postM, .01); }
-  };
-  solid(YARD.x1, YARD.z1, YARD.x2, YARD.z1); solid(YARD.x1, YARD.z2, YARD.x2, YARD.z2); solid(YARD.x2, YARD.z1, YARD.x2, YARD.z2);
+  // the other three sides
+  run(YARD.x1, YARD.z1, YARD.x2, YARD.z1, 1); run(YARD.x1, YARD.z2, YARD.x2, YARD.z2, -1); run(YARD.x2, YARD.z1, YARD.x2, YARD.z2, -1);
 }
 // yard buildings & things
 {
