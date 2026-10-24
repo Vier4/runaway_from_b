@@ -395,6 +395,7 @@ const MAKAR_SUSPECT = ['Э… кто там?','Бронислав, это ты?'
 const MAKAR_CHASE = ['Стой, говорю!','Не уйдёшь, я тут каждую банку знаю!','Брони-и-ислав! Тут чужой!','Куда побежал?!'];
 const MAKAR_SEARCH = ['Куда делся?','Выходи, я тебя видел!'];
 const MAKAR_GIVEUP = ['Показалось. Ладно, катка ждёт.','Пойду доиграю.'];
+const MAKAR_SWIM = ['Водичка — огонь!','Бульк!','Бронислав, иди купаться!','Я дельфин, мам!','Кто последний — тот нуб!'];
 const SPAG_ARRIVE = ['Кто сломал мои спагетти?! Найду — будешь в трендах!','Моя пачка… Ну всё, это война.'];
 const SUSPECT_PHRASES = ['Э… кто тут?','Слышь, мне показалось, или чё?','Кто там шуршит, а?','Хм… Странный звук.'];
 const CHASE_PHRASES = ['Слышь, стоять!','О-о! Контент пошёл!','Э, ты куда, братан?!','Улыбнись, тебя снимают!','От камеры не убежишь!'];
@@ -1465,7 +1466,7 @@ const SMOKE_SPOTS = [[3.7, 1.7], [10.4, 1.4], [16.6, 3.6], [14, 6], [1.5, 6.6], 
 }
 
 /* ================= outside: facades, roof, yard, street ================= */
-const YARD = { x1:-13, x2:21, z1:-4, z2:16 };
+const YARD = { x1:-13, x2:29, z1:-4, z2:16 };   // east of the сарай: pool, swing, trampoline
 const GATE = { z1:8.55, z2:9.45 };
 const yard = new THREE.Group(); scene.add(yard);
 let carGroup = null, carCol = null;
@@ -1742,6 +1743,88 @@ const gateLeaf = { pivot:new THREE.Group(), open:0 };
     const sh = new THREE.Mesh(new THREE.PlaneGeometry(.6, .7, 4, 4), M(c, { map:tex, rough:.95, side:THREE.DoubleSide })); sh.position.set(x, 1.55, z); yard.add(sh); sh.userData.sway = Math.random()*6;
     (yard.userData.clothes || (yard.userData.clothes = [])).push(sh);
   }
+}
+// the east part of the yard: погреб entrance, frame pool, swing, trampoline
+const HUT = { x:25.5, z:-3.05, exit:{ x:25.5, z:-1.7 } };
+const POOL = { x:25.5, z:5.5, w:4.4, d:2.8, h:1.1, ladder:{ x:25.5, z:3.55 } };
+const fun = {};
+{
+  // погреб: a low brick hut with a slanted roof over the steps down to the подвал
+  const g = grp(yard, HUT.x, 0, HUT.z);
+  casters.push(box(g, 0, 0, 0, 1.8, 1.5, 1.5, M(0xc08a6a, { map:brickTex, rough:.9 })));
+  const roof = rbox(g, 0, 1.62, -.05, 2.0, .05, 1.8, M(0x4a4e52, { rough:.5, metal:.6 }), .01); roof.rotation.x = -.2; casters.push(roof);
+  rbox(g, 0, .7, .76, .8, 1.35, .04, M(0xffffff, { map:darkWoodTex, rough:.85 }), .01);
+  sph(g, .3, .75, .8, .025, mat.steel);
+  const lbl = new THREE.Mesh(new THREE.PlaneGeometry(.6, .16), M(0xffffff, { map:labelTex('ПОГРЕБ', '#d8c8a0', '#3a2a18', 256, 68, 'bold 40px sans-serif'), rough:.8 }));
+  lbl.position.set(0, 1.5, .78); g.add(lbl);
+  addCollider(HUT.x - .9, HUT.z - .75, HUT.x + .9, HUT.z + .78, 1.6);
+  sadd('Погреб', 'Двор', g);
+}
+{
+  // каркасный бассейн: blue walls on a white steel frame, a ladder over the north side, water you can see into
+  const g = grp(yard, POOL.x, 0, POOL.z);
+  const wallM = M(0x2f7fd0, { rough:.5, env:.6 }), linerM = M(0x8fd0f0, { rough:.4, env:.6, side:THREE.DoubleSide }), frameM = M(0xf2f2f2, { rough:.35, metal:.4, env:1 });
+  const { w, d, h } = POOL;
+  for (const s of [-1, 1]){
+    rbox(g, 0, h/2, s*d/2, w, h, .05, wallM, .01); rbox(g, 0, h/2, s*(d/2 - .03), w - .06, h - .02, .01, linerM, .003);
+    rbox(g, s*w/2, h/2, 0, .05, h, d, wallM, .01); rbox(g, s*(w/2 - .03), h/2, 0, .01, h - .02, d - .06, linerM, .003);
+    rbox(g, 0, h + .02, s*d/2, w + .08, .05, .08, frameM, .02); rbox(g, s*w/2, h + .02, 0, .08, .05, d + .08, frameM, .02);
+  }
+  for (let i = 0; i <= 4; i++) for (const s of [-1, 1]) cyl(g, -w/2 + i*w/4, h/2, s*(d/2 + .06), .025, .025, h + .02, frameM, 10);
+  for (const s of [-1, 1]) cyl(g, s*(w/2 + .06), h/2, 0, .025, .025, h + .02, frameM, 10);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(w - .06, d - .06), linerM); floor.rotation.x = -Math.PI/2; floor.position.y = .02; g.add(floor);
+  const waterTex = canvasTex(128, 128, (c, cw, ch) => {
+    c.fillStyle = '#3aa8e0'; c.fillRect(0, 0, cw, ch);
+    c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 2;
+    for (let i = 0; i < 14; i++){ c.beginPath(); const y = Math.random()*ch, x = Math.random()*cw; c.moveTo(x, y); c.quadraticCurveTo(x + 12, y - 6, x + 24, y); c.stroke(); }
+  });
+  waterTex.repeat.set(3, 2);
+  fun.water = new THREE.Mesh(new THREE.PlaneGeometry(w - .06, d - .06), M(0xffffff, { map:waterTex, rough:.05, env:1.6, transparent:true, opacity:.62, depthWrite:false }));
+  fun.water.rotation.x = -Math.PI/2; fun.water.position.y = .95; g.add(fun.water);
+  // ladder: two rails up and over the wall, steps on both sides
+  const lad = grp(g, 0, 0, -d/2);
+  for (const s of [-1, 1]){
+    tube(lad, [[s*.25, 0, -.55], [s*.25, h + .3, -.05], [s*.25, h + .3, .05], [s*.25, 0, .55]], .02, frameM, 16);
+    for (let k = 1; k <= 3; k++) rbox(lad, 0, k*.3, s*(.55 - k*.13), .5, .03, .12, M(0x2a2a2e, { rough:.6 }), .01);
+  }
+  // inflatable ring floating on the water
+  fun.ring = new THREE.Mesh(new THREE.TorusGeometry(.3, .1, 10, 24), M(0xff5a3a, { rough:.35, env:.8 })); fun.ring.rotation.x = Math.PI/2; fun.ring.position.set(1.2, .98, .5); g.add(fun.ring);
+  addCollider(POOL.x - w/2 - .1, POOL.z - d/2 - .1, POOL.x + w/2 + .1, POOL.z + d/2 + .1, h);
+  addCollider(POOL.x - .35, POOL.z - d/2 - .65, POOL.x + .35, POOL.z - d/2, .8);   // the ladder
+  sadd('Бассейн', 'Двор', g);
+}
+{
+  // качели: two steel A-frames, a beam, a bench seat on chains that sways in the wind
+  const g = grp(yard, 22.6, 0, 11.6);
+  const pipe = M(0x2f6f3a, { rough:.4, metal:.6, env:.9 }), steel = mat.steel;
+  for (const sx of [-1.1, 1.1]) for (const sz of [-1, 1]){ const leg = cyl(g, sx, 1.08, sz*.45, .035, .035, 2.3, pipe, 10); leg.rotation.x = -sz*.2; }
+  const beam = cyl(g, 0, 2.2, 0, .04, .04, 2.3, pipe, 12); beam.rotation.z = Math.PI/2;
+  fun.swing = grp(g, 0, 2.18, 0);
+  for (const sx of [-.45, .45]) cyl(fun.swing, sx, -.8, 0, .006, .006, 1.6, steel, 6);
+  rbox(fun.swing, 0, -1.62, 0, 1.0, .05, .38, M(0xffffff, { map:lightWoodTex, rough:.8 }), .01);
+  rbox(fun.swing, 0, -1.4, -.17, 1.0, .4, .04, M(0xffffff, { map:lightWoodTex, rough:.8 }), .01);
+  for (const sx of [-1.1, 1.1]) addCollider(22.6 + sx - .1, 11.6 - .55, 22.6 + sx + .1, 11.6 + .55, 2.2);
+  addCollider(22.6 - .55, 11.6 - .25, 22.6 + .55, 11.6 + .25, .6, { nav:true });
+  sadd('Качели', 'Двор', g);
+}
+{
+  // батут with a safety net
+  const g = grp(yard, 26.6, 0, 12.4), R = 1.5;
+  const padM = M(0x2f7fd0, { rough:.6 }), legM = M(0xd8d8d8, { rough:.35, metal:.6 });
+  const pad = new THREE.Mesh(new THREE.TorusGeometry(R, .09, 10, 40), padM); pad.rotation.x = Math.PI/2; pad.position.y = .62; g.add(pad);
+  const bed = new THREE.Mesh(new THREE.CircleGeometry(R - .05, 40), M(0x141416, { rough:.7, side:THREE.DoubleSide })); bed.rotation.x = -Math.PI/2; bed.position.y = .6; g.add(bed);
+  for (let i = 0; i < 6; i++){
+    const a = i/6*Math.PI*2, x = Math.cos(a)*R, z = Math.sin(a)*R;
+    cyl(g, x, .3, z, .025, .025, .6, legM, 8);
+    cyl(g, x, 1.3, z, .035, .035, 1.4, M(0xf2f2f2, { rough:.5 }), 10);   // net poles in foam
+  }
+  const netTex = canvasTex(64, 64, (c, w, h) => { c.clearRect(0, 0, w, h); c.strokeStyle = 'rgba(20,20,22,.85)'; c.lineWidth = 2; for (let i = 0; i <= 64; i += 16){ c.beginPath(); c.moveTo(i, 0); c.lineTo(i, h); c.stroke(); c.beginPath(); c.moveTo(0, i); c.lineTo(w, i); c.stroke(); } });
+  netTex.repeat.set(30, 4);
+  const net = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 1.35, 40, 1, true), M(0xffffff, { map:netTex, transparent:true, alphaTest:.3, side:THREE.DoubleSide, rough:.8 }));
+  net.position.y = 1.32; g.add(net);
+  const top = new THREE.Mesh(new THREE.TorusGeometry(R, .02, 6, 40), M(0xf2f2f2, { rough:.5 })); top.rotation.x = Math.PI/2; top.position.y = 2.0; g.add(top);
+  addCollider(26.6 - R, 12.4 - R, 26.6 + R, 12.4 + R, .7);
+  sadd('Батут', 'Двор', g);
 }
 // the street: road, wooden poles with a sodium lamp and wires, neighbours' houses with lit windows
 {
@@ -2255,7 +2338,7 @@ const elecPanel = { pivot:null, open:0, main:null };
 const blackoutEl = document.getElementById('blackout');
 
 /* ================= navigation grid for Bronislav (house + yard) ================= */
-const NX0 = -14, NZ0 = -5, NX1 = 22, NZ1 = 17;
+const NX0 = -14, NZ0 = -5, NX1 = 30, NZ1 = 17;
 const CELL = .25, GW = (NX1 - NX0)/CELL, GH = (NZ1 - NZ0)/CELL, NC = GW*GH, INF = 1e9;
 const navBlocked = new Uint8Array(NC);
 const cellAt = (x, z) => clamp(Math.floor((z - NZ0)/CELL), 0, GH - 1)*GW + clamp(Math.floor((x - NX0)/CELL), 0, GW - 1);
@@ -2508,7 +2591,7 @@ const makar = (() => {
   return { group:g, legL, legR, armL, armR, pad, mark, markBang, eyeMat };
 })();
 const MK = { x:CEL.chair.x, z:CEL.chair.z, a:Math.PI/2, state:'game', pose:'sit', sitting:true, meter:0, seen:false, phase:0, prevPhase:0,
-  taskT:30, susT:0, grabT:0, searchT:0, speakT:4, lostT:0, chased:false, met:false, stim:{ x:0, z:0 }, lastSeen:{ x:0, z:0 }, field:null, fieldCell:-1, fieldAge:0 };
+  taskT:30, susT:0, grabT:0, searchT:0, speakT:4, lostT:0, chased:false, met:false, outside:false, tripT:300, swimT:0, shoutCd:0, stim:{ x:0, z:0 }, lastSeen:{ x:0, z:0 }, field:null, fieldCell:-1, fieldAge:0 };
 // his own little nav grid for the подвал
 const MCELL = .25, MGW = (CEL.x2 - CEL.x1)/MCELL, MGH = (CEL.z2 - CEL.z1)/MCELL;
 const mBlocked = new Uint8Array(MGW*MGH);
@@ -3377,7 +3460,7 @@ function updateBron(dt){
       if (!B.invArrived){
         if (navStep(nz.x, nz.z, 2.3, dt) || Math.hypot(nz.x - B.x, nz.z - B.z) < .5){
           B.invArrived = true; B.invT = 3.5;
-          say(pick({ flush:FLUSH_ARRIVE, spaghetti:SPAG_ARRIVE, dog:DOG_ARRIVE, lizard:LIZARD_ARRIVE, makar:MAKAR_ARRIVE }[nz.kind]), 3, nz.kind === 'spaghetti' ? 'angry' : 'sly', 2);
+          say(pick({ flush:FLUSH_ARRIVE, spaghetti:SPAG_ARRIVE, dog:DOG_ARRIVE, lizard:LIZARD_ARRIVE, makar:MAKAR_ARRIVE, pool:MAKAR_ARRIVE }[nz.kind]), 3, nz.kind === 'spaghetti' ? 'angry' : 'sly', 2);
         }
       } else {
         B.invT -= dt; B.a += dt*1.3;
@@ -3402,22 +3485,24 @@ function makeNoise(x, z, kind){
   standUp();
   B.state = 'investigate'; B.noise = { x, z, kind }; B.invArrived = false; B.invT = 0;
   sfx.hm();
-  say(pick({ flush:FLUSH_REACT, spaghetti:SPAG_REACT, dog:DOG_REACT, lizard:LIZARD_REACT, makar:MAKAR_REACT }[kind]), 2.6, 'angry', 2);
-  banner({ flush:'Бронислав услышал смыв и идёт проверить!', spaghetti:'Бронислав услышал хруст и бежит на кухню!', dog:'Бобик лает! Бронислав идёт посмотреть!', lizard:'Ящерка тебя лижет! Бронислав услышал и идёт в зал!', makar:'Макар орёт из подвала! Бронислав идёт в кладовку!' }[kind], 'warn', 2.4);
+  say(pick({ flush:FLUSH_REACT, spaghetti:SPAG_REACT, dog:DOG_REACT, lizard:LIZARD_REACT, makar:MAKAR_REACT, pool:MAKAR_REACT }[kind]), 2.6, 'angry', 2);
+  banner({ flush:'Бронислав услышал смыв и идёт проверить!', spaghetti:'Бронислав услышал хруст и бежит на кухню!', dog:'Бобик лает! Бронислав идёт посмотреть!', lizard:'Ящерка тебя лижет! Бронислав услышал и идёт в зал!', makar:'Макар орёт из подвала! Бронислав идёт в кладовку!', pool:'Макар увидел тебя из бассейна и зовёт Бронислава!' }[kind], 'warn', 2.4);
 }
 /* ---- Makar brain: plays танчики in headphones, sometimes fetches огурцы, chases you if he spots you ---- */
 let mbubbleT = 0;
+const makarNear = () => MK.outside ? !P.cellar : P.cellar;   // on the same floor as you
 function makarSay(text, time = 2.4, priority = 1){
+  if (!makarNear()) return;
   $('mbubble').textContent = text; $('mbubble').classList.add('on'); mbubbleT = time;
   speak(text, MK.state === 'chase' ? 'angry' : 'hype', priority, undefined, MK);
 }
 function makarStand(){ if (MK.sitting){ MK.sitting = false; MK.x = CEL.stand.x; MK.z = CEL.stand.z; } }
 function makarSit(){
-  Object.assign(MK, { sitting:true, x:CEL.chair.x, z:CEL.chair.z, a:Math.PI/2, state:'game', pose:'sit', meter:0, taskT:rand(25, 40) });
+  Object.assign(MK, { outside:false, sitting:true, x:CEL.chair.x, z:CEL.chair.z, a:Math.PI/2, state:'game', pose:'sit', meter:0, taskT:rand(25, 40) });
 }
 function resetMakar(){
   makarSit();
-  Object.assign(MK, { chased:false, met:false, seen:false, speakT:4, lostT:0, susT:0, grabT:0, searchT:0, field:null, fieldCell:-1 });
+  Object.assign(MK, { chased:false, met:false, seen:false, speakT:4, lostT:0, susT:0, grabT:0, searchT:0, field:null, fieldCell:-1, tripT:300, swimT:0, shoutCd:0 });
   $('mbubble').classList.remove('on'); mbubbleT = 0;
 }
 function makarChase(){
@@ -3435,10 +3520,20 @@ function makarCatch(){
   makarSay('Попался! Брони-и-ислав, я его поймал!', 2.2, 3);
   if (catches >= maxCatches()){ try { document.exitPointerLock?.(); } catch (e) {} }
 }
+// in the yard he only walks the clear path between the погреб and the pool
+function makarWalk(tx, tz, speed, dt){
+  const dx = tx - MK.x, dz = tz - MK.z, l = Math.hypot(dx, dz);
+  if (l < .1) return true;
+  const st = Math.min(speed*dt, l);
+  MK.x += dx/l*st; MK.z += dz/l*st;
+  MK.a = turnTo(MK.a, Math.atan2(dx, dz), dt*8);
+  MK.phase += speed*dt*3.2;
+  return l - st < .1;
+}
 function updateMakar(dt){
   if (cheat('freeze')){ MK.meter = 0; MK.seen = false; return; }
   const dx = P.x - MK.x, dz = P.z - MK.z, d = Math.hypot(dx, dz);
-  const ghost = cheat('ghost') || !!D_().blind || !P.cellar;   // «Практика»: he never spots you either
+  const ghost = cheat('ghost') || !!D_().blind || !makarNear();   // «Практика»: he never spots you either
   const gaming = MK.state === 'game';   // headphones on, eyes on the TV
   let seen = false;
   if (!ghost && !P.hidden){
@@ -3450,7 +3545,23 @@ function updateMakar(dt){
   }
   MK.seen = seen;
   if (seen){ MK.lastSeen.x = P.x; MK.lastSeen.z = P.z; MK.lostT = 0; } else MK.lostT += dt;
-  if (MK.state !== 'chase'){
+  // every 5 minutes he goes out through the погреб for a 3-minute swim
+  MK.tripT -= dt; MK.shoutCd -= dt;
+  if (MK.tripT <= 0 && MK.state === 'game'){
+    MK.tripT = 300; makarStand(); MK.state = 'toDoor';
+    makarSay('Так, пойду искупнусь. Танчики подождут.', 2.4);
+  }
+  // outside he can't chase you, but he yells for his brother
+  if (MK.outside){
+    let gain = 0;
+    if (seen){ gain += .9*(1.6 - d/8)*(P.crouch ? .5 : 1)*(P.moving ? 1 : .6); if (d < 1.3) gain += 2.6; }
+    MK.meter = gain > 0 ? Math.min(1, MK.meter + gain*dt) : Math.max(0, MK.meter - .16*dt);
+    if (MK.meter >= 1 && MK.shoutCd <= 0){
+      MK.shoutCd = 10; MK.meter = .5;
+      makarSay('Брони-и-ислав! Тут кто-то во дворе!', 2.4, 2);
+      if (doorOpen) makeNoise(MK.state === 'swim' ? POOL.ladder.x : MK.x, MK.state === 'swim' ? POOL.ladder.z - .6 : MK.z, 'pool'); else makeNoise(1.3, 9.0, 'pool');
+    }
+  } else if (MK.state !== 'chase'){
     let gain = 0;
     if (seen){ gain += .9*(1.6 - d/8)*(P.crouch ? .5 : 1)*(P.moving ? 1 : .6); if (d < 1.3) gain += 2.6; MK.stim.x = P.x; MK.stim.z = P.z; }
     if (!ghost && P.noisy && d < (gaming ? 2.5 : 6)){ gain += .5; MK.stim.x = P.x; MK.stim.z = P.z; }
@@ -3458,7 +3569,8 @@ function updateMakar(dt){
     if (MK.state === 'search' && seen) gain += 3;
     MK.meter = gain > 0 ? Math.min(1, MK.meter + gain*dt) : Math.max(0, MK.meter - .16*dt);
     if (MK.meter >= 1){ makarChase(); return; }
-    if (MK.meter > .45 && (MK.state === 'game' || MK.state === 'snack' || MK.state === 'return')){
+    if (MK.meter > .45 && (MK.state === 'game' || MK.state === 'snack' || MK.state === 'return' || MK.state === 'toDoor')){
+      if (MK.state === 'toDoor') MK.tripT = Math.min(MK.tripT, 20);   // he'll try again soon
       makarStand(); MK.state = 'suspicious'; MK.susT = 0; makarSay(pick(MAKAR_SUSPECT), 2);
     }
   }
@@ -3496,6 +3608,37 @@ function updateMakar(dt){
       if (MK.lostT > 4){ MK.state = 'search'; MK.searchT = 4; makarSay(pick(MAKAR_SEARCH), 2); }
       break;
     }
+    case 'toDoor':   // in the подвал, to the door out to the огород
+      MK.pose = 'walk';
+      if (makarStep(CEL.door.front.x, CEL.door.front.z, 1.4, dt)){
+        if (P.cellar) sfx.creak();
+        Object.assign(MK, { outside:true, x:HUT.exit.x, z:HUT.exit.z, a:0, state:'toPool', meter:0 });
+      }
+      break;
+    case 'toPool':   // out of the погреб, straight across the yard to the ladder
+      MK.pose = 'walk';
+      if (makarWalk(POOL.ladder.x, POOL.ladder.z, 1.4, dt)){
+        Object.assign(MK, { state:'swim', swimT:180, x:POOL.x, z:POOL.z, speakT:3 });
+        if (!P.cellar) noise(.5, .3*Math.max(0, 1 - Math.hypot(POOL.x - P.x, POOL.z - P.z)/20), 1200);   // splash
+        makarSay('Бульк!', 1.6);
+      }
+      break;
+    case 'swim': {
+      MK.pose = 'swim'; MK.swimT -= dt;
+      const k = elapsed*.25;
+      MK.x = POOL.x + Math.sin(k)*1.3; MK.z = POOL.z + Math.sin(k*1.7)*.45;
+      MK.a = Math.atan2(Math.cos(k)*1.3, Math.cos(k*1.7)*.77);
+      if (MK.speakT <= 0){ makarSay(pick(MAKAR_SWIM), 2.2); MK.speakT = rand(8, 14); }
+      if (MK.swimT <= 0){ Object.assign(MK, { state:'fromPool', x:POOL.ladder.x, z:POOL.ladder.z, a:Math.PI }); makarSay('Всё, накупался. Пора обратно.', 2.2); }
+      break;
+    }
+    case 'fromPool':
+      MK.pose = 'walk';
+      if (makarWalk(HUT.exit.x, HUT.exit.z, 1.4, dt)){
+        if (P.cellar) sfx.creak();
+        Object.assign(MK, { outside:false, x:CEL.door.front.x, z:CEL.door.front.z, state:'return', meter:0, field:null });
+      }
+      break;
     case 'search':
       MK.pose = 'walk'; MK.searchT -= dt; MK.a += dt*1.6;
       if (MK.searchT <= 0){ MK.meter = 0; if (P.cellar) makarSay(pick(MAKAR_GIVEUP), 2.2); MK.state = 'return'; }
@@ -3545,9 +3688,10 @@ function syncMakar(dt, t){
   if (pose === 'walk'){ const a = moving ? sw*(MK.state === 'chase' ? .8 : .55) : 0; legs = a; armL = -a*.8; armR = a*.8; y = moving ? Math.abs(sw)*.04 : 0; }
   if (pose === 'sit'){ legs = -Math.PI/2; armL = -1.15 + Math.sin(t*14)*.04; armR = -1.15 + Math.sin(t*14 + 2)*.04; y = -.47; }
   if (pose === 'grab'){ armR = -2.3; armL = -.4; }
-  makar.legL.rotation.x = legs; makar.legR.rotation.x = pose === 'walk' ? -legs : legs;
+  if (pose === 'swim'){ armL = -2.6 + Math.sin(t*3.2)*1.1; armR = -2.6 - Math.sin(t*3.2)*1.1; legs = Math.sin(t*5)*.25; y = Math.sin(t*2)*.03 - .1; }
+  makar.legL.rotation.x = legs; makar.legR.rotation.x = pose === 'walk' || pose === 'swim' ? -legs : legs;
   makar.armL.rotation.x = armL; makar.armR.rotation.x = armR;
-  g.position.set(MK.x, CEL.y + y, MK.z);
+  g.position.set(MK.x, (MK.outside ? 0 : CEL.y) + y, MK.z);
   makar.pad.visible = pose === 'sit';
   makar.mark.visible = MK.state === 'suspicious' || MK.state === 'search';
   makar.markBang.visible = MK.state === 'chase' || state === 'mcaught';
@@ -3560,8 +3704,8 @@ function syncMakar(dt, t){
   // his speech bubble
   const bub = $('mbubble');
   if (bub.classList.contains('on')){
-    tmpV.set(MK.x, CEL.y + 2.5, MK.z).project(camera);
-    if (!P.cellar || tmpV.z > 1) bub.style.left = '-999px';
+    tmpV.set(MK.x, (MK.outside ? 0 : CEL.y) + 2.5, MK.z).project(camera);
+    if (!makarNear() || tmpV.z > 1) bub.style.left = '-999px';
     else { bub.style.left = clamp((tmpV.x*.5 + .5)*innerWidth, 90, innerWidth - 90) + 'px'; bub.style.top = clamp((-tmpV.y*.5 + .5)*innerHeight, 70, innerHeight - 30) + 'px'; }
   }
 }
@@ -3741,6 +3885,9 @@ function syncWorld(dt, t){
   gateLeaf.pivot.rotation.y = gateLeaf.open*1.3;
   if (house.userData.pendulum) house.userData.pendulum.rotation.z = Math.sin(t*3.1)*.18;
   for (const c of yard.userData.clothes || []) c.rotation.y = Math.sin(t*1.3 + c.userData.sway)*.12;
+  fun.swing.rotation.x = Math.sin(t*1.1)*.08;
+  fun.water.material.map.offset.set(t*.02, Math.sin(t*.5)*.03);
+  fun.ring.position.x = 1.2 + Math.sin(t*.3)*.25; fun.ring.position.y = .98 + Math.sin(t*1.7)*.01;
   for (const r of spawned) if (r.pick && !r.taken) r.holder.rotation.y += dt*1.5;
   for (const it of PICKUPS) if (it.g.visible) it.g.children[it.g.children.length - 1].material.opacity = .2 + Math.sin(t*3 + it.x)*.1;
   carKeyObj.rotation.y += dt*2; carKeyObj.position.y = carSpot.y + .05 + Math.sin(t*3 + 3)*.02;
@@ -3829,10 +3976,11 @@ function updateHud(d, dt){
   else if (B.state === 'walk') text = TASKS[B.task].going;
   else if (B.state === 'suspicious'){ text = 'что-то услышал…'; cls = 'warn'; }
   else if (B.state === 'chase'){ text = 'гонится за тобой!'; cls = 'danger'; }
-  else if (B.state === 'investigate'){ text = { flush:'идёт на звук смыва', spaghetti:'бежит на кухню: спагетти!', dog:'идёт на лай Бобика', lizard:'идёт на чавканье ящерки', makar:'идёт на крик Макара' }[B.noise ? B.noise.kind : 'flush']; cls = 'warn'; }
+  else if (B.state === 'investigate'){ text = { flush:'идёт на звук смыва', spaghetti:'бежит на кухню: спагетти!', dog:'идёт на лай Бобика', lizard:'идёт на чавканье ящерки', makar:'идёт на крик Макара', pool:'идёт на крик Макара' }[B.noise ? B.noise.kind : 'flush']; cls = 'warn'; }
   else { text = 'ищет тебя'; cls = 'warn'; }
   if (P.cellar){
-    text = { game:'играет в танчики', snack:'идёт за огурцами', return:'возвращается к игре', suspicious:'что-то услышал…', chase:'гонится за тобой!', search:'ищет тебя' }[MK.state];
+    text = { game:'играет в танчики', snack:'идёт за огурцами', return:'возвращается к игре', suspicious:'что-то услышал…', chase:'гонится за тобой!', search:'ищет тебя',
+      toDoor:'идёт купаться', toPool:'идёт к бассейну', swim:'купается в бассейне', fromPool:'возвращается в подвал' }[MK.state];
     cls = MK.state === 'chase' ? 'danger' : MK.state === 'suspicious' || MK.state === 'search' ? 'warn' : '';
   }
   st.querySelector('.label').textContent = P.cellar ? 'Макар' : 'Бронислав';
