@@ -268,7 +268,7 @@ h2.good{color:var(--safe)}
     <h2>Концовки</h2>
     <ol class="endings" id="endingsList"></ol>
     <div class="admin-gate" id="adminGate"></div>
-    <div class="row"><button class="ghost" id="endingsBack" type="button">Назад</button></div>
+    <div class="row"><button class="ghost" id="endingsBack" type="button">Назад</button><button class="ghost danger-btn" id="endingsReset" type="button" hidden>Сбросить концовки</button></div>
   </div>
 </section>
 
@@ -429,6 +429,8 @@ const VAC_GRAB = ['Иди сюда, железка.','Попался, пылес
 const VAC_DOCK = ['Всё, на базу. Заряжайся.','Стоять на зарядке и не рыпаться.','Кто его включает? Подписчики, это полтергейст!'];
 const DOG_ARRIVE = ['Бобик, ну чё ты? Никого же нет.','Кошку, что ли, увидел? Сиди тихо.'];
 const LIZARD_REACT = ['Э! Кто там с моей ящеркой лижется?!','Чё там ящерка расчавкалась?!','Слышь! Кто ящерку дразнит?!'];
+const MUSIC_REACT = ['Э! Кто врубил музыку на моём унитазе?!','Чё за дискотека в туалете?!','Слышь! Это мой умный унитаз, не трогай!'];
+const MUSIC_ARRIVE = ['Так, выключаем. Унитаз сам себе диджей, что ли?','Никого… Опять обновление прилетело, походу.'];
 const LIZARD_ARRIVE = ['Ящерка, ты кого там облизывала? Никого же нет.','Голодная, что ли? Ща покормлю… потом.'];
 const MAKAR_REACT = ['Чё там Макар орёт?!','Макар, чё случилось?!','Макар! Кто в подвале?!'];
 const MAKAR_ARRIVE = ['Макар, ну и где? Никого же нет.','Макар опять в танчики переиграл…'];
@@ -1266,17 +1268,35 @@ const spagBits = [], spagBitMat = M(0xf0d27a, { rough:.5 }), spagBitGeo = new TH
   lathe(house, 7.2, .75, 8.85, [[0, 0], [.04, 0], [.05, .09], [.052, .095], [0, .095]], china, 16);
   sreg('Стол с клеёнкой и табуретки', 'Мебель');
 }
-// Туалет: унитаз, ванна, раковина-тюльпан, стиральная машина, зеркало
+// Туалет: умный унитаз, ванна, раковина-тюльпан, стиральная машина, зеркало
+const SMART_WC = { x:12.2, y:1.1, z:11.88 };   // the touch panel on the wall to the right of the toilet
+const smartWc = { screen:null, led:null };
 {
   const porcelain = M(0xf7f7f3, { rough:.1, env:1.1 });
+  // Bronislav's black smart toilet: glossy black, a blue night-light under the rim, a touch screen on the tank
+  const blackGloss = M(0x0e0e10, { rough:.08, env:1.5 });
   smark();
-  lathe(house, 11.5, 0, 11.52, [[0, 0], [.13, 0], [.12, .2], [.2, .36], [.22, .4], [.2, .41], [.15, .38], [0, .25]], porcelain, 32).scale.set(1, 1, 1.25);
-  const seat = new THREE.Mesh(new THREE.TorusGeometry(.18, .028, 10, 32), M(0xffffff, { rough:.3 })); seat.rotation.x = Math.PI/2; seat.scale.set(1, 1.25, 1); seat.position.set(11.5, .43, 11.5); house.add(seat);
-  rbox(house, 11.5, .62, 11.82, .42, .38, .18, porcelain, .03, 3);
-  cyl(house, 11.5, .815, 11.82, .03, .03, .01, mat.chrome, 16);
-  const lid = rbox(house, 11.5, .63, 11.75, .38, .02, .46, M(0xffffff, { rough:.3 }), .02); lid.rotation.x = -1.35; lid.position.set(11.5, .68, 11.72);
-  sreg('Унитаз', 'Мебель');
+  lathe(house, 11.5, 0, 11.52, [[0, 0], [.13, 0], [.12, .2], [.2, .36], [.22, .4], [.2, .41], [.15, .38], [0, .25]], blackGloss, 32).scale.set(1, 1, 1.25);
+  const seat = new THREE.Mesh(new THREE.TorusGeometry(.18, .028, 10, 32), M(0x18181b, { rough:.2, env:1.2 })); seat.rotation.x = Math.PI/2; seat.scale.set(1, 1.25, 1); seat.position.set(11.5, .43, 11.5); house.add(seat);
+  rbox(house, 11.5, .62, 11.82, .42, .38, .18, blackGloss, .03, 3);
+  const lid = rbox(house, 11.5, .63, 11.75, .38, .02, .46, M(0x18181b, { rough:.2, env:1.2 }), .02); lid.rotation.x = -1.35; lid.position.set(11.5, .68, 11.72);
+  sreg('Умный унитаз', 'Мебель');
   addCollider(11.28, 11.27, 11.72, 11.92, .82);
+  smartWc.led = new THREE.Mesh(new THREE.TorusGeometry(.19, .006, 6, 40), BASIC(0x3aa0ff, { toneMapped:false }));
+  smartWc.led.rotation.x = Math.PI/2; smartWc.led.scale.set(1, 1.25, 1); smartWc.led.position.set(11.5, .36, 11.5); house.add(smartWc.led); powered.push(smartWc.led);
+  powered.push(rbox(house, 11.5, .815, 11.82, .16, .005, .08, M(0x0a1830, { rough:.1, emissive:0x2a7aff, ei:.6 }), .004));
+  // the touch panel on the wall: «♪ Музыка» and a play button
+  const panelTex = canvasTex(128, 192, (c, w, h) => {
+    c.fillStyle = '#05070c'; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#3aa0ff'; c.font = 'bold 18px sans-serif'; c.textAlign = 'center'; c.fillText('SMART WC', w/2, 28);
+    c.font = 'bold 54px sans-serif'; c.fillText('♪', w/2, 92);
+    c.font = 'bold 20px sans-serif'; c.fillText('Музыка', w/2, 122);
+    c.beginPath(); c.arc(w/2, 156, 18, 0, 7); c.strokeStyle = '#3aa0ff'; c.lineWidth = 3; c.stroke();
+    c.beginPath(); c.moveTo(w/2 - 6, 146); c.lineTo(w/2 + 10, 156); c.lineTo(w/2 - 6, 166); c.closePath(); c.fill();
+  });
+  rbox(house, SMART_WC.x, SMART_WC.y, SMART_WC.z + .01, .16, .23, .02, M(0x111114, { rough:.2, env:1 }), .01);
+  smartWc.screen = new THREE.Mesh(new THREE.PlaneGeometry(.13, .195), M(0x000000, { emissive:0xffffff, emissiveMap:panelTex, ei:.9, rough:.1 }));
+  smartWc.screen.position.set(SMART_WC.x, SMART_WC.y, SMART_WC.z - .002); smartWc.screen.rotation.y = Math.PI; house.add(smartWc.screen); powered.push(smartWc.screen);
   // ванна
   smark();
   const bath = grp(house, 12.55, 0, 9.0);
@@ -3438,6 +3458,34 @@ function tone(freq, dur, vol, type = 'sine', slideTo){
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
   o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + .02);
 }
+// умный унитаз: its own little pop tune, scheduled on the audio clock through one gain that follows the distance and can cut it off
+const wcMusic = { on:false, t:0, out:null };
+const WC_TUNE = { step:.2, lead:[69, 0, 72, 69, 76, 0, 74, 72, 71, 0, 72, 74, 76, 74, 72, 0, 69, 0, 72, 69, 76, 0, 79, 76, 74, 0, 72, 71, 69, 0, 0, 0], bass:[45, 41, 43, 40, 45, 41, 43, 45] };
+function startWcMusic(loops = 2){
+  stopWcMusic();
+  const { step, lead, bass } = WC_TUNE;
+  wcMusic.on = true; wcMusic.t = lead.length*step*loops;
+  if (!ac) return;
+  const out = ac.createGain(); out.gain.value = 0; out.connect(ac.destination); wcMusic.out = out;
+  const hz = n => 440*Math.pow(2, (n - 69)/12);
+  const note = (t, f, dur, vol, type, slideTo) => {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t); if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g).connect(out); o.start(t); o.stop(t + dur + .02);
+  };
+  const t0 = ac.currentTime + .05;
+  for (let l = 0; l < loops; l++) for (let i = 0; i < lead.length; i++){
+    const t = t0 + (l*lead.length + i)*step;
+    if (lead[i]) note(t, hz(lead[i]), step*.9, .22, 'square');
+    if (i % 4 === 0){ note(t, hz(bass[i/4]), step*3.6, .5, 'triangle'); note(t, 130, .18, .9, 'sine', 45); }   // bass and a kick on every beat
+    if (i % 4 === 2) note(t, 6000, .04, .08, 'square', 3000);   // hi-hat
+  }
+}
+function stopWcMusic(){
+  wcMusic.on = false; wcMusic.t = 0;
+  if (wcMusic.out){ const o = wcMusic.out; o.gain.setTargetAtTime(0, ac.currentTime, .05); setTimeout(() => o.disconnect(), 300); wcMusic.out = null; }
+}
 // оповещатель «Соната-К»: a piezo siren that sweeps up again and again, a shrill «уи-уи-уи»
 function sonataK(dur){
   if (!ac || muted) return;
@@ -3635,6 +3683,7 @@ function renderEndings(){
     ? `<p>Все концовки открыты — тебе доступна админ-панель.</p><button class="ghost" id="adminGateBtn" type="button">Открыть админ-панель</button>`
     : `<p>Открой все ${ENDINGS.length} концовки, чтобы получить админ-панель. Осталось: ${ENDINGS.length - have.length}.</p><div class="bar"><i style="width:${have.length/ENDINGS.length*100}%"></i></div>`;
   $('adminBtn').hidden = !open;
+  $('endingsReset').hidden = !have.length;
 }
 function showEndings(from){
   renderEndings(); endingsFrom = from;
@@ -3665,12 +3714,22 @@ $('adminBtn').addEventListener('click', () => showAdmin('startScreen'));
 $('adminBack').addEventListener('click', () => { $('adminScreen').hidden = true; $(adminFrom).hidden = false; renderEndings(); });
 $('adminOff').addEventListener('click', () => { for (const k in CHEATS) CHEATS[k] = false; saveCheats(); syncCheats(); });
 $('adminPlay').addEventListener('click', () => { $('adminScreen').hidden = true; startRun(); });
-$('adminReset').addEventListener('click', () => {
-  if (!confirm('Сбросить все открытые концовки? Админ-панель снова закроется.')) return;
+function resetEndings(){
+  if (!confirm(adminUnlocked() ? 'Сбросить все открытые концовки? Админ-панель снова закроется.' : 'Сбросить все открытые концовки?')) return false;
   try { localStorage.removeItem('pobeg-endings'); } catch (e) {}
+  return true;
+}
+$('adminReset').addEventListener('click', () => {
+  if (!resetEndings()) return;
   $('adminScreen').hidden = true; $('endScreen').hidden = true; $('startScreen').hidden = false;
   if (state !== 'menu') toMenu(); else syncDiff();
   $('goBtn').focus();
+});
+// available any time, not only once everything is open: stays on the list, now empty
+$('endingsReset').addEventListener('click', () => {
+  if (!resetEndings()) return;
+  if (state === 'menu') syncDiff(); else renderEndings();
+  $('endingsBack').focus();
 });
 function giveKey(){
   hasKey = true; keyObj.visible = false;
@@ -3848,7 +3907,7 @@ function resetWorld(){
   resetMakar(); P.cellar = false; hatch.open = 0; boltP = 0; cel.bolt.position.x = CEL.door.x + .12; valveP = 0; waterOff = false;
   inv = []; invKey = '-'; 
   for (const b of spagBits) house.remove(b); spagBits.length = 0; if (spagPack) spagPack.rotation.z = .15;
-  flushCd = spagCd = 0; B.noise = null;
+  flushCd = spagCd = 0; B.noise = null; stopWcMusic();
   placeKey();
   placeFireKey();
   placeElecKey();
@@ -3929,6 +3988,7 @@ function syncLives(){
 function winEnding(){ return chases === 0 && catches === 0 && !D_().blind ? 3 : usedFlush && usedSpag ? 4 : 2; }
 function endRun(id){
   const e = ENDINGS[id - 1], won = e.good;
+  stopWcMusic();
   state = won ? 'won' : 'over';
   try { document.exitPointerLock?.(); } catch (err) {}
   setHud(false);
@@ -3948,7 +4008,7 @@ function endRun(id){
 }
 // caught but attempts are left: black out, wake up in the bedroom, Bronislav hides the key again
 function startRespawn(byMakar){
-  state = 'respawn'; respawnT = 2.4; respawned = false;
+  state = 'respawn'; respawnT = 2.4; respawned = false; stopWcMusic();
   const lostKey = hasKey || doorOpen || hasFireKey || hasElecKey || hasCarKey || hasBbwKey || hasMotoKey;
   $('fadeTitle').textContent = `Попытка ${catches + 1} из ${maxCatches()}`;
   $('fadeText').textContent = byMakar
@@ -4072,6 +4132,9 @@ function findAction(){
     return hasFireKey ? { type:'alarm', text:'<kbd>E</kbd>открыть щиток и включить тревогу' } : { type:'panelLocked', text:'Пожарный щиток заперт. Нужен ключ' };
   if (!doorOpen && Math.hypot(.4 - P.x, 9.0 - P.z) < 1.35)
     return hasKey ? { type:'door', text:'Держи <kbd>E</kbd> — открыть дверь' } : { type:'locked', text:'Дверь заперта. Нужен ключ' };
+  if (P.x > 10.1 && P.x < 12.9 && P.z > 7.1 && P.z < 11.9 && Math.hypot(SMART_WC.x - P.x, SMART_WC.z - P.z) < 1.4 && facing(SMART_WC.x, SMART_WC.z) > .93)
+    return !powerOn ? { type:'wait', text:'Умный унитаз без света не работает' }
+         : wcMusic.on ? { type:'wcMusicOff', text:'<kbd>E</kbd>выключить музыку' } : { type:'wcMusic', text:'<kbd>E</kbd>включить музыку на умном унитазе' };
   if (!toiletDoor.col.active && Math.hypot(11.5 - P.x, 11.45 - P.z) < 1.05 && facing(11.5, 11.6) > .3)
     return flushCd > 0 ? { type:'wait', text:'Бачок набирается…' } : { type:'flush', text:'<kbd>E</kbd>смыть унитаз' };
   if (Math.hypot(5.0 - P.x, 11.45 - P.z) < 1.3 && facing(5.0, 11.45) > .35)
@@ -4181,6 +4244,12 @@ function doAction(){
     B.hideSeen = watched ? w : null;
     if (watched && B.state !== 'chase') enterChase();
     MK.hideSeen = P.cellar && MK.state === 'chase' && MK.lostT < .6 ? w : null;
+  } else if (action.type === 'wcMusic'){
+    startWcMusic(); tone(1320, .08, .12, 'sine'); setTimeout(() => tone(1760, .1, .12, 'sine'), 90);
+    banner('Умный унитаз включил музыку на весь дом!', 'warn', 2);
+    setTimeout(() => { if (wcMusic.on) makeNoise(11.5, 10.6, 'music'); }, 1200);
+  } else if (action.type === 'wcMusicOff'){
+    stopWcMusic(); tone(880, .08, .1, 'sine');
   } else if (action.type === 'flush'){
     flushCd = 5; sfx.flushBig(1); usedFlush = true;
     makeNoise(11.5, 10.6, 'flush');
@@ -4361,7 +4430,10 @@ function updateBronOnFloor(dt){
       if (!B.invArrived){
         if (navStep(nz.x, nz.z, 2.3, dt, undefined, 0) || (!B.level && !B.climb && Math.hypot(nz.x - B.x, nz.z - B.z) < .5)){
           B.invArrived = true; B.invT = 3.5;
-          say(pick({ flush:FLUSH_ARRIVE, spaghetti:SPAG_ARRIVE, dog:DOG_ARRIVE, lizard:LIZARD_ARRIVE, makar:MAKAR_ARRIVE, pool:MAKAR_ARRIVE }[nz.kind]), 3, nz.kind === 'spaghetti' ? 'angry' : 'sly', 2);
+          if (nz.kind === 'music') stopWcMusic();   // he taps the panel off
+          // invisible or «Практика»: you may be standing right by the toilet, and he still sees nobody
+          if (nz.kind === 'flush' && (cheat('ghost') || D_().blind)) say('Никого нету. А чё он сам смылся тогда?', 3, 'sly', 2);
+          else say(pick({ music:MUSIC_ARRIVE, flush:FLUSH_ARRIVE, spaghetti:SPAG_ARRIVE, dog:DOG_ARRIVE, lizard:LIZARD_ARRIVE, makar:MAKAR_ARRIVE, pool:MAKAR_ARRIVE }[nz.kind]), 3, nz.kind === 'spaghetti' ? 'angry' : 'sly', 2);
         }
       } else {
         B.invT -= dt; B.a += dt*1.3;
@@ -4401,8 +4473,8 @@ function makeNoise(x, z, kind){
   standUp();
   B.state = 'investigate'; B.noise = { x, z, kind, lvl:0 }; B.invArrived = false; B.invT = 0;
   sfx.hm();
-  say(pick({ flush:FLUSH_REACT, spaghetti:SPAG_REACT, dog:DOG_REACT, lizard:LIZARD_REACT, makar:MAKAR_REACT, pool:MAKAR_REACT }[kind]), 2.6, 'angry', 2);
-  banner({ flush:'Бронислав услышал смыв и идёт проверить!', spaghetti:'Бронислав услышал хруст и бежит на кухню!', dog:'Бобик лает! Бронислав идёт посмотреть!', lizard:'Ящерка тебя лижет! Бронислав услышал и идёт в зал!', makar:'Макар орёт из подвала! Бронислав идёт в кладовку!', pool:'Макар увидел тебя из бассейна и зовёт Бронислава!' }[kind], 'warn', 2.4);
+  say(pick({ music:MUSIC_REACT, flush:FLUSH_REACT, spaghetti:SPAG_REACT, dog:DOG_REACT, lizard:LIZARD_REACT, makar:MAKAR_REACT, pool:MAKAR_REACT }[kind]), 2.6, 'angry', 2);
+  banner({ music:'Умный унитаз заиграл музыку! Бронислав идёт в туалет!', flush:'Бронислав услышал смыв и идёт проверить!', spaghetti:'Бронислав услышал хруст и бежит на кухню!', dog:'Бобик лает! Бронислав идёт посмотреть!', lizard:'Ящерка тебя лижет! Бронислав услышал и идёт в зал!', makar:'Макар орёт из подвала! Бронислав идёт в кладовку!', pool:'Макар увидел тебя из бассейна и зовёт Бронислава!' }[kind], 'warn', 2.4);
 }
 /* ---- Makar brain: plays танчики in headphones, sometimes fetches огурцы, chases you if he spots you ---- */
 let mbubbleT = 0;
@@ -4841,6 +4913,15 @@ function syncBron(dt, t){
   g.position.y = floorY + y;
 }
 function syncWorld(dt, t){
+  if (wcMusic.on){
+    wcMusic.t -= dt;
+    if (wcMusic.t <= 0 || !powerOn) stopWcMusic();
+    else if (wcMusic.out){
+      const d = Math.hypot(11.5 - camera.position.x, 11.5 - camera.position.z) + (P.level || P.cellar ? 6 : 0);
+      wcMusic.out.gain.setTargetAtTime(muted ? 0 : .5*Math.max(.04, 1 - d/16), ac.currentTime, .1);
+    }
+  }
+  if (powerOn){ if (wcMusic.on) smartWc.led.material.color.setHSL((t*.5) % 1, .9, .55); else smartWc.led.material.color.set(0x3aa0ff); }
   keyObj.rotation.y += dt*2; keyObj.position.y = keySpot.y + .05 + Math.sin(t*3)*.02;
   // toilet door
   const target = toiletDoor.col.active ? 0 : -1.45;
@@ -4972,7 +5053,7 @@ function updateHud(d, dt){
   else if (B.state === 'walk') text = TASKS[B.task].going;
   else if (B.state === 'suspicious'){ text = 'что-то услышал…'; cls = 'warn'; }
   else if (B.state === 'chase'){ text = 'гонится за тобой!'; cls = 'danger'; }
-  else if (B.state === 'investigate'){ text = { flush:'идёт на звук смыва', spaghetti:'бежит на кухню: спагетти!', dog:'идёт на лай Бобика', lizard:'идёт на чавканье ящерки', makar:'идёт на крик Макара', pool:'идёт на крик Макара' }[B.noise ? B.noise.kind : 'flush']; cls = 'warn'; }
+  else if (B.state === 'investigate'){ text = { music:'идёт выключать музыку в туалете', flush:'идёт на звук смыва', spaghetti:'бежит на кухню: спагетти!', dog:'идёт на лай Бобика', lizard:'идёт на чавканье ящерки', makar:'идёт на крик Макара', pool:'идёт на крик Макара' }[B.noise ? B.noise.kind : 'flush']; cls = 'warn'; }
   else if (B.state === 'vacuum'){ text = vac.carried ? 'несёт пылесос на базу' : 'бежит выключать пылесос'; cls = 'warn'; }
   else { text = 'ищет тебя'; cls = 'warn'; }
   if (P.cellar){

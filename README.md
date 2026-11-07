@@ -27,7 +27,7 @@ There is also an on-screen joystick (toggle it in the main menu).
 
 ## Endings
 
-There are 16 endings, four of them with Makar, who lives in the basement. Unlocking all of them opens the admin panel with cheats: invisibility, flying, object spawning and more.
+There are 16 endings, four of them with Makar, who lives in the basement. Unlocking all of them opens the admin panel with cheats: invisibility, flying, object spawning and more. You can reset your endings at any time on the endings screen.
 
 ## Tech
 
