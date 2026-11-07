@@ -256,7 +256,7 @@ h2.good{color:var(--safe)}
     <div class="row">
       <button class="go" id="goBtn" type="button">НАЧАТЬ ПОБЕГ</button>
       <button class="ghost" id="joyBtn" type="button" aria-pressed="true">Джойстик: вкл</button>
-      <button class="ghost" id="endingsBtn" type="button">Концовки <span class="count" id="endingsCount">0/15</span></button>
+      <button class="ghost" id="endingsBtn" type="button">Концовки <span class="count" id="endingsCount">0/16</span></button>
       <button class="ghost" id="adminBtn" type="button" hidden>Админ-панель</button>
     </div>
   </div>
@@ -264,7 +264,7 @@ h2.good{color:var(--safe)}
 
 <section class="screen" id="endingsScreen" hidden>
   <div class="card">
-    <div class="eyebrow">Открыто <span id="endingsOpened">0 из 15</span></div>
+    <div class="eyebrow">Открыто <span id="endingsOpened">0 из 16</span></div>
     <h2>Концовки</h2>
     <ol class="endings" id="endingsList"></ol>
     <div class="admin-gate" id="adminGate"></div>
@@ -396,6 +396,7 @@ const INV_DEFS = {
   briefs:{ name:'Трусы Бронислава',     short:'Трусы',    icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 7h24l2 18h-11l-3-9-3 9H2z" fill="#d0303a" stroke="#7a1418" stroke-width="1.4" stroke-linejoin="round"/><rect x="4" y="6" width="24" height="4" rx="1" fill="#f2f2f2" stroke="#9aa0a6" stroke-width="1"/><g fill="#ffffff"><circle cx="9" cy="15" r="1.6"/><circle cx="22" cy="14" r="1.6"/><circle cx="7" cy="21" r="1.6"/><circle cx="25" cy="21" r="1.6"/></g></svg>' },
   note:  { name:'Бумажка с паролем',    short:'Пароль',   icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 5h20v18l-5 5H6z" fill="#ffe066" stroke="#c8a020" stroke-width="1.4" stroke-linejoin="round"/><path d="M21 28v-5h5" fill="#f2c94c" stroke="#c8a020" stroke-width="1.4" stroke-linejoin="round"/><path d="M10 12h12M10 16h9" stroke="#2f4fb0" stroke-width="1.8" stroke-linecap="round"/></svg>' },
   bbw:  { name:'Ключи от bbw c5',          short:'bbw',  icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="10" cy="16" r="6.5" fill="none" stroke="#2f6fd8" stroke-width="3.2"/><path d="M16 16h13M24 16v5M28 16v4" stroke="#2f6fd8" stroke-width="3.2" stroke-linecap="round" fill="none"/><text x="10" y="19" font-size="7" text-anchor="middle" fill="#2f6fd8" font-family="sans-serif" font-weight="700">B</text></svg>' },
+  moto: { name:'Ключи от мотоцикла',       short:'Мотик', icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="10" cy="16" r="6.5" fill="none" stroke="#ff7a1a" stroke-width="3.2"/><path d="M16 16h13M24 16v5M28 16v4" stroke="#ff7a1a" stroke-width="3.2" stroke-linecap="round" fill="none"/></svg>' },
   crowbar:{ name:'Лом',                 short:'Лом',      icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 27L24 6" stroke="#c81e16" stroke-width="3.4" stroke-linecap="round"/><path d="M24 6c3-2 6 0 4 3" fill="none" stroke="#c81e16" stroke-width="3" stroke-linecap="round"/><path d="M7 27l-3 1" stroke="#c81e16" stroke-width="3" stroke-linecap="round"/></svg>' },
   money: { name:'Сто рублей',          short:'100 ₽',    icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="2.5" y="9" width="27" height="14" rx="2" fill="#c7b37c" stroke="#6a5a2a" stroke-width="1.4"/><circle cx="9" cy="16" r="3.4" fill="none" stroke="#6a5a2a" stroke-width="1.2"/><text x="21" y="19.5" font-size="9" text-anchor="middle" fill="#3a3010" font-family="sans-serif" font-weight="700">100</text></svg>' },
 };
@@ -415,6 +416,7 @@ const ENDINGS = [
   { id:13, name:'Кукольный секрет', good:true, hint:'Найди на улице лом и вскрой заколоченную дверь в спальне Бронислава.', how:'Ты сломал доски ломом и нашёл секретную комнату Бронислава.', text:'Там чёрные стены и полки с куклами. Ты сфотографировал всё на телефон, и Бронислав сам открыл тебе дверь, лишь бы ты никому не показал.', quote:'Братан, только не выкладывай! Это… это для ролика было! Иди уже!' },
   { id:14, name:'Посмотрел компромат', good:true, hint:'Найди на столе Бронислава бумажку с паролем и зайди в его компьютер.', how:'Ты взломал компьютер Бронислава и посмотрел его секретное видео.', text:'На видео Бронислав в одних трусах тряс попой под музыку. Выключить его было нельзя. Бронислав застал тебя у компьютера, покраснел и сам открыл тебе дверь, лишь бы ты молчал.', quote:'Ты ничего не видел, братан. НИЧЕГО. Дверь открыта, иди.' },
   { id:15, name:'Угнал bbw c5', good:true, hint:'Найди в подвале ключи Макара и уезжай на его bbw c5.', how:'Ты угнал bbw c5 Макара.', text:'Макар выскочил из погреба в одних тапках и долго бежал за машиной. Новый ролик Бронислава называется «Брат, где твоя бэха?».', quote:'Э-э! Моя бэха! Брони-и-ислав, у меня тачку угнали!' },
+  { id:16, name:'Угнал мотоцикл', good:true, hint:'Найди ключи от оранжевого мотоцикла Бронислава и уезжай на нём.', how:'Ты угнал оранжевый мотоцикл Бронислава.', text:'Ты с рёвом вылетел за ворота, а Бронислав бежал следом в одних носках и снимал на телефон. Новый ролик называется «У меня угнали мотик прямо со двора».', quote:'Мой мотик! Пацаны, он даже шлем не надел! Стой, братан!' },
 ];
 const maxCatches = () => DIFF[difficulty].lives;
 const WALK_PHRASES = ['Так, чё там дальше по плану…','Подписчики ждут. Погнали.','Ща будет контент.'];
@@ -575,7 +577,7 @@ const duvetTex = canvasTex(256, 256, (g, w, h) => {
 const sidingTex = canvasTex(256, 256, (g, w, h) => {
   for (let r = 0; r < 8; r++){
     const v = .9 + Math.random()*.15;
-    g.fillStyle = `rgb(${110*v|0},${150*v|0},${170*v|0})`; g.fillRect(0, r*32, w, 32);
+    g.fillStyle = `rgb(${142*v|0},${145*v|0},${148*v|0})`; g.fillRect(0, r*32, w, 32);
     g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(0, r*32 + 2, w, 4);
     g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(0, r*32 + 28, w, 4);
     for (let k = 0; k < 6; k++){ g.fillStyle = 'rgba(160,140,110,.35)'; g.fillRect(Math.random()*w, r*32 + Math.random()*24, rand(4, 18), rand(1, 3)); }
@@ -1750,6 +1752,7 @@ const GATE = { z1:8.55, z2:9.45 };
 const yard = new THREE.Group(); scene.add(yard);
 let carGroup = null, carCol = null;
 const BBW = { x:-9.0, z:.55 }, bbw = { group:null, col:null };   // Makar's bbw c5
+const MOTO = { x:-8.4, z:6.5 }, moto = { group:null, col:null };   // Bronislav's orange motorcycle
 // facades with real openings, painted wooden siding
 const sidingMat = M(0xffffff, { map:sidingTex, bumpMap:sidingTex, bumpScale:.02, rough:.75, env:.3 });
 const trimMat = M(0xf4f1ea, { rough:.6 });
@@ -2061,6 +2064,53 @@ const gateLeaf = { pivot:new THREE.Group(), open:0 };
     sadd('bbw c5', 'Двор', g);
     bbw.col = addCollider(BBW.x - 2.45, BBW.z - .99, BBW.x + 2.45, BBW.z + .99, 1.7);
   }
+  // Bronislav's motorcycle: a bright orange naked bike between the Жигули and the path to the калитка, nose to the street
+  {
+    const g = grp(yard, MOTO.x, 0, MOTO.z, -Math.PI/2); moto.group = g;
+    const paint = M(0xff6a10, { rough:.2, metal:.5, env:1.4 }), black = M(0x141416, { rough:.45 }), grey = M(0x3a3c40, { rough:.4, metal:.7, env:.9 });
+    for (const z of [-.7, .7]){
+      const tyre = new THREE.Mesh(new THREE.TorusGeometry(.26, .07, 10, 28), mat.rubber); tyre.position.set(0, .33, z); tyre.rotation.y = Math.PI/2; g.add(tyre);
+      const rim = cyl(g, 0, .33, z, .2, .2, .05, black, 24); rim.rotation.z = Math.PI/2;
+      const disc = cyl(g, .05, .33, z, .13, .13, .01, mat.steel, 20); disc.rotation.z = Math.PI/2;
+      cyl(g, 0, .33, z, .03, .03, .2, mat.steel, 8).rotation.z = Math.PI/2;   // axle
+    }
+    // frame, engine, swingarm
+    const frame = rbox(g, 0, .72, .05, .1, .08, .85, paint, .03); frame.rotation.x = .25;
+    const engine = rbox(g, 0, .45, -.02, .3, .34, .5, grey, .05);
+    for (let i = 0; i < 4; i++) rbox(g, 0, .38 + i*.06, .26, .32, .02, .06, mat.steel, .005);   // cylinder fins
+    for (const s of [-1, 1]){ const arm = rbox(g, s*.1, .36, -.38, .04, .05, .62, grey, .015); arm.rotation.x = -.1; }
+    // fuel tank with the channel logo, seat, tail
+    const tank = rbox(g, 0, .9, .18, .36, .24, .56, paint, .1, 3);
+    const logo = canvasTex(64, 64, (c) => { c.fillStyle = '#141416'; c.beginPath(); c.arc(32, 32, 30, 0, 7); c.fill(); c.fillStyle = '#ffffff'; c.font = 'bold 40px sans-serif'; c.textAlign = 'center'; c.fillText('Б', 32, 46); });
+    for (const s of [-1, 1]){ const l = new THREE.Mesh(new THREE.CircleGeometry(.07, 24), M(0xffffff, { map:logo, rough:.3 })); l.position.set(s*.182, .9, .2); l.rotation.y = s*Math.PI/2; g.add(l); }
+    rbox(g, 0, .86, -.32, .3, .1, .5, black, .04);                            // seat
+    const tail = rbox(g, 0, .92, -.68, .24, .12, .36, paint, .05); tail.rotation.x = -.2;
+    rbox(g, 0, .9, -.87, .14, .05, .02, M(0xc01010, { rough:.1, emissive:0x330000 }), .01);   // tail light
+    planarUV(rbox(g, 0, .7, -.86, .26, .14, .01, M(0xffffff, { map:labelTex('77 БР 07', '#ffffff', '#111111', 256, 128, 'bold 52px sans-serif'), rough:.4 }), .004)).rotation.y = Math.PI;
+    // fenders
+    const ff = rbox(g, 0, .64, .74, .14, .03, .42, paint, .015); ff.rotation.x = .2;
+    const rf = rbox(g, 0, .66, -.78, .14, .03, .32, black, .015); rf.rotation.x = -.35;
+    // front fork, headlight, handlebar with mirrors
+    for (const s of [-1, 1]){ const f = cyl(g, s*.08, .68, .58, .025, .025, .76, mat.chrome, 10); f.rotation.x = -.35; }
+    rbox(g, 0, 1.02, .5, .2, .08, .1, black, .02);                            // triple clamp
+    const lamp = sph(g, 0, .95, .62, .1, M(0xfff8e0, { rough:.05, emissive:0x555544 }), 1, 1, .7, 20);
+    cyl(g, 0, .95, .6, .11, .11, .06, black, 20).rotation.x = Math.PI/2; void lamp;
+    const bar = cyl(g, 0, 1.1, .44, .015, .015, .72, mat.chrome, 10); bar.rotation.z = Math.PI/2;
+    for (const s of [-1, 1]){
+      const grip = cyl(g, s*.33, 1.1, .44, .025, .025, .12, black, 10); grip.rotation.z = Math.PI/2;
+      cyl(g, s*.28, 1.22, .44, .008, .008, .24, black, 6);
+      cyl(g, s*.28, 1.34, .44, .05, .05, .015, mat.mirror, 16).rotation.x = Math.PI/2;
+    }
+    // exhaust along the right side, side stand
+    const pipe = cyl(g, -.19, .34, -.35, .035, .035, .7, mat.chrome, 12); pipe.rotation.x = Math.PI/2 - .12;
+    cyl(g, -.19, .38, -.75, .06, .055, .28, mat.chrome, 14).rotation.x = Math.PI/2 - .12;
+    // a black helmet hanging on the left grip
+    const helmet = sph(g, .34, 1.0, .4, .14, M(0x141416, { rough:.15, env:1.3 }), 1, 1.05, 1.15, 20); helmet.rotation.x = .3;
+    rbox(g, .34, 1.0, .53, .2, .08, .02, M(0x20303a, { rough:.05, env:1.6 }), .02);
+    casters.push(engine, tank);
+    sadd('Мотоцикл', 'Двор', g);
+    moto.col = addCollider(MOTO.x - 1.0, MOTO.z - .42, MOTO.x + 1.0, MOTO.z + .42, 1.1);
+  }
   // лавочка, бочка, бельевая верёвка с мерчем
   smark(yard);
   rbox(yard, -12.5, .45, 12.4, .4, .05, 1.6, M(0xffffff, { map:lightWoodTex, rough:.8 }), .01); legs4(yard, -12.5, 12.4, .3, 1.4, .45, M(0xffffff, { map:darkWoodTex }), .03);
@@ -2123,6 +2173,42 @@ const fun = {};
   addCollider(POOL.x - w/2 - .1, POOL.z - d/2 - .1, POOL.x + w/2 + .1, POOL.z + d/2 + .1, h);
   addCollider(POOL.x - .35, POOL.z - d/2 - .65, POOL.x + .35, POOL.z - d/2, .8);   // the ladder
   sadd('Бассейн', 'Двор', g);
+}
+{
+  // two лежака south of the pool, backrests up, with a striped beach umbrella over a little table between them
+  const g = grp(yard, 26.3, 0, 8.6);
+  const frameM = M(0xf2f2ef, { rough:.4, env:.6 });
+  const stripes = (cols, n, w = 128, h = 128, vertical = false) => canvasTex(w, h, (c, cw, ch) => {
+    for (let i = 0; i < n; i++){ c.fillStyle = cols[i % cols.length]; if (vertical) c.fillRect(i*cw/n, 0, cw/n + 1, ch); else c.fillRect(0, i*ch/n, cw, ch/n + 1); }
+  });
+  const cushionM = M(0xffffff, { map:stripes(['#2f7fd0', '#f4f4f0'], 10, 64, 128, true), rough:.9 });
+  const lounger = (x) => {
+    const l = grp(g, x, 0, 0);
+    for (const sx of [-.27, .27]) for (const z of [-.88, .3]) rbox(l, sx, .15, z, .05, .3, .05, frameM, .01);
+    rbox(l, 0, .32, -.3, .62, .05, 1.3, frameM, .01);
+    rbox(l, 0, .37, -.3, .56, .05, 1.26, cushionM, .02);
+    // backrest: tilted ~50°, rising away from the pool
+    const back = grp(l, 0, .32, .35); back.rotation.x = -.87;
+    rbox(back, 0, 0, .35, .62, .05, .7, frameM, .01);
+    rbox(back, 0, .05, .35, .56, .05, .66, cushionM, .02);
+    addCollider(26.3 + x - .31, 8.6 - .95, 26.3 + x + .31, 8.6 + .95, .45);
+  };
+  lounger(-.75); lounger(.75);
+  // a towel thrown over the left one
+  rbox(g, -.75, .41, -.55, .5, .02, .6, M(0xff8a3a, { rough:.95 }), .01);
+  // side table with a glass of juice
+  cyl(g, 0, .25, .3, .03, .03, .5, mat.steel, 10);
+  cyl(g, 0, .51, .3, .26, .26, .03, frameM, 24);
+  cyl(g, 0, .01, .3, .2, .22, .02, frameM, 20);
+  cyl(g, .12, .58, .22, .035, .03, .11, mat.glass, 14);
+  cyl(g, .12, .56, .22, .031, .027, .07, M(0xffa020, { rough:.2, transparent:true, opacity:.85 }), 14);
+  // umbrella: pole through the table, red-and-white canopy
+  cyl(g, 0, 1.15, .3, .022, .022, 2.3, frameM, 10);
+  const canopyM = M(0xffffff, { map:stripes(['#d8302a', '#f6f2ea'], 8, 128, 16, true), rough:.8, side:THREE.DoubleSide });
+  const canopy = new THREE.Mesh(new THREE.ConeGeometry(1.25, .45, 8, 1, true), canopyM); canopy.position.set(0, 2.3, .3); g.add(canopy); casters.push(canopy);
+  sph(g, 0, 2.54, .3, .04, frameM);
+  addCollider(26.3 - .27, 8.6 + .03, 26.3 + .27, 8.6 + .57, .55);
+  sadd('Лежаки с зонтиком', 'Двор', g);
 }
 {
   // качели: two steel A-frames, a beam, a bench seat on chains that sways in the wind
@@ -2856,6 +2942,20 @@ const carKeyObj = new THREE.Group();
   scene.add(carKeyObj);
 }
 let carSpot = KEY_SPOTS[3];
+// ключи от мотоцикла: a black key with an orange fob, hidden in the house like the car keys
+const motoKeyObj = new THREE.Group();
+{
+  const steel = M(0xd4d8dc, { rough:.2, metal:1, env:1.3 });
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.02, .004, 8, 20), steel); ring.position.x = -.12; motoKeyObj.add(ring);
+  rbox(motoKeyObj, -.065, 0, 0, .05, .035, .012, M(0x141416, { rough:.35, env:1 }), .008);
+  rbox(motoKeyObj, 0, 0, 0, .08, .012, .004, steel, .001);
+  rbox(motoKeyObj, -.17, -.02, 0, .045, .06, .014, M(0xff6a10, { rough:.35, emissive:0x401800, ei:.6 }), .01);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:C(0xff8a30), transparent:true, opacity:.5, blending:THREE.AdditiveBlending, depthWrite:false }));
+  glow.scale.set(.32, .32, 1); motoKeyObj.add(glow);
+  motoKeyObj.scale.setScalar(1.4);
+  scene.add(motoKeyObj);
+}
+let motoSpot = KEY_SPOTS[4];
 // ключи от bbw c5: on Makar's nightstand in his cellar bedroom
 const BBW_KEY = { x:24.85, z:-29.5, y:CEL.y + .58 };
 const bbwKeyObj = new THREE.Group();
@@ -3381,6 +3481,7 @@ sadd('Ключ от входной двери', KI, keyObj, { key:'door' });
 sadd('Ключ от пожарного щитка', KI, fireKeyObj, { key:'fire' });
 sadd('Ключ от электрощитка', KI, elecKeyObj, { key:'elec' });
 sadd('Ключи от машины', KI, carKeyObj, { key:'car' });
+sadd('Ключи от мотоцикла', KI, motoKeyObj, { key:'moto' });
 for (const it of PICKUPS) sadd(INV_DEFS[it.id].name, KI, it.g, { item:it.id });
 sadd('Бронислав (статуя)', PERS, bron.group);
 sadd('Бобик (статуя)', PERS, dog.g);
@@ -3679,7 +3780,7 @@ const B = {
 };
 let hasFireKey = false, alarmOn = false, alarmT = 0, alarmEnding = 5;
 let hasElecKey = false, powerOn = true, blackT = 0;
-let hasCarKey = false, driveT = 0, hasBbwKey = false, driveCar = null;
+let hasCarKey = false, driveT = 0, hasBbwKey = false, hasMotoKey = false, driveCar = null;
 let flushCd = 0, spagCd = 0, catches = 0, usedFlush = false, usedSpag = false, respawnT = 0, respawned = false;
 let elapsed = 0, hasKey = false, unlock = 0, hbT = 0, caughtT = 0, winT = 0, chases = 0;
 let action = null;
@@ -3691,6 +3792,7 @@ function freeSpots(self){
   if (self !== 'fire' && fireKeyObj.visible) used.push(fireSpot);
   if (self !== 'elec' && elecKeyObj.visible) used.push(elecSpot);
   if (self !== 'car' && carKeyObj.visible) used.push(carSpot);
+  if (self !== 'moto' && motoKeyObj.visible) used.push(motoSpot);
   return KEY_SPOTS.filter(k => !used.includes(k));
 }
 function placeElecKey(){
@@ -3708,6 +3810,11 @@ function placeCarKey(){
   carKeyObj.position.set(carSpot.x, carSpot.y + .03, carSpot.z);
   carKeyObj.visible = true;
 }
+function placeMotoKey(){
+  motoSpot = pick(freeSpots('moto'));
+  motoKeyObj.position.set(motoSpot.x, motoSpot.y + .03, motoSpot.z);
+  motoKeyObj.visible = true;
+}
 function placeKey(){
   keySpot = pick(freeSpots('door').filter(k => k !== keySpot || KEY_SPOTS.length < 2));
   keyObj.position.set(keySpot.x, keySpot.y + .03, keySpot.z);
@@ -3719,6 +3826,7 @@ function resetWorld(){
   hasElecKey = false; elecKeyObj.visible = false; elecPanel.open = 0; powerOn = true; blackoutEl.style.opacity = 0;
   hasCarKey = false; carKeyObj.visible = false; carGroup.position.set(-9.2, 0, 3.8); carCol.active = true;
   hasBbwKey = false; bbwKeyObj.visible = true; bbw.group.position.set(BBW.x, 0, BBW.z); bbw.col.active = true;
+  hasMotoKey = false; motoKeyObj.visible = false; moto.group.position.set(MOTO.x, 0, MOTO.z); moto.col.active = true;
   hasCrowbar = false; placeCrowbar(); pryP = 0; newPassword(); $('pcScreen').hidden = true;
   if (secret.open){ secret.col.active = true; buildNav(); }
   Object.assign(secret, { open:false, seen:false, t:0 }); secret.pivot.rotation.y = 0; secret.boards.visible = true; secret.fallen.visible = false;
@@ -3745,6 +3853,7 @@ function resetWorld(){
   placeFireKey();
   placeElecKey();
   placeCarKey();
+  placeMotoKey();
 }
 function startRun(){
   initAudio();
@@ -3772,15 +3881,19 @@ function toMenu(){
   P.hidden = 'menu';
   syncDiff();
 }
-function startDrive(isBbw){
-  driveCar = isBbw ? { group:bbw.group, ending:15, text:'bbw c5 Макара уносит тебя по улице. Сзади бежит Макар в тапках.', eye:1.4 }
-                    : { group:carGroup, ending:7, text:'Жигули Бронислава уносят тебя по улице прочь от его дома.', eye:1.06 };
-  state = 'driving'; driveT = 0; (isBbw ? bbw.col : carCol).active = false;
+// seat: where your head is from the vehicle's centre (x towards the back, z to the left)
+function startDrive(kind = 'car'){
+  driveCar = {
+    car:  { group:carGroup, col:carCol, ending:7, text:'Жигули Бронислава уносят тебя по улице прочь от его дома.', eye:1.06, seat:[.25, .38], rev:[55, 120], line:'Э! Это моя «семёрка»! Стой!' },
+    bbw:  { group:bbw.group, col:bbw.col, ending:15, text:'bbw c5 Макара уносит тебя по улице. Сзади бежит Макар в тапках.', eye:1.4, seat:[.25, .38], rev:[55, 120], line:'Э! Макар, это твоя бэха поехала?!' },
+    moto: { group:moto.group, col:moto.col, ending:16, text:'Оранжевый мотоцикл Бронислава с рёвом уносит тебя по улице. Ветер в лицо!', eye:1.45, seat:[.3, 0], rev:[95, 260], line:'Э! Мой мотик! Слезай с него, братан!' },
+  }[kind];
+  state = 'driving'; driveT = 0; driveCar.col.active = false;
   $('prompt').hidden = true; $('eye').classList.remove('on'); $('vignette').style.opacity = 0;
   // engine: starter whirr, then the revs climb
-  noise(.5, .35, 900); setTimeout(() => { tone(55, 1.8, .22, 'sawtooth', 120); noise(1.6, .25, 300); }, 450);
-  banner('Вжух! Поехали!', 'good', 2);
-  setTimeout(() => { if (state === 'driving') say(isBbw ? 'Э! Макар, это твоя бэха поехала?!' : 'Э! Это моя «семёрка»! Стой!', 3, 'angry', 3); }, 700);
+  noise(.5, .35, 900); setTimeout(() => { tone(driveCar.rev[0], 1.8, .22, 'sawtooth', driveCar.rev[1]); noise(1.6, .25, 300); }, 450);
+  banner(kind === 'moto' ? 'Врум-врум! Погнали!' : 'Вжух! Поехали!', 'good', 2);
+  setTimeout(() => { if (state === 'driving') say(driveCar.line, 3, 'angry', 3); }, 700);
 }
 function startBlackout(){
   state = 'blackout'; blackT = 3.4; elecPanel.open = 1;
@@ -3836,7 +3949,7 @@ function endRun(id){
 // caught but attempts are left: black out, wake up in the bedroom, Bronislav hides the key again
 function startRespawn(byMakar){
   state = 'respawn'; respawnT = 2.4; respawned = false;
-  const lostKey = hasKey || doorOpen || hasFireKey || hasElecKey || hasCarKey || hasBbwKey;
+  const lostKey = hasKey || doorOpen || hasFireKey || hasElecKey || hasCarKey || hasBbwKey || hasMotoKey;
   $('fadeTitle').textContent = `Попытка ${catches + 1} из ${maxCatches()}`;
   $('fadeText').textContent = byMakar
     ? (lostKey ? 'Макар вытащил тебя из подвала и сдал брату. Бронислав отобрал ключ и спрятал его в новом месте. Ты снова в спальне.'
@@ -3855,6 +3968,7 @@ function doRespawn(){
   if (hasFireKey){ hasFireKey = false; placeFireKey(); }
   if (hasElecKey){ hasElecKey = false; placeElecKey(); }
   if (hasCarKey){ hasCarKey = false; placeCarKey(); }
+  if (hasMotoKey){ hasMotoKey = false; placeMotoKey(); }
   if (hasCrowbar){ hasCrowbar = false; placeCrowbar(); }
   if (hasBbwKey){ hasBbwKey = false; bbwKeyObj.visible = true; }   // Makar takes his keys back
   if (tookKey){
@@ -3907,6 +4021,7 @@ function findAction(){
       return hasCrowbar ? { type:'pry', text:'Держи <kbd>E</kbd> — сломать доски ломом' } : { type:'boarded', text:'Дверь заколочена. Нужен лом' };
     if (!hasKey && keySpot.lvl && near(keySpot)) return { type:'key', text:'<kbd>E</kbd>взять ключ' };
     if (!hasCarKey && carKeyObj.visible && carSpot.lvl && near(carSpot)) return { type:'carkey', text:'<kbd>E</kbd>взять ключи от машины' };
+    if (!hasMotoKey && motoKeyObj.visible && motoSpot.lvl && near(motoSpot)) return { type:'motokey', text:'<kbd>E</kbd>взять ключи от мотоцикла' };
     if (!hasElecKey && elecKeyObj.visible && elecSpot.lvl && near(elecSpot)) return { type:'eleckey', text:'<kbd>E</kbd>взять ключ от электрощитка' };
     if (!hasFireKey && fireKeyObj.visible && fireSpot.lvl && near(fireSpot)) return { type:'firekey', text:'<kbd>E</kbd>взять ключ от пожарного щитка' };
     return hideIn();
@@ -3930,6 +4045,8 @@ function findAction(){
     return { type:'key', text:'<kbd>E</kbd>взять ключ' };
   if (!hasCarKey && carKeyObj.visible && !carSpot.lvl && Math.hypot(carSpot.x - P.x, carSpot.z - P.z) < 1.5 && facing(carSpot.x, carSpot.z) > .35)
     return { type:'carkey', text:'<kbd>E</kbd>взять ключи от машины' };
+  if (!hasMotoKey && motoKeyObj.visible && !motoSpot.lvl && Math.hypot(motoSpot.x - P.x, motoSpot.z - P.z) < 1.5 && facing(motoSpot.x, motoSpot.z) > .35)
+    return { type:'motokey', text:'<kbd>E</kbd>взять ключи от мотоцикла' };
   {
     const cx = clamp(P.x, carCol.x1, carCol.x2), cz = clamp(P.z, carCol.z1, carCol.z2);
     if (Math.hypot(P.x - cx, P.z - cz) < .9 && facing(-9.2, 3.8) > .2)
@@ -3939,6 +4056,11 @@ function findAction(){
     const c = bbw.col, cx = clamp(P.x, c.x1, c.x2), cz = clamp(P.z, c.z1, c.z2);
     if (Math.hypot(P.x - cx, P.z - cz) < .9 && facing(BBW.x, BBW.z) > .2)
       return hasBbwKey ? { type:'driveBbw', text:'<kbd>E</kbd>сесть в bbw c5 и уехать' } : { type:'carLocked', text:'bbw c5 заперт. Нужны ключи Макара' };
+  }
+  {
+    const c = moto.col, cx = clamp(P.x, c.x1, c.x2), cz = clamp(P.z, c.z1, c.z2);
+    if (Math.hypot(P.x - cx, P.z - cz) < .9 && facing(MOTO.x, MOTO.z) > .2)
+      return hasMotoKey ? { type:'driveMoto', text:'<kbd>E</kbd>сесть на мотоцикл и уехать' } : { type:'carLocked', text:'Мотоцикл не заводится. Нужны ключи' };
   }
   if (!hasElecKey && elecKeyObj.visible && !elecSpot.lvl && Math.hypot(elecSpot.x - P.x, elecSpot.z - P.z) < 1.5 && facing(elecSpot.x, elecSpot.z) > .35)
     return { type:'eleckey', text:'<kbd>E</kbd>взять ключ от электрощитка' };
@@ -3974,6 +4096,7 @@ function doAction(){
     else if (k === 'fire'){ hasFireKey = true; fireKeyObj.visible = false; }
     else if (k === 'elec'){ hasElecKey = true; elecKeyObj.visible = false; }
     else if (k === 'car'){ hasCarKey = true; carKeyObj.visible = false; }
+    else if (k === 'moto'){ hasMotoKey = true; motoKeyObj.visible = false; }
     else if (r.pick.item) inv.push(r.pick.item);
     banner(`В инвентаре: ${r.name}`, 'good', 2);
     return;
@@ -4034,7 +4157,13 @@ function doAction(){
     return;
   }
   if (action.type === 'drive'){ startDrive(); return; }
-  if (action.type === 'driveBbw'){ startDrive(true); return; }
+  if (action.type === 'driveBbw'){ startDrive('bbw'); return; }
+  if (action.type === 'driveMoto'){ startDrive('moto'); return; }
+  if (action.type === 'motokey'){
+    hasMotoKey = true; motoKeyObj.visible = false; sfx.key();
+    banner('Ключи от мотоцикла! Оранжевый мотоцикл стоит во дворе у дорожки к калитке', 'good', 3.4);
+    return;
+  }
   if (action.type === 'bbwkey'){
     hasBbwKey = true; bbwKeyObj.visible = false; sfx.key();
     banner('Ключи от bbw c5! Машина Макара стоит во дворе рядом с жигулями', 'good', 3.4);
@@ -4756,6 +4885,7 @@ function syncWorld(dt, t){
   for (const r of spawned) if (r.pick && !r.taken) r.holder.rotation.y += dt*1.5;
   for (const it of PICKUPS) if (it.g.visible) it.glow.material.opacity = .2 + Math.sin(t*3 + it.x)*.1;
   carKeyObj.rotation.y += dt*2; carKeyObj.position.y = carSpot.y + .05 + Math.sin(t*3 + 3)*.02;
+  motoKeyObj.rotation.y += dt*2; motoKeyObj.position.y = motoSpot.y + .05 + Math.sin(t*3 + 5)*.02;
   bbwKeyObj.rotation.y += dt*2; bbwKeyObj.position.y = BBW_KEY.y + .05 + Math.sin(t*3 + 4)*.02;
   elecKeyObj.rotation.y += dt*2; elecKeyObj.position.y = elecSpot.y + .05 + Math.sin(t*3 + 2)*.02;
   elecPanel.open += ((state === 'blackout' ? 1 : 0) - elecPanel.open)*Math.min(1, dt*6);
@@ -4774,7 +4904,7 @@ let menuYaw = 0;
 function updateCamera(dt, t){
   if (state === 'driving'){
     // driver's seat on the left, looking at the gate
-    camera.position.set(driveCar.group.position.x + .25, driveCar.eye, driveCar.group.position.z + .38);
+    camera.position.set(driveCar.group.position.x + driveCar.seat[0], driveCar.eye, driveCar.group.position.z + driveCar.seat[1]);
     yaw = turnTo(yaw, Math.PI/2, dt*4); pitch += (-.05 - pitch)*Math.min(1, dt*4);
     camera.rotation.set(pitch, yaw, 0);
     return;
@@ -4819,7 +4949,7 @@ function updateBubble(){
 let invKey = '', inv = [];
 function syncInventory(){
   // keys follow the has* flags (they can be taken back on a respawn); other things are added on pickup
-  for (const [id, has] of [['door', hasKey], ['fire', hasFireKey], ['elec', hasElecKey], ['car', hasCarKey], ['crowbar', hasCrowbar], ['note', hasNote], ['bbw', hasBbwKey]]){
+  for (const [id, has] of [['door', hasKey], ['fire', hasFireKey], ['elec', hasElecKey], ['car', hasCarKey], ['crowbar', hasCrowbar], ['note', hasNote], ['bbw', hasBbwKey], ['moto', hasMotoKey]]){
     const i = inv.indexOf(id);
     if (has && i < 0) inv.push(id); else if (!has && i >= 0) inv.splice(i, 1);
   }
@@ -4961,7 +5091,7 @@ function zoneVisibility(){
 }
 function bakeStatic(){
   scene.updateMatrixWorld(true);
-  const live = new Set([bron.group, makar.group, dog.g, carGroup, bbw.group, bbwKeyObj, liz.g, liz.jar, liz.tongue, vac.g, keyObj, fireKeyObj, elecKeyObj, carKeyObj, crowObj, noteMesh,
+  const live = new Set([bron.group, makar.group, dog.g, carGroup, bbw.group, moto.group, bbwKeyObj, motoKeyObj, liz.g, liz.jar, liz.tongue, vac.g, keyObj, fireKeyObj, elecKeyObj, carKeyObj, crowObj, noteMesh,
     briefsOnDetector, frontDoor.pivot, gateLeaf.pivot, toiletDoor.pivot, firePanel.pivot, elecPanel.pivot, elecPanel.main, hatch.pivot,
     secret.pivot, secret.boards, secret.fallen, cel.valve, cel.bolt, fun.swing, fun.ring, fun.water, spagPack, house.userData.pendulum, house.userData.strip,
     ...PICKUPS.map(p => p.g), ...wardrobes.map(w => w.group), ...interiorDoors.map(d => d.pivot), ...(yard.userData.clothes || []),
@@ -4991,7 +5121,7 @@ function bakeStatic(){
   }
   // moving things that move as one piece (a door leaf, a wardrobe, a limb): weld their parts in their own space
   const parts = [...interiorDoors.map(d => d.pivot), frontDoor.pivot, gateLeaf.pivot, toiletDoor.pivot, carGroup, firePanel.pivot, elecPanel.pivot, hatch.pivot,
-    secret.pivot, secret.boards, secret.fallen, fun.swing, bbw.group, ...PICKUPS.map(p => p.g), ...wardrobes.flatMap(w => [w.group, ...w.doors.map(d => d.pivot)]),
+    secret.pivot, secret.boards, secret.fallen, fun.swing, bbw.group, moto.group, ...PICKUPS.map(p => p.g), ...wardrobes.flatMap(w => [w.group, ...w.doors.map(d => d.pivot)]),
     bron.group, bron.legL, bron.legR, bron.armL, bron.armR, makar.group, makar.legL, makar.legR, makar.armL, makar.armR, liz.g, liz.jar, dog.g].filter(Boolean);
   const own = new Set([...live, ...parts, bron.stick, bron.spag, ...bron.halves, makar.pad, ...liz.jarBugs, ...liz.terrBugs,
     liz.yawG, liz.body, liz.head, liz.lickTxt, dog.head, dog.jaw, dog.tail, dog.woof].filter(Boolean));
