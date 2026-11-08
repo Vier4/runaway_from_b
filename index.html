@@ -264,7 +264,7 @@ h2.good{color:var(--safe)}
     <div class="row">
       <button class="go" id="goBtn" type="button">НАЧАТЬ ПОБЕГ</button>
       <button class="ghost" id="joyBtn" type="button" aria-pressed="true">Джойстик: вкл</button>
-      <button class="ghost" id="endingsBtn" type="button">Концовки <span class="count" id="endingsCount">0/17</span></button>
+      <button class="ghost" id="endingsBtn" type="button">Концовки <span class="count" id="endingsCount">0/18</span></button>
       <button class="ghost" id="adminBtn" type="button" hidden>Админ-панель</button>
     </div>
   </div>
@@ -272,7 +272,7 @@ h2.good{color:var(--safe)}
 
 <section class="screen" id="endingsScreen" hidden>
   <div class="card">
-    <div class="eyebrow">Открыто <span id="endingsOpened">0 из 17</span></div>
+    <div class="eyebrow">Открыто <span id="endingsOpened">0 из 18</span></div>
     <h2>Концовки</h2>
     <ol class="endings" id="endingsList"></ol>
     <div class="admin-gate" id="adminGate"></div>
@@ -408,6 +408,7 @@ const INV_DEFS = {
   moto: { name:'Ключи от мотоцикла',       short:'Мотик', icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="10" cy="16" r="6.5" fill="none" stroke="#ff7a1a" stroke-width="3.2"/><path d="M16 16h13M24 16v5M28 16v4" stroke="#ff7a1a" stroke-width="3.2" stroke-linecap="round" fill="none"/></svg>' },
   rag:   { name:'Сухая тряпка',          short:'Тряпка',   icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 9c5-3 8 2 13-1s6-1 9 1l-2 15c-4-2-7 2-12 0s-6 0-9 1z" fill="#c9bda0" stroke="#7a6f55" stroke-width="1.4" stroke-linejoin="round"/></svg>' },
   ragwet:{ name:'Мокрая тряпка',         short:'Мокрая',   icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 7c5-3 8 2 13-1s6-1 9 1l-2 13c-4-2-7 2-12 0s-6 0-9 1z" fill="#6d6552" stroke="#3f3a2c" stroke-width="1.4" stroke-linejoin="round"/><path d="M11 24c-1.6 2.2-1.6 4 0 4s1.6-1.8 0-4zM21 23c-1.6 2.2-1.6 4 0 4s1.6-1.8 0-4z" fill="#5ab8f0"/></svg>' },
+  gun:   { name:'Пистолет',             short:'Пистолет', icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 9h24v7H17l-2 3h-3l-2 9H5l2-12H4z" fill="#2a2a2e" stroke="#8a8f96" stroke-width="1.3" stroke-linejoin="round"/></svg>' },
   crowbar:{ name:'Лом',                 short:'Лом',      icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 27L24 6" stroke="#c81e16" stroke-width="3.4" stroke-linecap="round"/><path d="M24 6c3-2 6 0 4 3" fill="none" stroke="#c81e16" stroke-width="3" stroke-linecap="round"/><path d="M7 27l-3 1" stroke="#c81e16" stroke-width="3" stroke-linecap="round"/></svg>' },
   money: { name:'Сто рублей',          short:'100 ₽',    icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="2.5" y="9" width="27" height="14" rx="2" fill="#c7b37c" stroke="#6a5a2a" stroke-width="1.4"/><circle cx="9" cy="16" r="3.4" fill="none" stroke="#6a5a2a" stroke-width="1.2"/><text x="21" y="19.5" font-size="9" text-anchor="middle" fill="#3a3010" font-family="sans-serif" font-weight="700">100</text></svg>' },
 };
@@ -429,6 +430,7 @@ const ENDINGS = [
   { id:15, name:'Угнал bbw c5', good:true, hint:'Найди в подвале ключи Макара и уезжай на его bbw c5.', how:'Ты угнал bbw c5 Макара.', text:'Макар выскочил из погреба в одних тапках и долго бежал за машиной. Новый ролик Бронислава называется «Брат, где твоя бэха?».', quote:'Э-э! Моя бэха! Брони-и-ислав, у меня тачку угнали!' },
   { id:16, name:'Угнал мотоцикл', good:true, hint:'Найди ключи от оранжевого мотоцикла Бронислава и уезжай на нём.', how:'Ты угнал оранжевый мотоцикл Бронислава.', text:'Ты с рёвом вылетел за ворота, а Бронислав бежал следом в одних носках и снимал на телефон. Новый ролик называется «У меня угнали мотик прямо со двора».', quote:'Мой мотик! Пацаны, он даже шлем не надел! Стой, братан!' },
   { id:17, name:'Бронислава забрала скорая', good:true, hint:'Возьми тряпку с края ванны, намочи её и положи у двери в студию Бронислава, где стоит его компьютер.', how:'Бронислав поскользнулся на мокрой тряпке, и его забрала скорая помощь.', text:'Пока его несли на носилках, он снимал всё на телефон и просил ставить лайки. Про тебя все забыли, и ты спокойно ушёл из дома.', quote:'Пацаны, я в порядке! Это был постановочный трюк! Ай, спина!' },
+  { id:18, name:'Бронислава забрала полиция', good:true, hint:'Найди у крыльца пистолет, положи его под дверь студии Бронислава и попадись ему на глаза в коридоре.', how:'Бронислав нашёл под дверью пистолет, начал палить в потолок, и за ним приехала полиция.', text:'Полицейский долго объяснял ему, что потолок не подписчик, а потом Бронислава унесли в машину. Пока все смотрели на мигалки, ты спокойно ушёл.', quote:'Начальник, это реквизит для ролика! Пацаны, лайк и адвоката!' },
 ];
 const maxCatches = () => DIFF[difficulty].lives;
 const WALK_PHRASES = ['Так, чё там дальше по плану…','Подписчики ждут. Погнали.','Ща будет контент.'];
@@ -2275,46 +2277,59 @@ const fun = {};
   addCollider(26.6 - R, 12.4 - R, 26.6 + R, 12.4 + R, .7);
   sadd('Батут', 'Двор', g);
 }
-// карета скорой помощи and the crew with a stretcher: off the map until Bronislav slips
+// карета скорой помощи and the police van with their crews: off the map until a film needs them
 const AMB = { x:-17, z:6.4, far:46 };
-const amb = { group:null, beacons:[], doors:[] }, crew = { group:null, legs:[] };
-{
-  const g = grp(yard, AMB.x, 0, AMB.far, Math.PI); amb.group = g; g.visible = false;
-  const white = M(0xf4f4f0, { rough:.3, env:1 }), red = M(0xd8261c, { rough:.4 }), glass = M(0x121a20, { rough:.05, env:1.6 }), black = M(0x141416, { rough:.6 });
+function emergencyVan({ front, side, ink, stripe, beacons }){
+  const g = grp(yard, AMB.x, 0, AMB.far, Math.PI), van = { group:g, beacons:[], doors:[] }; g.visible = false;
+  const white = M(0xf4f4f0, { rough:.3, env:1 }), band = M(stripe, { rough:.4 }), glass = M(0x121a20, { rough:.05, env:1.6 }), black = M(0x141416, { rough:.6 });
   casters.push(rbox(g, 0, 1.55, -.55, 2.1, 2.0, 3.9, white, .08, 3), rbox(g, 0, 1.4, 1.85, 2.0, 1.7, 1.3, white, .12, 3));
   rbox(g, 0, 1.75, 2.51, 1.7, .62, .02, glass, .01);
   rbox(g, 0, .68, 2.52, 1.96, .22, .08, black, .03);
-  planarUV(rbox(g, 0, 1.0, 2.52, 1.2, .24, .01, M(0xffffff, { map:labelTex('СКОРАЯ 03', '#f4f4f0', '#d8261c', 256, 52, 'bold 36px sans-serif'), rough:.4 }), .004));
-  const side = labelTex('СКОРАЯ ПОМОЩЬ', '#f4f4f0', '#d8261c', 512, 64, 'bold 44px sans-serif');
-  for (const s of [-1, 1]){
-    rbox(g, s*1.06, 1.15, -.55, .01, .26, 3.9, red, .004);
+  planarUV(rbox(g, 0, 1.0, 2.52, 1.2, .24, .01, M(0xffffff, { map:labelTex(front, '#f4f4f0', ink, 256, 52, 'bold 36px sans-serif'), rough:.4 }), .004));
+  const sideTex = labelTex(side, '#f4f4f0', ink, 512, 64, 'bold 44px sans-serif');
+  [-1, 1].forEach((s, i) => {
+    rbox(g, s*1.06, 1.15, -.55, .01, .26, 3.9, band, .004);
     rbox(g, s*1.01, 1.75, 1.9, .02, .55, .8, glass, .01);
     rbox(g, s*.72, .95, 2.52, .34, .16, .03, M(0xfff8e0, { rough:.05, emissive:0x444433 }), .02);
-    const l = new THREE.Mesh(new THREE.PlaneGeometry(2.9, .36), M(0xffffff, { map:side, rough:.4 })); l.position.set(s*1.056, 1.9, -.6); l.rotation.y = s*Math.PI/2; g.add(l);
-    // blue beacons on the roof; each glows in turn
-    const b = rbox(g, s*.45, 2.66, 1.1, .46, .16, .24, BASIC(0x2a4cff, { toneMapped:false }), .04);
-    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:C(0x3a60ff), transparent:true, opacity:.9, blending:THREE.AdditiveBlending, depthWrite:false }));
-    glow.scale.set(1.5, 1.5, 1); glow.position.copy(b.position); g.add(glow); amb.beacons.push({ b, glow });
+    const l = new THREE.Mesh(new THREE.PlaneGeometry(2.9, .36), M(0xffffff, { map:sideTex, rough:.4 })); l.position.set(s*1.056, 1.9, -.6); l.rotation.y = s*Math.PI/2; g.add(l);
+    // beacons on the roof; each glows in turn
+    const [on, off] = beacons[i], b = rbox(g, s*.45, 2.66, 1.1, .46, .16, .24, BASIC(on, { toneMapped:false }), .04);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:C(on), transparent:true, opacity:.9, blending:THREE.AdditiveBlending, depthWrite:false }));
+    glow.scale.set(1.5, 1.5, 1); glow.position.copy(b.position); g.add(glow); van.beacons.push({ b, glow, on, off });
     for (const z of [-1.5, 1.7]){ cyl(g, s*.92, .38, z, .38, .38, .24, mat.rubber, 24).rotation.z = Math.PI/2; cyl(g, s*1.05, .38, z, .22, .22, .02, mat.steel, 18).rotation.z = Math.PI/2; }
     // rear doors on hinges at the sides of the van
-    const pv = grp(g, s*1.04, 0, -2.53); const leaf = rbox(pv, -s*.52, 1.5, 0, 1.02, 1.9, .04, white, .01); void leaf;
-    rbox(pv, -s*.52, 1.15, -.025, 1.02, .26, .01, red, .004);
-    amb.doors.push({ pivot:pv, open:-s*1.9 });
-  }
+    const pv = grp(g, s*1.04, 0, -2.53);
+    rbox(pv, -s*.52, 1.5, 0, 1.02, 1.9, .04, white, .01);
+    rbox(pv, -s*.52, 1.15, -.025, 1.02, .26, .01, band, .004);
+    van.doors.push({ pivot:pv, open:-s*1.9 });
+  });
   rbox(g, 0, 1.5, -2.505, 1.9, 1.75, .01, M(0x26303a, { rough:.8 }), .004);   // the dark inside, seen with the doors open
-
-  const c = grp(yard, 0, 0, 0); crew.group = c; c.visible = false;
-  const uniform = M(0x2a6fb0, { rough:.8, map:fabricTex }), trousers = M(0x1f3f66, { rough:.85 }), skin = M(0xe2a98a, { rough:.55 });
-  rbox(c, 0, .84, -.9, .66, .05, 2.2, M(0xe8eef2, { rough:.6 }), .02);
-  for (const s of [-1, 1]) rbox(c, s*.35, .86, -.9, .03, .03, 2.7, mat.steel, .01);
-  for (const z of [.72, -2.5]){
-    const m = grp(c, 0, 0, z);
-    cyl(m, 0, 1.2, 0, .2, .22, .66, uniform, 14);
-    sph(m, 0, 1.68, 0, .13, skin, 1, 1, 1, 14);
-    cyl(m, 0, 1.78, 0, .12, .135, .07, M(0xf4f4f0, { rough:.6 }), 14);
-    for (const s of [-1, 1]){ const arm = cyl(m, s*.25, 1.14, z > 0 ? -.2 : .2, .05, .05, .55, uniform, 8); arm.rotation.x = z > 0 ? 1.1 : -1.1; }
-    for (const s of [-1, 1]){ const leg = grp(m, s*.1, .9, 0); cyl(leg, 0, -.44, 0, .08, .07, .88, trousers, 10); crew.legs.push({ leg, s }); }
+  return van;
+}
+function crewman(parent, z, legs, uniform, trousers, capM, carry){
+  const skin = M(0xe2a98a, { rough:.55 }), m = grp(parent, 0, 0, z);
+  cyl(m, 0, 1.2, 0, .2, .22, .66, uniform, 14);
+  sph(m, 0, 1.68, 0, .13, skin, 1, 1, 1, 14);
+  cyl(m, 0, 1.78, 0, .12, .135, .07, capM, 14);
+  for (const s of [-1, 1]){
+    if (carry){ const arm = cyl(m, s*.25, 1.14, z > 0 ? -.2 : .2, .05, .05, .55, uniform, 8); arm.rotation.x = z > 0 ? 1.1 : -1.1; }
+    else cyl(m, s*.27, 1.2, 0, .05, .05, .6, uniform, 8);
+    const leg = grp(m, s*.1, .9, 0); cyl(leg, 0, -.44, 0, .08, .07, .88, trousers, 10); legs.push({ leg, s });
   }
+  return m;
+}
+const amb = emergencyVan({ front:'СКОРАЯ 03', side:'СКОРАЯ ПОМОЩЬ', ink:'#d8261c', stripe:0xd8261c, beacons:[[0x2a4cff, 0x0a1040], [0x2a4cff, 0x0a1040]] });
+const copVan = emergencyVan({ front:'ПОЛИЦИЯ 02', side:'ПОЛИЦИЯ', ink:'#1f4fa0', stripe:0x1f4fa0, beacons:[[0xff2a2a, 0x401010], [0x2a4cff, 0x0a1040]] });
+const crew = { group:grp(yard), legs:[] }, copCrew = { group:grp(yard), legs:[] }, copTalk = grp(yard);
+crew.group.visible = copCrew.group.visible = copTalk.visible = false;
+{
+  const uniform = M(0x2a6fb0, { rough:.8, map:fabricTex }), trousers = M(0x1f3f66, { rough:.85 }), cap = M(0xf4f4f0, { rough:.6 });
+  rbox(crew.group, 0, .84, -.9, .66, .05, 2.2, M(0xe8eef2, { rough:.6 }), .02);
+  for (const s of [-1, 1]) rbox(crew.group, s*.35, .86, -.9, .03, .03, 2.7, mat.steel, .01);
+  for (const z of [.72, -2.5]) crewman(crew.group, z, crew.legs, uniform, trousers, cap, true);
+  const copCoat = M(0x2b3a55, { rough:.8, map:fabricTex }), copTrousers = M(0x1d2738, { rough:.85 }), copCap = M(0x1a2233, { rough:.5 });
+  for (const z of [.45, -2.2]) crewman(copCrew.group, z, copCrew.legs, copCoat, copTrousers, copCap, true);
+  crewman(copTalk, 0, [], copCoat, copTrousers, copCap, false);
 }
 // the street: road, wooden poles with a sodium lamp and wires, neighbours' houses with lit windows
 {
@@ -2978,6 +2993,13 @@ function buildBriefs(g){
 }
 pickup('briefs', .95, .585, 1.65, g => { buildBriefs(g); g.rotation.y = .5; });
 // the same трусы hanging on a smoke detector once you throw them there
+// пистолет: lies on the grass by the porch; barrel along +z, grip down
+function buildPistol(g){
+  const steel = M(0x1c1c20, { rough:.3, metal:.8, env:1.1 });
+  rbox(g, 0, .03, .03, .03, .035, .17, steel, .005);
+  rbox(g, 0, -.04, -.03, .027, .11, .04, M(0x2a2622, { rough:.7 }), .006).rotation.x = -.25;
+}
+pickup('gun', -3.1, .05, 8.0, g => { buildPistol(g); g.rotation.set(0, .7, Math.PI/2); });
 // тряпка: hangs over the rim of the bath, dry; wet it there and leave it by the door of Bronislav's студия
 pickup('rag', 12.18, .585, 9.0, g => {
   const cloth = M(0xc9bda0, { map:fabricTex, rough:1 });
@@ -2987,6 +3009,8 @@ pickup('rag', 12.18, .585, 9.0, g => {
 });
 const RAG = { x:14.65, z:5.5, bath:{ x:12.4, z:9.0 } };
 const ragTrap = { set:false, g:grp(house, RAG.x, .012, RAG.z) };
+const GUN = { x:14.5, z:5.2 }, gunTrap = { set:false, g:grp(house, GUN.x, .03, GUN.z) };
+buildPistol(gunTrap.g); gunTrap.g.rotation.set(0, 1.1, Math.PI/2); gunTrap.g.visible = false;
 {
   const puddle = new THREE.Mesh(new THREE.CircleGeometry(.44, 28), M(0x9eb6c8, { rough:.04, env:2, transparent:true, opacity:.55, depthWrite:false }));
   puddle.rotation.x = -Math.PI/2; puddle.scale.set(1, .72, 1); ragTrap.g.add(puddle);
@@ -3374,6 +3398,10 @@ const bron = (() => {
   rbox(stick, 0, -1.55, .009, .07, .002, .145, BASIC(0x3050a0, { toneMapped:false }), .001);
   sph(stick, .03, -1.54, -.07, .01, BASIC(0xff2d4f, { toneMapped:false }), 1, 1, 1, 8);
   armR.add(stick);
+  // the pistol he finds under his door, and its muzzle flash
+  const gun = grp(armR, 0, -.88, .06); buildPistol(gun); gun.rotation.x = Math.PI/2; gun.visible = false;   // the barrel carries on along the arm
+  const gunFlash = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:C(0xffc040), transparent:true, opacity:1, blending:THREE.AdditiveBlending, depthWrite:false }));
+  gunFlash.scale.set(1.3, 1.3, 1); gunFlash.position.set(0, .03, .18); gunFlash.visible = false; gun.add(gunFlash);
   // spaghetti bundle
   const spag = new THREE.Group(); spag.position.set(0, 1.3, .62);
   const halves = [];
@@ -3390,7 +3418,7 @@ const bron = (() => {
   g.scale.setScalar(BS);
   g.traverse(o => { if (o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
   scene.add(g);
-  return { group:g, legL, legR, armL, armR, stick, spag, halves, recTag, mark, markBang, eyeMat };
+  return { group:g, legL, legR, armL, armR, stick, gun, gunFlash, spag, halves, recTag, mark, markBang, eyeMat };
 })();
 
 /* ================= Макар, Bronislav's younger brother, lives in the подвал ================= */
@@ -3871,7 +3899,7 @@ function moodNow(){
   return 'calm';
 }
 function speak(text, mood = 'calm', priority = 1, fixedVol, who = B){
-  if (!VOICE.ok || muted || (state !== 'play' && state !== 'caught' && state !== 'mcaught' && state !== 'waterOff' && state !== 'won' && state !== 'alarm' && state !== 'blackout' && state !== 'driving' && state !== 'slip') || text.startsWith('*')) return;
+  if (!VOICE.ok || muted || (state !== 'play' && state !== 'caught' && state !== 'mcaught' && state !== 'waterOff' && state !== 'won' && state !== 'alarm' && state !== 'blackout' && state !== 'driving' && state !== 'slip' && state !== 'cops') || text.startsWith('*')) return;
   const d = Math.hypot(who.x - camera.position.x, who.z - camera.position.z);
   const los = (who === B ? B.level : 0) === P.level && clearSight(who.x, who.z, camera.position.x, camera.position.z, false, P.level);
   const v = fixedVol ?? Math.max(0, 1 - d/20)*(los ? 1 : .55);
@@ -3980,7 +4008,9 @@ function resetWorld(){
   flushCd = spagCd = 0; B.noise = null; stopWcMusic();
   ragTrap.set = false; ragTrap.g.visible = false; B.fall = null; bron.group.visible = true; slipStars.visible = false;
   amb.group.visible = false; amb.group.position.z = AMB.far; crew.group.visible = false; $('slipVideo').hidden = true;
-  for (const d of amb.doors) d.pivot.rotation.y = 0;
+  for (const d of [...amb.doors, ...copVan.doors]) d.pivot.rotation.y = 0;
+  gunTrap.set = false; gunTrap.g.visible = false; bron.gun.visible = false; bron.gunFlash.visible = false;
+  copVan.group.visible = false; copVan.group.position.z = AMB.far; copCrew.group.visible = false; copTalk.visible = false;
   placeKey();
   placeFireKey();
   placeElecKey();
@@ -4037,15 +4067,33 @@ const slipStars = new THREE.Group();
 const SLIP = { walk:1.2, fall:.55, a:4.4, b:7.8, c:12.6, end:14.8 };
 const SLIP_PATH = [[-12.2, 9.0], [-14.2, 9.0], [-17.0, 11.2], [-17.0, 9.7]];
 let slipT = 0, slipWp = 1, slipSirenT = 0, slipTone = false;
-function startSlip(){
-  state = 'slip'; slipT = 0; slipWp = 1; slipSirenT = 0;
+// what every film starts with: you leave the game, the HUD goes, the black bars come in
+function beginFilm(name, px, pz, place){
+  state = name; slipWp = 1; slipSirenT = 0;
   if (P.hidden){ P.hidden.group.visible = true; P.hidden = null; }
-  Object.assign(P, { x:RAG.x, z:6.3, fy:0, level:0, cellar:false, crouch:false, moving:false });
+  Object.assign(P, { x:px, z:pz, fy:0, level:0, cellar:false, crouch:false, moving:false });
   setHud(false); stopWcMusic();
   $('banner').classList.remove('on'); $('bubble').classList.remove('on'); $('mbubble').classList.remove('on'); $('vignette').style.opacity = 0;
-  $('slipVideo').hidden = false; $('slipPlace').innerHTML = '<b>● REC</b> · камера в коридоре'; $('slipCaption').textContent = '';
-  camera.fov = 95; camera.updateProjectionMatrix();
+  $('slipVideo').hidden = false; filmPlace(place); $('slipCaption').textContent = '';
   standUp();
+}
+function filmPlace(text){ $('slipPlace').innerHTML = '<b>● REC</b> · ' + text; }
+function filmSay(text, mood){ $('slipCaption').textContent = text; if (mood) speak(text, mood, 3, .85); }
+function filmSiren(dt, t, van, hi, lo){
+  slipSirenT -= dt;
+  if (slipSirenT <= 0){ slipSirenT = .48; slipTone = !slipTone; tone(slipTone ? hi : lo, .47, .13, 'triangle'); }
+  van.beacons.forEach((b, i) => { const on = ((t*7 | 0) + i) % 2 === 0; b.b.material.color.set(on ? b.on : b.off); b.glow.visible = on; });
+}
+function filmCarry(dt, team){
+  const w = SLIP_PATH[slipWp], dx = w[0] - B.x, dz = w[1] - B.z, l = Math.hypot(dx, dz), st = Math.min(l, 1.85*dt);
+  if (l > .02){ B.x += dx/l*st; B.z += dz/l*st; B.a = turnTo(B.a, Math.atan2(dx, dz), dt*7); B.phase += dt*9; }
+  if (l < .05 && slipWp < SLIP_PATH.length - 1) slipWp++;
+  team.group.position.set(B.x, 0, B.z); team.group.rotation.y = B.a;
+  for (const { leg, s } of team.legs) leg.rotation.x = l > .02 ? Math.sin(B.phase)*.55*s : 0;
+}
+function startSlip(){
+  beginFilm('slip', RAG.x, 6.3, 'камера в коридоре'); slipT = 0;
+  camera.fov = 95; camera.updateProjectionMatrix();
   Object.assign(B, { level:0, climb:null, sitting:false, x:RAG.x, z:4.1, a:0, state:'walk', pose:'walk', noise:null, fall:null });
   const door = interiorDoors.find(d => !d.lvl && Math.abs(d.cz - 5) < .3 && Math.abs(d.cx - RAG.x) < .8);
   if (door){ door.hold = 1.4; door.angle = door.openAngle; }
@@ -4065,38 +4113,80 @@ function updateSlip(dt){
     slipStars.children.forEach((st, i) => { const a = t*4 + i/5*Math.PI*2; st.position.set(Math.cos(a)*.34, Math.sin(a*2)*.05, Math.sin(a)*.34); });
   }
   if (at(land)){ tone(70, .4, .6, 'sine', 32); noise(.25, .55, 420); }
-  if (at(land + .5)){ $('slipCaption').textContent = 'Ай! Моя спина! Пацаны, вызывайте скорую!'; speak('Ай! Моя спина! Пацаны, вызывайте скорую!', 'angry', 3, .85); }
+  if (at(land + .5)) filmSay('Ай! Моя спина! Пацаны, вызывайте скорую!', 'angry');
   if (at(S.a)){   // cut to the street
     slipStars.visible = false; P.x = AMB.x; P.z = 9; amb.group.visible = true; camera.fov = camera.aspect < 1 ? 80 : 72; camera.updateProjectionMatrix();
-    $('slipPlace').innerHTML = '<b>● REC</b> · улица Садовая'; $('slipCaption').textContent = 'Скорая помощь спешит к дому блогера';
+    filmPlace('улица Садовая'); filmSay('Скорая помощь спешит к дому блогера');
   }
   if (t >= S.a){
-    slipSirenT -= dt;
-    if (slipSirenT <= 0){ slipSirenT = .48; slipTone = !slipTone; tone(slipTone ? 960 : 720, .47, .13, 'triangle'); }
-    amb.beacons.forEach((b, i) => { const on = ((t*7 | 0) + i) % 2 === 0; b.b.material.color.set(on ? 0x2a4cff : 0x0a1040); b.glow.visible = on; });
+    filmSiren(dt, t, amb, 960, 720);
   }
   if (t >= S.a && t < S.b){ const k = Math.min(1, (t - S.a)/3); amb.group.position.z = AMB.z + (AMB.far - AMB.z)*Math.pow(1 - k, 3); }
   if (at(S.b)){   // cut to the stretcher coming out of the калитка
     amb.group.position.z = AMB.z; amb.doors.forEach(d => { d.pivot.rotation.y = d.open; });
     crew.group.visible = true;
     Object.assign(B, { x:SLIP_PATH[0][0], z:SLIP_PATH[0][1], a:-Math.PI/2, state:'slip', fall:{ tilt:-Math.PI/2, y:1.14, legs:0, armL:-.1, armR:-2.4 } });
-    $('slipPlace').innerHTML = '<b>● REC</b> · у калитки'; $('slipCaption').textContent = 'Подписчики, лайк за смелость! Это контент!';
-    speak('Подписчики, лайк за смелость! Это контент!', 'hype', 3, .85);
+    filmPlace('у калитки'); filmSay('Подписчики, лайк за смелость! Это контент!', 'hype');
   }
-  if (t >= S.b && t < S.c){
-    const w = SLIP_PATH[slipWp], dx = w[0] - B.x, dz = w[1] - B.z, l = Math.hypot(dx, dz), st = Math.min(l, 1.85*dt);
-    if (l > .02){ B.x += dx/l*st; B.z += dz/l*st; B.a = turnTo(B.a, Math.atan2(dx, dz), dt*7); B.phase += dt*9; }
-    if (l < .05 && slipWp < SLIP_PATH.length - 1) slipWp++;
-    crew.group.position.set(B.x, 0, B.z); crew.group.rotation.y = B.a;
-    for (const { leg, s } of crew.legs) leg.rotation.x = l > .02 ? Math.sin(B.phase)*.55*s : 0;
-  }
+  if (t >= S.b && t < S.c) filmCarry(dt, crew);
   if (at(S.c)){   // loaded: the doors shut and off they go
     crew.group.visible = false; bron.group.visible = false; amb.doors.forEach(d => { d.pivot.rotation.y = 0; });
-    $('slipCaption').textContent = 'Бронислава увезли в больницу';
+    filmSay('Бронислава увезли в больницу');
   }
   if (t >= S.c) amb.group.position.z -= Math.min(16, (t - S.c)*9)*dt;
   if (at(S.end - .9)){ $('fadeTitle').textContent = 'Бронислава увезли!'; $('fadeText').textContent = 'Дом остался без хозяина. Ты спокойно выходишь на улицу.'; $('fade').classList.add('on'); }
   if (t >= S.end){ $('slipVideo').hidden = true; endRun(17); }
+}
+// ending 18: he sees you in the corridor and grabs the pistol from under his door. Shots into the ceiling, the police, a talk in the yard, carried off
+const COP = { grab:1.0, lift:1.7, shots:[2.35, 2.75, 3.1, 3.55], a:4.8, b:7.6, c:13.4, d:17.6, end:19.7 };
+const COP_TALK = { x:-5.6, z:9, ox:-7.0 };
+let copT = 0, flashT = 0;
+function startCops(){
+  beginFilm('cops', 13.2, 6.3, 'камера в коридоре'); copT = 0; flashT = 0;
+  Object.assign(B, { level:0, climb:null, sitting:false, x:14.65, z:5.72, a:Math.PI, state:'film', pose:'walk', noise:null, fall:{ tilt:0, y:0, legs:0, armL:0, armR:0 } });
+  filmSay('О! А это ещё что у двери?', 'sly');
+}
+function updateCops(dt){
+  const prev = copT, t = (copT += dt), at = x => prev < x && t >= x, S = COP;
+  if (t < S.a){
+    // bends down, comes back up with the pistol, arm in the air
+    const bend = t < S.grab ? Math.max(0, (t - .5)/.5) : t < S.lift ? 1 - (t - S.grab)/(S.lift - S.grab) : 0;
+    const raise = t < S.grab ? -.3*bend : Math.min(1, (t - S.grab)/(S.lift - S.grab))*-2.75;
+    const kick = flashT > 0 ? .15 : 0;
+    B.fall = { tilt:bend*.6, y:0, legs:0, armL:-.2, armR:raise + kick };
+    flashT -= dt; bron.gunFlash.visible = flashT > 0;
+  }
+  if (at(S.grab)){ gunTrap.g.visible = false; bron.gun.visible = true; tone(1500, .05, .1, 'square'); }
+  for (const x of S.shots) if (at(x)){ flashT = .07; noise(.14, .85, 2600); tone(150, .2, .5, 'square', 45); }
+  if (at(S.shots[0])) filmSay('Пау! Пау! Пацаны, это контент!', 'hype');
+  if (at(S.a)){   // cut to the street
+    bron.gun.visible = false; bron.gunFlash.visible = false; P.x = AMB.x; P.z = 9; copVan.group.visible = true;
+    filmPlace('улица Садовая'); filmSay('Соседи услышали выстрелы и вызвали полицию');
+  }
+  if (t >= S.a) filmSiren(dt, t, copVan, 620, 880);
+  if (t >= S.a && t < S.b){ const k = Math.min(1, (t - S.a)/2.6); copVan.group.position.z = AMB.z + (AMB.far - AMB.z)*Math.pow(1 - k, 3); }
+  if (at(S.b)){   // the talk in the yard
+    copVan.group.position.z = AMB.z; P.x = COP_TALK.ox; P.z = COP_TALK.z - 1;
+    copTalk.visible = true; copTalk.position.set(COP_TALK.ox, 0, COP_TALK.z); copTalk.rotation.y = Math.PI/2;
+    Object.assign(B, { x:COP_TALK.x, z:COP_TALK.z, a:-Math.PI/2 });
+    filmPlace('во дворе'); filmSay('Гражданин, кто стрелял?', 'calm');
+  }
+  if (t >= S.b && t < S.c) B.fall = { tilt:0, y:0, legs:0, armL:-2.8, armR:-2.8 + Math.sin(t*5)*.15 };
+  if (at(S.b + 1.9)) filmSay('Начальник, это для ролика! Подпишись на канал!', 'hype');
+  if (at(S.b + 3.9)) filmSay('Подпишитесь вот здесь. В протоколе.', 'calm');
+  if (at(S.c)){   // carried out through the калитка
+    copTalk.visible = false; copVan.doors.forEach(d => { d.pivot.rotation.y = d.open; }); copCrew.group.visible = true; slipWp = 1; P.x = AMB.x; P.z = 9;
+    Object.assign(B, { x:SLIP_PATH[0][0], z:SLIP_PATH[0][1], a:-Math.PI/2, fall:{ tilt:-Math.PI/2, y:1.05, legs:0, armL:-.1, armR:-.1 } });
+    filmPlace('у калитки'); filmSay('Пацаны, меня задерживают! Лайк, подписка, адвокат!', 'angry');
+  }
+  if (t >= S.c && t < S.d) filmCarry(dt, copCrew);
+  if (at(S.d)){   // loaded: the doors shut and off they go
+    copCrew.group.visible = false; bron.group.visible = false; copVan.doors.forEach(d => { d.pivot.rotation.y = 0; });
+    filmSay('Бронислава увезли в отделение');
+  }
+  if (t >= S.d) copVan.group.position.z -= Math.min(16, (t - S.d)*9)*dt;
+  if (at(S.end - .9)){ $('fadeTitle').textContent = 'Бронислава забрала полиция!'; $('fadeText').textContent = 'Пока все смотрели на мигалки, ты спокойно выходишь на улицу.'; $('fade').classList.add('on'); }
+  if (t >= S.end){ $('slipVideo').hidden = true; endRun(18); }
 }
 function startBlackout(){
   state = 'blackout'; blackT = 3.4; elecPanel.open = 1;
@@ -4244,6 +4334,8 @@ function findAction(){
     return { type:'wetRag', text:'<kbd>E</kbd>намочить тряпку в ванне' };
   if (!ragTrap.set && (inv.includes('rag') || inv.includes('ragwet')) && Math.hypot(RAG.x - P.x, RAG.z - P.z) < 1.3 && facing(RAG.x, RAG.z) > .3)
     return inv.includes('ragwet') ? { type:'placeRag', text:'<kbd>E</kbd>положить мокрую тряпку у двери' } : { type:'wait', text:'Тряпка сухая. Сначала намочи её в ванне' };
+  if (!gunTrap.set && inv.includes('gun') && Math.hypot(GUN.x - P.x, GUN.z - P.z) < 1.3 && facing(GUN.x, GUN.z) > .3)
+    return { type:'placeGun', text:'<kbd>E</kbd>положить пистолет под дверь Бронислава' };
   for (const it of PICKUPS) if (!it.taken && Math.hypot(it.x - P.x, it.z - P.z) < 1.4 && facing(it.x, it.z) > .4)
     return { type:'item', item:it, text:`<kbd>E</kbd>взять: ${INV_DEFS[it.id].name.toLowerCase()}` };
   // sitting in his chair, looking at the screen: the computer wins over a key lying on the desk
@@ -4315,6 +4407,7 @@ function doAction(){
   if (action.type === 'item'){
     const it = action.item; it.taken = true; it.g.visible = false; sfx.key();
     if (!inv.includes(it.id)) inv.push(it.id);
+    if (it.id === 'gun') banner('Пистолет! Положи его под дверь студии Бронислава', 'good', 3.4);
     if (it.id === 'rag') banner('Сухая тряпка. Намочи её в ванне', 'good', 3);
     if (it.id === 'briefs') banner('Трусы Бронислава! Встань под датчик дыма и посмотри вверх', 'good', 3.4);
     else banner(`В инвентаре: ${INV_DEFS[it.id].name}`, 'good', 2.2);
@@ -4366,6 +4459,11 @@ function doAction(){
   if (action.type === 'carkey'){
     hasCarKey = true; carKeyObj.visible = false; sfx.key();
     banner('Ключи от жигулей! Машина стоит во дворе у ворот', 'good', 3);
+    return;
+  }
+  if (action.type === 'placeGun'){
+    inv.splice(inv.indexOf('gun'), 1); gunTrap.set = true; gunTrap.g.visible = true; noise(.08, .25, 1600);
+    banner(cheat('ghost') || D_().blind ? 'Пистолет под дверью, но сейчас Бронислав тебя не видит' : 'Пистолет под дверью. Пусть Бронислав выйдет в коридор и заметит тебя!', 'good', 3.4);
     return;
   }
   if (action.type === 'wetRag'){
@@ -5115,7 +5213,7 @@ function syncWorld(dt, t){
   if (doorOpen) frontDoor.open = Math.min(1, frontDoor.open + dt*1.5);
   frontDoor.pivot.rotation.y = -frontDoor.open*1.5;
   const nearGate = doorOpen && Math.hypot(P.x - YARD.x1, P.z - (GATE.z1 + GATE.z2)/2) < 2.2;
-  gateLeaf.open += ((nearGate || state === 'winning' || (state === 'slip' && slipT > SLIP.a) ? 1 : 0) - gateLeaf.open)*Math.min(1, dt*4);
+  gateLeaf.open += ((nearGate || state === 'winning' || (state === 'slip' && slipT > SLIP.a) || state === 'cops' ? 1 : 0) - gateLeaf.open)*Math.min(1, dt*4);
   gateLeaf.pivot.rotation.y = gateLeaf.open*1.3;
   if (house.userData.pendulum) house.userData.pendulum.rotation.z = Math.sin(t*3.1)*.18;
   for (const c of yard.userData.clothes || []) c.rotation.y = Math.sin(t*1.3 + c.userData.sway)*.12;
@@ -5144,6 +5242,13 @@ function syncWorld(dt, t){
 
 let menuYaw = 0;
 function updateCamera(dt, t){
+  if (state === 'cops'){
+    if (copT < COP.a){ camera.position.set(10.6, 1.35, 6.1); camera.lookAt(14.65, 1.25, 5.7); }
+    else if (copT < COP.b){ camera.position.set(-21.4, 1.6, -1.5); camera.lookAt(AMB.x, 1.2, Math.min(copVan.group.position.z, 16)); }
+    else if (copT < COP.c){ camera.position.set(-6.3, 1.65, 12.2); camera.lookAt(-6.3, 1.05, 9.0); }
+    else { camera.position.set(-19.5, 1.7, 13.6); camera.lookAt(-15, .9, 9.4); }
+    return;
+  }
   if (state === 'slip'){
     if (slipT < SLIP.a){
       // a wide-angle security camera up under the ceiling: the corridor is too narrow to see all of him otherwise
@@ -5274,13 +5379,15 @@ function frame(){
   let d = 99;
   if (!spawnOpen){ updateDog(dt, T); updateLizard(dt, T); updateVac(dt, T); }
   if (state === 'play'){ if (!spawnOpen){ updatePlayer(dt); if (state === 'play') d = updateBron(dt); if (state === 'play') updateMakar(dt); } updateHud(d, dt);
-    if (state === 'play' && ragTrap.set && !B.level && !B.climb && Math.abs(B.x - RAG.x) < .75 && Math.abs(B.z - RAG.z) < .42) startSlip(); }
+    if (state === 'play' && ragTrap.set && !B.level && !B.climb && Math.abs(B.x - RAG.x) < .75 && Math.abs(B.z - RAG.z) < .42) startSlip();
+    if (state === 'play' && gunTrap.set && B.seen && !B.level && !B.climb && B.z > 5.1 && B.z < 6.9) startCops(); }
   else if (state === 'menu'){ updateBron(dt); }
   else if (state === 'caught'){ caughtT -= dt; if (caughtT <= 0){ if (catches >= maxCatches()) endRun(1); else startRespawn(); } }
   else if (state === 'mcaught'){ caughtT -= dt; if (caughtT <= 0){ if (catches >= maxCatches()) endRun(9); else startRespawn(true); } }
   else if (state === 'cellarOut'){ outT -= dt; if (outT <= 0) endRun(MK.chased ? 10 : 11); }
   else if (state === 'waterOff'){ waterT -= dt; if (waterT <= 0) endRun(12); }
   else if (state === 'slip') updateSlip(dt);
+  else if (state === 'cops') updateCops(dt);
   else if (state === 'pcVideo'){
     videoT += dt; drawPcVideo(videoT);
     videoSlurpT -= dt; if (videoSlurpT <= 0){ tone(rand(110, 150), .1, .14, 'square'); noise(.05, .2, 4000, 'highpass'); videoSlurpT = 60/150; }   // a cheesy beat
@@ -5344,7 +5451,7 @@ function zoneVisibility(){
 }
 function bakeStatic(){
   scene.updateMatrixWorld(true);
-  const live = new Set([bron.group, makar.group, dog.g, carGroup, bbw.group, moto.group, amb.group, crew.group, ragTrap.g, slipStars, bbwKeyObj, motoKeyObj, liz.g, liz.jar, liz.tongue, vac.g, keyObj, fireKeyObj, elecKeyObj, carKeyObj, crowObj, noteMesh,
+  const live = new Set([bron.group, makar.group, dog.g, carGroup, bbw.group, moto.group, amb.group, crew.group, copVan.group, copCrew.group, copTalk, ragTrap.g, gunTrap.g, slipStars, bbwKeyObj, motoKeyObj, liz.g, liz.jar, liz.tongue, vac.g, keyObj, fireKeyObj, elecKeyObj, carKeyObj, crowObj, noteMesh,
     briefsOnDetector, frontDoor.pivot, gateLeaf.pivot, toiletDoor.pivot, firePanel.pivot, elecPanel.pivot, elecPanel.main, hatch.pivot,
     secret.pivot, secret.boards, secret.fallen, cel.valve, cel.bolt, fun.swing, fun.ring, fun.water, spagPack, house.userData.pendulum, house.userData.strip,
     ...PICKUPS.map(p => p.g), ...wardrobes.map(w => w.group), ...interiorDoors.map(d => d.pivot), ...(yard.userData.clothes || []),
@@ -5376,7 +5483,7 @@ function bakeStatic(){
   const parts = [...interiorDoors.map(d => d.pivot), frontDoor.pivot, gateLeaf.pivot, toiletDoor.pivot, carGroup, firePanel.pivot, elecPanel.pivot, hatch.pivot,
     secret.pivot, secret.boards, secret.fallen, fun.swing, bbw.group, moto.group, ...PICKUPS.map(p => p.g), ...wardrobes.flatMap(w => [w.group, ...w.doors.map(d => d.pivot)]),
     bron.group, bron.legL, bron.legR, bron.armL, bron.armR, makar.group, makar.legL, makar.legR, makar.armL, makar.armR, liz.g, liz.jar, dog.g].filter(Boolean);
-  const own = new Set([...live, ...parts, bron.stick, bron.spag, ...bron.halves, makar.pad, ...liz.jarBugs, ...liz.terrBugs,
+  const own = new Set([...live, ...parts, bron.stick, bron.gun, bron.spag, ...bron.halves, makar.pad, ...liz.jarBugs, ...liz.terrBugs,
     liz.yawG, liz.body, liz.head, liz.lickTxt, dog.head, dog.jaw, dog.tail, dog.woof].filter(Boolean));
   const keep = new Set([bron.eyeMat, makar.eyeMat]);
   for (const root of parts){
