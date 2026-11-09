@@ -53,6 +53,7 @@ button:focus-visible{outline:2px solid var(--lamp);outline-offset:3px}
   body.joy #prompt{bottom:calc(296px + env(safe-area-inset-bottom,0px))}
 }
 #blackout{position:fixed;inset:0;pointer-events:none;z-index:4;background:#000;opacity:0;transition:opacity .25s}
+#radGlow{position:fixed;inset:0;pointer-events:none;z-index:4;background:radial-gradient(ellipse at center,rgba(90,255,60,.14),rgba(50,220,30,.55));opacity:0}
 #alarmGlow{position:fixed;inset:0;pointer-events:none;z-index:4;background:radial-gradient(ellipse at center,rgba(255,40,30,.12),rgba(255,20,10,.5));opacity:0}
 #hudTR{top:calc(14px + env(safe-area-inset-top,0px));right:calc(14px + env(safe-area-inset-right,0px));display:flex;flex-direction:column;align-items:flex-end;gap:8px;max-width:min(260px,46vw)}
 .status{padding:8px 12px;display:flex;flex-direction:column;gap:2px;text-align:right;transition:border-color .2s,background .2s}
@@ -217,6 +218,7 @@ h2.good{color:var(--safe)}
 <div id="closet" hidden><div class="door"></div><div class="gap"></div><div class="door"></div></div>
 <div id="vignette"></div>
 <div id="alarmGlow"></div>
+<div id="radGlow"></div>
 <div id="blackout"></div>
 <div id="flash"></div>
 <div id="bubble"></div>
@@ -264,7 +266,7 @@ h2.good{color:var(--safe)}
     <div class="row">
       <button class="go" id="goBtn" type="button">НАЧАТЬ ПОБЕГ</button>
       <button class="ghost" id="joyBtn" type="button" aria-pressed="true">Джойстик: вкл</button>
-      <button class="ghost" id="endingsBtn" type="button">Концовки <span class="count" id="endingsCount">0/18</span></button>
+      <button class="ghost" id="endingsBtn" type="button">Концовки <span class="count" id="endingsCount">0/19</span></button>
       <button class="ghost" id="adminBtn" type="button" hidden>Админ-панель</button>
     </div>
   </div>
@@ -272,7 +274,7 @@ h2.good{color:var(--safe)}
 
 <section class="screen" id="endingsScreen" hidden>
   <div class="card">
-    <div class="eyebrow">Открыто <span id="endingsOpened">0 из 18</span></div>
+    <div class="eyebrow">Открыто <span id="endingsOpened">0 из 19</span></div>
     <h2>Концовки</h2>
     <ol class="endings" id="endingsList"></ol>
     <div class="admin-gate" id="adminGate"></div>
@@ -409,6 +411,8 @@ const INV_DEFS = {
   rag:   { name:'Сухая тряпка',          short:'Тряпка',   icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 9c5-3 8 2 13-1s6-1 9 1l-2 15c-4-2-7 2-12 0s-6 0-9 1z" fill="#c9bda0" stroke="#7a6f55" stroke-width="1.4" stroke-linejoin="round"/></svg>' },
   ragwet:{ name:'Мокрая тряпка',         short:'Мокрая',   icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 7c5-3 8 2 13-1s6-1 9 1l-2 13c-4-2-7 2-12 0s-6 0-9 1z" fill="#6d6552" stroke="#3f3a2c" stroke-width="1.4" stroke-linejoin="round"/><path d="M11 24c-1.6 2.2-1.6 4 0 4s1.6-1.8 0-4zM21 23c-1.6 2.2-1.6 4 0 4s1.6-1.8 0-4z" fill="#5ab8f0"/></svg>' },
   gun:   { name:'Пистолет',             short:'Пистолет', icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 9h24v7H17l-2 3h-3l-2 9H5l2-12H4z" fill="#2a2a2e" stroke="#8a8f96" stroke-width="1.3" stroke-linejoin="round"/></svg>' },
+  pear:  { name:'Груша',                short:'Груша',    icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 8c3 0 4 3 4 6 0 3 5 5 5 10 0 4-4 6-9 6s-9-2-9-6c0-5 5-7 5-10 0-3 1-6 4-6z" fill="#c8d040" stroke="#7a8420" stroke-width="1.3"/><path d="M16 8V3" stroke="#5a3a1a" stroke-width="2" stroke-linecap="round"/><path d="M17 6c2-3 5-3 7-2-1 3-4 4-7 2z" fill="#4f9a32"/></svg>' },
+  energy:{ name:'Энергетик',            short:'Энергетик',icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="9" y="4" width="14" height="25" rx="3" fill="#141416" stroke="#8a8f96" stroke-width="1.3"/><rect x="11" y="2.5" width="10" height="3" rx="1" fill="#c9ced3"/><path d="M18 8l-6 10h4l-2 8 7-11h-4z" fill="#7dff3a"/></svg>' },
   crowbar:{ name:'Лом',                 short:'Лом',      icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 27L24 6" stroke="#c81e16" stroke-width="3.4" stroke-linecap="round"/><path d="M24 6c3-2 6 0 4 3" fill="none" stroke="#c81e16" stroke-width="3" stroke-linecap="round"/><path d="M7 27l-3 1" stroke="#c81e16" stroke-width="3" stroke-linecap="round"/></svg>' },
   money: { name:'Сто рублей',          short:'100 ₽',    icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="2.5" y="9" width="27" height="14" rx="2" fill="#c7b37c" stroke="#6a5a2a" stroke-width="1.4"/><circle cx="9" cy="16" r="3.4" fill="none" stroke="#6a5a2a" stroke-width="1.2"/><text x="21" y="19.5" font-size="9" text-anchor="middle" fill="#3a3010" font-family="sans-serif" font-weight="700">100</text></svg>' },
 };
@@ -431,6 +435,7 @@ const ENDINGS = [
   { id:16, name:'Угнал мотоцикл', good:true, hint:'Найди ключи от оранжевого мотоцикла Бронислава и уезжай на нём.', how:'Ты угнал оранжевый мотоцикл Бронислава.', text:'Ты с рёвом вылетел за ворота, а Бронислав бежал следом в одних носках и снимал на телефон. Новый ролик называется «У меня угнали мотик прямо со двора».', quote:'Мой мотик! Пацаны, он даже шлем не надел! Стой, братан!' },
   { id:17, name:'Бронислава забрала скорая', good:true, hint:'Возьми тряпку с края ванны, намочи её и положи у двери в студию Бронислава, где стоит его компьютер.', how:'Бронислав поскользнулся на мокрой тряпке, и его забрала скорая помощь.', text:'Пока его несли на носилках, он снимал всё на телефон и просил ставить лайки. Про тебя все забыли, и ты спокойно ушёл из дома.', quote:'Пацаны, я в порядке! Это был постановочный трюк! Ай, спина!' },
   { id:18, name:'Бронислава забрала полиция', good:true, hint:'Найди у крыльца пистолет, положи его под дверь студии Бронислава и попадись ему на глаза в коридоре.', how:'Бронислав нашёл под дверью пистолет, начал палить в потолок, и за ним приехала полиция.', text:'Полицейский долго объяснял ему, что потолок не подписчик, а потом Бронислава унесли в машину. Пока все смотрели на мигалки, ты спокойно ушёл.', quote:'Начальник, это реквизит для ролика! Пацаны, лайк и адвоката!' },
+  { id:19, name:'Дом Бронислава в радиации', good:true, hint:'Не ешь суп на кухонном столе. Добавь в него грушу из холодильника и энергетик со стола Бронислава.', how:'Ты добавил в суп грушу и энергетик, и он начал фонить.', text:'Приехали люди в костюмах химзащиты и оцепили дом. Тебя вывели первым, а Бронислава до сих пор отмывают.', quote:'Пацаны, у меня суп светится! Это вообще законно?!' },
 ];
 const maxCatches = () => DIFF[difficulty].lives;
 const WALK_PHRASES = ['Так, чё там дальше по плану…','Подписчики ждут. Погнали.','Ща будет контент.'];
@@ -2967,6 +2972,47 @@ pickup('remote', 8.2, .78, 2.22, g => {
   const red = rbox(g, 0, .018, 0, .012, .004, .012, M(0xd8261c, { rough:.4 }), .002); red.position.set(Math.sin(.5)*.06, .018, Math.cos(.5)*.06);
   for (let i = 0; i < 6; i++){ const b = rbox(g, 0, .018, 0, .01, .004, .01, M(0xb8bcc0, { rough:.4 }), .002); const t = -.02 - (i >> 1)*.022, side = (i & 1 ? .012 : -.012); b.position.set(Math.sin(.5)*t + Math.cos(.5)*side, .018, Math.cos(.5)*t - Math.sin(.5)*side); }
 });
+// суп on the kitchen table: you can eat it, but it is meant for a груша and an энергетик
+const SOUP = { x:7.75, y:.75, z:8.8 };
+const soup = { g:grp(house, SOUP.x, SOUP.y, SOUP.z), eaten:false, pear:false, energy:false };
+{
+  const china_ = M(0xf6f3ea, { rough:.2, env:1 });
+  cyl(soup.g, 0, .006, 0, .15, .15, .012, china_, 28);
+  lathe(soup.g, 0, .012, 0, [[0, 0], [.07, 0], [.11, .04], [.125, .075], [.118, .075], [.1, .04], [.06, .012], [0, .012]], china_, 28);
+  soup.liquid = cyl(soup.g, 0, .06, 0, .107, .107, .004, M(0xb5402a, { rough:.3, env:.8 }), 28);
+  for (const [x, z] of [[.03, .02], [-.04, .03], [.01, -.05]]) sph(soup.liquid, x, .003, z, .016, M(0xf0a040, { rough:.5 }), 1, .4, 1, 8);
+  const spoon = rbox(soup.g, .19, .016, 0, .025, .006, .17, mat.steel, .002); spoon.rotation.y = .15;
+  soup.glow = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:C(0x60ff40), transparent:true, opacity:.9, blending:THREE.AdditiveBlending, depthWrite:false }));
+  soup.glow.scale.set(1.3, 1.3, 1); soup.glow.position.y = .1; soup.glow.visible = false; soup.g.add(soup.glow);
+}
+// the open ЗИЛ: a lit inside with bare shelves and the one груша; hidden while the fridge is shut
+const FRIDGE = { x:6.85, z:11.6, front:{ x:6.85, z:10.7 } };
+const fridge = { g:grp(house, 0, 0, 0), open:false, pearTaken:false };
+{
+  fridge.g.visible = false;
+  rbox(fridge.g, FRIDGE.x, .95, 11.21, .58, 1.5, .01, BASIC(0xf4f8fa), .002);
+  for (const y of [.5, .8, 1.1, 1.4]) rbox(fridge.g, FRIDGE.x, y, 11.16, .56, .012, .1, M(0xdfe6ea, { rough:.2, env:1.2 }), .002);
+  fridge.door = grp(fridge.g, 7.17, 0, 11.2);
+  rbox(fridge.door, -.31, .95, 0, .62, 1.56, .07, mat.enamel, .03);
+  rbox(fridge.door, -.31, .95, .04, .54, 1.46, .01, M(0xe8ecee, { rough:.4 }), .004);
+  fridge.pear = grp(fridge.g, FRIDGE.x, 1.11, 11.15);
+  const skin = M(0xc8d040, { rough:.45, env:.7 });
+  sph(fridge.pear, 0, .05, 0, .05, skin, 1, 1, 1, 14); sph(fridge.pear, 0, .105, 0, .03, skin, 1, 1.2, 1, 12);
+  cyl(fridge.pear, 0, .15, 0, .004, .005, .04, M(0x5a3a1a, { rough:.8 }), 6);
+}
+function resetSoup(){
+  Object.assign(soup, { eaten:false, pear:false, energy:false });
+  soup.liquid.visible = true; soup.liquid.material.color.copy(C(0xb5402a)); soup.glow.visible = false;
+  Object.assign(fridge, { open:false, pearTaken:false }); fridge.g.visible = false; fridge.door.rotation.y = 0; fridge.pear.visible = true;
+}
+pickup('energy', 14.15, .75, .5, g => {
+  const label = canvasTex(128, 128, (c, w, h) => {
+    c.fillStyle = '#141416'; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#7dff3a'; c.beginPath(); c.moveTo(74, 14); c.lineTo(38, 72); c.lineTo(60, 72); c.lineTo(50, 116); c.lineTo(92, 54); c.lineTo(68, 54); c.closePath(); c.fill();
+  });
+  cyl(g, 0, .075, 0, .033, .033, .14, M(0xffffff, { map:label, rough:.3, metal:.3, env:1 }), 20);
+  cyl(g, 0, .148, 0, .029, .033, .012, mat.steel, 20);
+});
 pickup('sausage', 7.3, .79, 9.28, g => {
   const c = cyl(g, 0, .0, 0, .042, .042, .3, M(0xe09a96, { rough:.45 }), 20); c.rotation.z = Math.PI/2; c.rotation.y = .4;
   for (const sx of [-1, 1]){ const e = sph(g, 0, 0, 0, .042, M(0xd88e8a, { rough:.5 }), .4, 1, 1, 12); e.position.set(Math.cos(.4)*sx*.15, 0, -Math.sin(.4)*sx*.15); const tie = cyl(g, 0, 0, 0, .006, .006, .03, M(0xd6b46a), 6); tie.rotation.z = Math.PI/2; tie.rotation.y = .4; tie.position.set(Math.cos(.4)*sx*.175, 0, -Math.sin(.4)*sx*.175); }
@@ -3899,7 +3945,7 @@ function moodNow(){
   return 'calm';
 }
 function speak(text, mood = 'calm', priority = 1, fixedVol, who = B){
-  if (!VOICE.ok || muted || (state !== 'play' && state !== 'caught' && state !== 'mcaught' && state !== 'waterOff' && state !== 'won' && state !== 'alarm' && state !== 'blackout' && state !== 'driving' && state !== 'slip' && state !== 'cops') || text.startsWith('*')) return;
+  if (!VOICE.ok || muted || (state !== 'play' && state !== 'caught' && state !== 'mcaught' && state !== 'waterOff' && state !== 'radiation' && state !== 'won' && state !== 'alarm' && state !== 'blackout' && state !== 'driving' && state !== 'slip' && state !== 'cops') || text.startsWith('*')) return;
   const d = Math.hypot(who.x - camera.position.x, who.z - camera.position.z);
   const los = (who === B ? B.level : 0) === P.level && clearSight(who.x, who.z, camera.position.x, camera.position.z, false, P.level);
   const v = fixedVol ?? Math.max(0, 1 - d/20)*(los ? 1 : .55);
@@ -3984,7 +4030,7 @@ function resetWorld(){
   hasCarKey = false; carKeyObj.visible = false; carGroup.position.set(-9.2, 0, 3.8); carCol.active = true;
   hasBbwKey = false; bbwKeyObj.visible = true; bbw.group.position.set(BBW.x, 0, BBW.z); bbw.col.active = true;
   hasMotoKey = false; motoKeyObj.visible = false; moto.group.position.set(MOTO.x, 0, MOTO.z); moto.col.active = true;
-  hasCrowbar = false; placeCrowbar(); pryP = 0; newPassword(); $('pcScreen').hidden = true;
+  hasCrowbar = false; placeCrowbar(); pryP = 0; newPassword(); $('pcScreen').hidden = true; resetSoup(); $('radGlow').style.opacity = 0;
   if (secret.open){ secret.col.active = true; buildNav(); }
   Object.assign(secret, { open:false, seen:false, t:0 }); secret.pivot.rotation.y = 0; secret.boards.visible = true; secret.fallen.visible = false;
   elecPanel.main.rotation.x = 0; elecPanel.main.position.y = -.08; rgb.intensity = .7;
@@ -4336,11 +4382,21 @@ function findAction(){
     return inv.includes('ragwet') ? { type:'placeRag', text:'<kbd>E</kbd>положить мокрую тряпку у двери' } : { type:'wait', text:'Тряпка сухая. Сначала намочи её в ванне' };
   if (!gunTrap.set && inv.includes('gun') && Math.hypot(GUN.x - P.x, GUN.z - P.z) < 1.3 && facing(GUN.x, GUN.z) > .3)
     return { type:'placeGun', text:'<kbd>E</kbd>положить пистолет под дверь Бронислава' };
-  for (const it of PICKUPS) if (!it.taken && Math.hypot(it.x - P.x, it.z - P.z) < 1.4 && facing(it.x, it.z) > .4)
-    return { type:'item', item:it, text:`<kbd>E</kbd>взять: ${INV_DEFS[it.id].name.toLowerCase()}` };
   // sitting in his chair, looking at the screen: the computer wins over a key lying on the desk
   if (Math.hypot(PC.x - P.x, PC.z - P.z) < .9 && facing(PC.screen.x, PC.screen.z) > .85)
     return Math.hypot(B.x - PC.x, B.z - PC.z) < 1.2 && !B.level ? { type:'wait', text:'За компьютером сидит Бронислав' } : { type:'pc', text:'<kbd>E</kbd>зайти в компьютер Бронислава' };
+  // the soup on the kitchen table: add what you carry; with nothing to add, all that's left is to eat it
+  if (Math.hypot(SOUP.x - P.x, SOUP.z - P.z) < 1.4 && facing(SOUP.x, SOUP.z) > .85){
+    if (soup.eaten) return { type:'wait', text:'Тарелка пустая. Суп съеден' };
+    if (inv.includes('pear')) return { type:'soupAdd', item:'pear', text:'<kbd>E</kbd>добавить грушу в суп' };
+    if (inv.includes('energy')) return { type:'soupAdd', item:'energy', text:'<kbd>E</kbd>вылить энергетик в суп' };
+    return { type:'soupEat', text:'<kbd>E</kbd>съесть суп' };
+  }
+  if (Math.hypot(FRIDGE.front.x - P.x, FRIDGE.front.z - P.z) < 1.0 && facing(FRIDGE.x, FRIDGE.z) > .7)
+    return !fridge.open ? { type:'fridge', text:'<kbd>E</kbd>открыть холодильник' }
+      : !fridge.pearTaken ? { type:'pear', text:'<kbd>E</kbd>взять грушу' } : { type:'fridge', text:'<kbd>E</kbd>закрыть холодильник' };
+  for (const it of PICKUPS) if (!it.taken && Math.hypot(it.x - P.x, it.z - P.z) < 1.4 && facing(it.x, it.z) > .4)
+    return { type:'item', item:it, text:`<kbd>E</kbd>взять: ${INV_DEFS[it.id].name.toLowerCase()}` };
   if (!hasKey && !keySpot.lvl && Math.hypot(keySpot.x - P.x, keySpot.z - P.z) < 1.5 && facing(keySpot.x, keySpot.z) > .35)
     return { type:'key', text:'<kbd>E</kbd>взять ключ' };
   if (!hasCarKey && carKeyObj.visible && !carSpot.lvl && Math.hypot(carSpot.x - P.x, carSpot.z - P.z) < 1.5 && facing(carSpot.x, carSpot.z) > .35)
@@ -4422,6 +4478,30 @@ function doAction(){
     return;
   }
   if (action.type === 'pc'){ openPC(); return; }
+  if (action.type === 'fridge'){
+    fridge.open = !fridge.open; fridge.g.visible = fridge.open; if (!fridge.open) fridge.door.rotation.y = 0;
+    sfx.creak();
+    if (fridge.open && !fridge.pearTaken) banner('В холодильнике только груша. Энергетика тут нет', '', 2.6);
+    return;
+  }
+  if (action.type === 'pear'){
+    fridge.pearTaken = true; fridge.pear.visible = false; inv.push('pear'); sfx.key();
+    banner('В инвентаре: Груша', 'good', 2.2);
+    return;
+  }
+  if (action.type === 'soupEat'){
+    soup.eaten = true; soup.liquid.visible = false;
+    for (let i = 0; i < 4; i++) setTimeout(() => noise(.09, .3, 700), i*260);
+    banner('Вкусный суп! Только теперь в него нечего добавлять', 'warn', 3);
+    return;
+  }
+  if (action.type === 'soupAdd'){
+    inv.splice(inv.indexOf(action.item), 1); soup[action.item] = true; noise(.25, .3, 1400);
+    if (soup.pear && soup.energy){ startRadiation(); return; }
+    soup.liquid.material.color.copy(C(soup.pear ? 0xc8a030 : 0x6a7a30));
+    banner(soup.pear ? 'Груша в супе. Осталось вылить энергетик' : 'Энергетик в супе. Осталось добавить грушу', 'good', 2.8);
+    return;
+  }
   if (action.type === 'crowbar'){
     hasCrowbar = true; crowObj.visible = false; sfx.key();
     banner('Лом! Им можно вскрыть заколоченную дверь в спальне Бронислава', 'good', 3.2);
@@ -4954,6 +5034,18 @@ function goFloor(lv){
 let boltP = 0, outT = 0;
 // the water is off: the pipes knock and gurgle, Bronislav yells from the shower, you slip out
 let valveP = 0, waterOff = false, waterT = 0, pryP = 0;
+// груша + энергетик + суп: it starts to glow, the Geiger counter goes mad, the whole house is evacuated
+let radT = 0;
+function startRadiation(){
+  state = 'radiation'; radT = 4.4; syncInventory();
+  $('prompt').hidden = true; $('eye').classList.remove('on'); $('vignette').style.opacity = 0;
+  soup.liquid.material.color.copy(C(0x60ff40)); soup.glow.visible = true;
+  banner('Суп начал фонить!', 'warn', 2.6);
+  for (let i = 0; i < 34; i++) setTimeout(() => { if (state === 'radiation') noise(.018, .55, 3800, 'highpass'); }, 120 + 3900*(1 - Math.pow(1 - i/34, 1.8)));
+  standUp(); B.state = 'panic'; B.pose = 'vlog';
+  setTimeout(() => { if (state === 'radiation') say('Чем это пахнет?! Почему суп светится?!', 2.6, 'angry', 3); }, 500);
+  setTimeout(() => { if (state !== 'radiation') return; $('fadeTitle').textContent = 'Дом Бронислава в радиации'; $('fadeText').textContent = 'Счётчик Гейгера трещит на всю деревню. К дому едут люди в костюмах химзащиты.'; $('fade').classList.add('on'); }, 2700);
+}
 function startWaterOff(){
   state = 'waterOff'; waterOff = true; waterT = 3.6;
   $('prompt').hidden = true; $('eye').classList.remove('on');
@@ -5218,6 +5310,7 @@ function syncWorld(dt, t){
   if (house.userData.pendulum) house.userData.pendulum.rotation.z = Math.sin(t*3.1)*.18;
   for (const c of yard.userData.clothes || []) c.rotation.y = Math.sin(t*1.3 + c.userData.sway)*.12;
   fun.swing.rotation.x = Math.sin(t*1.1)*.08;
+  if (fridge.open) fridge.door.rotation.y += (-1.9 - fridge.door.rotation.y)*Math.min(1, dt*7);
   secret.pivot.rotation.y += ((secret.open ? -1.4 : 0) - secret.pivot.rotation.y)*Math.min(1, dt*4);   // swings out into the bedroom
   crowObj.children[crowObj.children.length - 1].material.opacity = .3 + Math.sin(t*3)*.15;
   fun.water.material.map.offset.set(t*.02, Math.sin(t*.5)*.03);
@@ -5386,6 +5479,12 @@ function frame(){
   else if (state === 'mcaught'){ caughtT -= dt; if (caughtT <= 0){ if (catches >= maxCatches()) endRun(9); else startRespawn(true); } }
   else if (state === 'cellarOut'){ outT -= dt; if (outT <= 0) endRun(MK.chased ? 10 : 11); }
   else if (state === 'waterOff'){ waterT -= dt; if (waterT <= 0) endRun(12); }
+  else if (state === 'radiation'){
+    radT -= dt; B.a += dt*5; B.phase += dt*8;
+    $('radGlow').style.opacity = ((T*5 | 0) % 2 ? .95 : .55);
+    soup.glow.material.opacity = .6 + Math.sin(T*14)*.3;
+    if (radT <= 0){ $('radGlow').style.opacity = 0; endRun(19); }
+  }
   else if (state === 'slip') updateSlip(dt);
   else if (state === 'cops') updateCops(dt);
   else if (state === 'pcVideo'){
@@ -5451,7 +5550,7 @@ function zoneVisibility(){
 }
 function bakeStatic(){
   scene.updateMatrixWorld(true);
-  const live = new Set([bron.group, makar.group, dog.g, carGroup, bbw.group, moto.group, amb.group, crew.group, copVan.group, copCrew.group, copTalk, ragTrap.g, gunTrap.g, slipStars, bbwKeyObj, motoKeyObj, liz.g, liz.jar, liz.tongue, vac.g, keyObj, fireKeyObj, elecKeyObj, carKeyObj, crowObj, noteMesh,
+  const live = new Set([soup.g, fridge.g, bron.group, makar.group, dog.g, carGroup, bbw.group, moto.group, amb.group, crew.group, copVan.group, copCrew.group, copTalk, ragTrap.g, gunTrap.g, slipStars, bbwKeyObj, motoKeyObj, liz.g, liz.jar, liz.tongue, vac.g, keyObj, fireKeyObj, elecKeyObj, carKeyObj, crowObj, noteMesh,
     briefsOnDetector, frontDoor.pivot, gateLeaf.pivot, toiletDoor.pivot, firePanel.pivot, elecPanel.pivot, elecPanel.main, hatch.pivot,
     secret.pivot, secret.boards, secret.fallen, cel.valve, cel.bolt, fun.swing, fun.ring, fun.water, spagPack, house.userData.pendulum, house.userData.strip,
     ...PICKUPS.map(p => p.g), ...wardrobes.map(w => w.group), ...interiorDoors.map(d => d.pivot), ...(yard.userData.clothes || []),
