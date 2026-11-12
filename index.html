@@ -435,7 +435,7 @@ const ENDINGS = [
   { id:16, name:'Угнал мотоцикл', good:true, hint:'Найди ключи от оранжевого мотоцикла Бронислава и уезжай на нём.', how:'Ты угнал оранжевый мотоцикл Бронислава.', text:'Ты с рёвом вылетел за ворота, а Бронислав бежал следом в одних носках и снимал на телефон. Новый ролик называется «У меня угнали мотик прямо со двора».', quote:'Мой мотик! Пацаны, он даже шлем не надел! Стой, братан!' },
   { id:17, name:'Бронислава забрала скорая', good:true, hint:'Возьми тряпку с края ванны, намочи её и положи у двери в студию Бронислава, где стоит его компьютер.', how:'Бронислав поскользнулся на мокрой тряпке, и его забрала скорая помощь.', text:'Пока его несли на носилках, он снимал всё на телефон и просил ставить лайки. Про тебя все забыли, и ты спокойно ушёл из дома.', quote:'Пацаны, я в порядке! Это был постановочный трюк! Ай, спина!' },
   { id:18, name:'Бронислава забрала полиция', good:true, hint:'Найди у крыльца пистолет, положи его под дверь студии Бронислава и попадись ему на глаза в коридоре.', how:'Бронислав нашёл под дверью пистолет, начал палить в потолок, и за ним приехала полиция.', text:'Полицейский долго объяснял ему, что потолок не подписчик, а потом Бронислава унесли в машину. Пока все смотрели на мигалки, ты спокойно ушёл.', quote:'Начальник, это реквизит для ролика! Пацаны, лайк и адвоката!' },
-  { id:19, name:'Дом Бронислава в радиации', good:true, hint:'Не ешь суп на кухонном столе. Добавь в него грушу из холодильника и энергетик со стола Бронислава.', how:'Ты добавил в суп грушу и энергетик, и он начал фонить.', text:'Приехали люди в костюмах химзащиты и оцепили дом. Тебя вывели первым, а Бронислава до сих пор отмывают.', quote:'Пацаны, у меня суп светится! Это вообще законно?!' },
+  { id:19, name:'Дом Бронислава в радиации', good:true, hint:'Не ешь суп на кухонном столе. Добавь в него грушу из холодильника и энергетик со стола Бронислава.', how:'Ты добавил в суп грушу и энергетик, а Бронислав его съел и потерял сознание.', text:'Суп фонил на всю деревню. Приехали люди в костюмах химзащиты, оцепили дом и унесли Бронислава на носилках, а тебя вывели первым.', quote:'Пацаны… суп… был… огонь…' },
 ];
 const maxCatches = () => DIFF[difficulty].lives;
 const WALK_PHRASES = ['Так, чё там дальше по плану…','Подписчики ждут. Погнали.','Ща будет контент.'];
@@ -3179,7 +3179,7 @@ function tryPassword(){
   if (state !== 'pc') return;
   if ($('pcPass').value.trim().toLowerCase() === pcPassword){
     state = 'pcVideo'; videoT = 0; videoSlurpT = 0;
-    $('pcLogin').hidden = true; $('pcVideoBox').hidden = false; $('pcNoExit').style.opacity = 0;
+    $('pcLogin').hidden = true; $('pcVideoBox').hidden = false; $('pcNoExit').style.opacity = 0; $('pcClose').hidden = false;
     $('pcClose').focus();
   } else {
     $('pcErr').textContent = hasNote ? 'Неверный пароль. Посмотри на бумажку внимательнее.' : 'Неверный пароль. Может, он где-то записан?';
@@ -5035,16 +5035,90 @@ let boltP = 0, outT = 0;
 // the water is off: the pipes knock and gurgle, Bronislav yells from the shower, you slip out
 let valveP = 0, waterOff = false, waterT = 0, pryP = 0;
 // груша + энергетик + суп: it starts to glow, the Geiger counter goes mad, the whole house is evacuated
-let radT = 0;
+let radT = 0, radVideo = false, radCue = 0, radChew = 0, radTick = 0;
+const SOUP_V = { eat:4, sick:5.8, fall:6.7, end:9.5 };   // the video's timeline, in seconds
 function startRadiation(){
-  state = 'radiation'; radT = 4.4; syncInventory();
+  state = 'radiation'; radT = 0; radVideo = false; radCue = 0; radChew = 0; radTick = 0; syncInventory();
   $('prompt').hidden = true; $('eye').classList.remove('on'); $('vignette').style.opacity = 0;
   soup.liquid.material.color.copy(C(0x60ff40)); soup.glow.visible = true;
-  banner('Суп начал фонить!', 'warn', 2.6);
-  for (let i = 0; i < 34; i++) setTimeout(() => { if (state === 'radiation') noise(.018, .55, 3800, 'highpass'); }, 120 + 3900*(1 - Math.pow(1 - i/34, 1.8)));
-  standUp(); B.state = 'panic'; B.pose = 'vlog';
-  setTimeout(() => { if (state === 'radiation') say('Чем это пахнет?! Почему суп светится?!', 2.6, 'angry', 3); }, 500);
-  setTimeout(() => { if (state !== 'radiation') return; $('fadeTitle').textContent = 'Дом Бронислава в радиации'; $('fadeText').textContent = 'Счётчик Гейгера трещит на всю деревню. К дому едут люди в костюмах химзащиты.'; $('fade').classList.add('on'); }, 2700);
+  banner('Суп начал фонить!', 'warn', 1.4);
+}
+// a short film, like the one on his computer: Bronislav wolfs the soup, turns green and passes out
+function updateSoupVideo(t, dt){
+  const cues = [[.25, () => speak('Ммм! Суп сегодня огонь, пацаны!', 'hype', 3, .85)], [SOUP_V.eat + .1, () => speak('Э… чё-то мне… нехорошо…', 'lazy', 3, .85)],
+    [SOUP_V.fall, () => { noise(.35, .7, 160); tone(70, .45, .3, 'sine', 40); }]];
+  while (radCue < cues.length && t >= cues[radCue][0]) cues[radCue++][1]();
+  radChew -= dt;
+  if (t < SOUP_V.eat && radChew <= 0){ noise(.1, .35, 700); setTimeout(() => tone(150, .08, .12, 'sine', 90), 120); radChew = .95; }
+  radTick -= dt;
+  if (radTick <= 0){ noise(.018, .5, 3800, 'highpass'); radTick = rand(.4, 1)/(3 + t*3); }
+  drawSoupVideo(t);
+}
+function drawSoupVideo(t){
+  const cv = $('pcVideo'), c = cv.getContext('2d'), w = cv.width, h = cv.height, { eat, sick:SICK, fall:FALL, end } = SOUP_V;
+  const sick = clamp((t - eat)/(SICK - eat), 0, 1), fall = clamp((t - SICK)/(FALL - SICK), 0, 1), out = t >= FALL, tilt = fall*fall*1.28;
+  const mix = (a, b, k) => a.map((v, i) => Math.round(v + (b[i] - v)*k)), rgb = a => `rgb(${a.join(',')})`;
+  const face = rgb(mix([226, 169, 138], [132, 214, 92], sick));
+  c.textAlign = 'center'; c.lineCap = 'round';
+  c.fillStyle = '#e8dcc0'; c.fillRect(0, 0, w, h);
+  c.fillStyle = '#d6a890'; for (let y = 30; y < 290; y += 58) for (let x = 30 + (y % 4)*7; x < w; x += 76){ c.beginPath(); c.arc(x, y, 5, 0, 7); c.fill(); }
+  // Bronislav, pivoting at the waist behind the table
+  const cyc = t < eat ? (1 - Math.cos(t*Math.PI*2/.95))/2 : 0, hx = Math.sin(t*6)*9*sick*(1 - fall);
+  c.save(); c.translate(320, 320); c.rotate(tilt); c.translate(-320, -320);
+  c.fillStyle = '#1d1f27'; c.beginPath(); c.roundRect(226, 168, 188, 180, 38); c.fill();
+  c.fillStyle = '#ff6a00'; c.beginPath(); c.arc(320, 232, 28, 0, 7); c.fill();
+  c.fillStyle = '#111'; c.font = 'bold 34px sans-serif'; c.fillText('Б', 320, 245);
+  c.strokeStyle = '#1d1f27'; c.lineWidth = 36; c.beginPath(); c.moveTo(240, 196); c.lineTo(214, 292); c.stroke();   // his left arm on the table
+  c.fillStyle = face; c.beginPath(); c.arc(320 + hx, 110, 58, 0, 7); c.fill();
+  c.beginPath(); c.arc(262 + hx, 112, 11, 0, 7); c.arc(378 + hx, 112, 11, 0, 7); c.fill();
+  c.fillStyle = '#ff6a00'; c.beginPath(); c.arc(320 + hx, 96, 60, Math.PI, 0); c.fill(); c.fillRect(260 + hx, 92, 120, 12);
+  // eyes: looking at the spoon, then spinning, then crossed out
+  for (const s of [-1, 1]){
+    const ex = 320 + hx + s*24, ey = 118;
+    if (out){ c.strokeStyle = '#111'; c.lineWidth = 5; c.beginPath(); c.moveTo(ex - 10, ey - 10); c.lineTo(ex + 10, ey + 10); c.moveTo(ex + 10, ey - 10); c.lineTo(ex - 10, ey + 10); c.stroke(); }
+    else {
+      c.fillStyle = '#f6f4ee'; c.beginPath(); c.arc(ex, ey, 13, 0, 7); c.fill();
+      if (sick > 0){ c.strokeStyle = '#2a7a20'; c.lineWidth = 2.5; c.beginPath(); for (let a = 0; a < 12; a += .4){ const r = a*.95, b = a + t*9; const px = ex + Math.cos(b)*r, py = ey + Math.sin(b)*r; a ? c.lineTo(px, py) : c.moveTo(px, py); } c.stroke(); }
+      else { c.fillStyle = '#2a1a10'; c.beginPath(); c.arc(ex + 3, ey + 4 - cyc*5, 6, 0, 7); c.fill(); }
+    }
+  }
+  c.fillStyle = '#3a2414'; c.beginPath(); c.roundRect(286 + hx, 134, 68, 13, 6); c.fill();
+  // mouth: opens for the spoon, wobbles when sick, hangs open with the tongue out at the end
+  if (out){ c.fillStyle = '#5a1420'; c.beginPath(); c.ellipse(320, 158, 18, 11, 0, 0, 7); c.fill(); c.fillStyle = '#e8577a'; c.beginPath(); c.ellipse(330, 168, 11, 14, .3, 0, 7); c.fill(); }
+  else if (sick > 0){ c.strokeStyle = '#3a5a20'; c.lineWidth = 4; c.beginPath(); for (let x = -18; x <= 18; x += 4){ const y = 156 + Math.sin(x*.5 + t*10)*3; x === -18 ? c.moveTo(320 + hx + x, y) : c.lineTo(320 + hx + x, y); } c.stroke(); }
+  else { c.fillStyle = '#5a1420'; c.beginPath(); c.ellipse(320, 156, 15, 3 + cyc*12, 0, 0, 7); c.fill(); }
+  // his right arm and the spoon, shovelling
+  const hk = t < eat ? cyc : 0, hd = [376 - hk*30, 288 - hk*126];
+  c.strokeStyle = '#1d1f27'; c.lineWidth = 36; c.beginPath(); c.moveTo(402, 196); c.lineTo(hd[0], hd[1]); c.stroke();
+  if (t < eat){
+    c.strokeStyle = '#c9ced3'; c.lineWidth = 6; c.beginPath(); c.moveTo(hd[0], hd[1]); c.lineTo(hd[0] - 34, hd[1] - 6); c.stroke();
+    c.fillStyle = '#c9ced3'; c.beginPath(); c.ellipse(hd[0] - 42, hd[1] - 7, 13, 8, 0, 0, 7); c.fill();
+    c.fillStyle = '#60ff40'; c.beginPath(); c.ellipse(hd[0] - 42, hd[1] - 9, 9, 5, 0, 0, 7); c.fill();
+  }
+  c.fillStyle = face; c.beginPath(); c.arc(hd[0], hd[1], 17, 0, 7); c.fill();
+  c.restore();
+  // the table and the glowing bowl, in front of him
+  for (let y = 0; y < 3; y++) for (let x = 0; x < 16; x++){ c.fillStyle = (x + y) % 2 ? '#d0303a' : '#f4f0e6'; c.fillRect(x*40, 290 + y*24, 40, 24); }
+  const pulse = .7 + Math.sin(t*9)*.3, gl = c.createRadialGradient(320, 300, 8, 320, 300, 130);
+  gl.addColorStop(0, `rgba(120,255,80,${.7*pulse})`); gl.addColorStop(1, 'rgba(120,255,80,0)'); c.fillStyle = gl; c.fillRect(190, 170, 260, 190);
+  c.fillStyle = '#f6f3ea'; c.beginPath(); c.ellipse(320, 306, 92, 26, 0, 0, 7); c.fill();
+  c.fillStyle = '#60ff40'; c.beginPath(); c.ellipse(320, 300, 74, 17, 0, 0, 7); c.fill();
+  c.fillStyle = '#c8ffb0'; for (let i = 0; i < 5; i++){ c.beginPath(); c.arc(280 + i*20, 298 + Math.sin(t*8 + i)*5, 4, 0, 7); c.fill(); }
+  // out cold: stars round his head, a radiation sign, the caption
+  if (out){
+    const hdx = 320 + 210*Math.sin(tilt), hdy = 320 - 210*Math.cos(tilt);
+    c.fillStyle = '#ffd23a'; c.font = '22px sans-serif';
+    for (let i = 0; i < 5; i++){ const a = t*4 + i*Math.PI*2/5; c.fillText('★', hdx + Math.cos(a)*62, hdy - 44 + Math.sin(a)*16); }
+    c.fillStyle = `rgba(70,255,50,${.14 + Math.abs(Math.sin(t*5))*.16})`; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#ffd23a'; c.font = 'bold 74px sans-serif'; c.fillText('☢', 120, 215 + Math.sin(t*4)*6);
+    c.fillStyle = 'rgba(0,0,0,.72)'; c.fillRect(70, 62, 500, 58);
+    c.fillStyle = '#7dff3a'; c.font = 'bold 28px sans-serif'; c.fillText('БРОНИСЛАВ ПОТЕРЯЛ СОЗНАНИЕ', 320, 101);
+  }
+  c.textAlign = 'left'; c.fillStyle = (t*2 | 0) % 2 ? '#ff2d4f' : '#7a1020'; c.beginPath(); c.arc(24, 24, 7, 0, 7); c.fill();
+  c.fillStyle = '#222'; c.font = 'bold 16px sans-serif'; c.fillText('REC  ОБЕД БРОНИСЛАВА', 38, 30);
+  c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(0, h - 26, w, 26);
+  c.fillStyle = '#555'; c.fillRect(70, h - 15, w - 150, 5); c.fillStyle = '#ff2d4f'; c.fillRect(70, h - 15, (w - 150)*Math.min(1, t/end), 5);
+  c.fillStyle = '#fff'; c.font = '13px sans-serif'; c.fillText(`0:0${Math.min(9, t | 0)} / 0:09`, w - 72, h - 8); c.fillText('▶', 26, h - 8);
 }
 function startWaterOff(){
   state = 'waterOff'; waterOff = true; waterT = 3.6;
@@ -5480,13 +5554,17 @@ function frame(){
   else if (state === 'cellarOut'){ outT -= dt; if (outT <= 0) endRun(MK.chased ? 10 : 11); }
   else if (state === 'waterOff'){ waterT -= dt; if (waterT <= 0) endRun(12); }
   else if (state === 'radiation'){
-    radT -= dt; B.a += dt*5; B.phase += dt*8;
-    $('radGlow').style.opacity = ((T*5 | 0) % 2 ? .95 : .55);
-    soup.glow.material.opacity = .6 + Math.sin(T*14)*.3;
-    if (radT <= 0){ $('radGlow').style.opacity = 0; endRun(19); }
+    radT += dt;
+    if (radT < 1.3){ $('radGlow').style.opacity = ((T*5 | 0) % 2 ? .95 : .55); soup.glow.material.opacity = .6 + Math.sin(T*14)*.3; }
+    else {
+      if (!radVideo){   // the same player as on his computer, and this one has no ✕ at all
+        radVideo = true; $('radGlow').style.opacity = 0;
+        $('pcScreen').hidden = false; $('pcLogin').hidden = true; $('pcVideoBox').hidden = false; $('pcClose').hidden = true; $('pcNoExit').style.opacity = 0;
+      }
+      updateSoupVideo(radT - 1.3, dt);
+      if (radT - 1.3 >= SOUP_V.end){ $('pcScreen').hidden = true; endRun(19); }
+    }
   }
-  else if (state === 'slip') updateSlip(dt);
-  else if (state === 'cops') updateCops(dt);
   else if (state === 'pcVideo'){
     videoT += dt; drawPcVideo(videoT);
     videoSlurpT -= dt; if (videoSlurpT <= 0){ tone(rand(110, 150), .1, .14, 'square'); noise(.05, .2, 4000, 'highpass'); videoSlurpT = 60/150; }   // a cheesy beat
