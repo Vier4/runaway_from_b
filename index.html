@@ -5565,6 +5565,8 @@ function frame(){
       if (radT - 1.3 >= SOUP_V.end){ $('pcScreen').hidden = true; endRun(19); }
     }
   }
+  else if (state === 'slip') updateSlip(dt);
+  else if (state === 'cops') updateCops(dt);
   else if (state === 'pcVideo'){
     videoT += dt; drawPcVideo(videoT);
     videoSlurpT -= dt; if (videoSlurpT <= 0){ tone(rand(110, 150), .1, .14, 'square'); noise(.05, .2, 4000, 'highpass'); videoSlurpT = 60/150; }   // a cheesy beat
